@@ -1,20 +1,27 @@
 #pragma once
 #include <array>
+#include <set>
 #include <vector>
 
 #include "game_enums.hpp"
 
 class Country {
  public:
-  Country(const CountryEnum id, const int stability, const Continent continent,
-          const bool battleground,
-          const std::vector<CountryEnum>& adjacentCountries)
+  Country(const CountryEnum id, const int stability, const bool battleground,
+          const std::vector<CountryEnum>& adjacentCountries,
+          const std::set<Region>& regions)
       : id_{id},
         stability_{stability},
-        continent_{continent},
         battleground_{battleground},
         adjacentCountries_{adjacentCountries},
+        regions_{regions},
         influence_({0, 0}) {}
+
+  Country(const CountryEnum id, const int stability, const bool battleground,
+          const std::vector<CountryEnum>& adjacentCountries,
+          const Region region)
+      : Country(id, stability, battleground, adjacentCountries,
+                std::set<Region>{region}) {}
 
   bool addInfluence(const Side side, int num);
   bool removeInfluence(const Side side, int num);
@@ -25,12 +32,12 @@ class Country {
   CountryEnum getId() const { return id_; }
 
  private:
-  CountryEnum id_;
-  int stability_;
-  Continent continent_;
-  bool battleground_;
-  std::vector<CountryEnum> adjacentCountries_;
+  const CountryEnum id_;
+  const int stability_;
+  const bool battleground_;
+  const std::vector<CountryEnum> adjacentCountries_;
   std::array<int, 2> influence_;
+  const std::set<Region> regions_;
 
   //   bool isAdjacentTo(const CountryEnum &otherCountryId) const {
   //     return std::find(adjacentCountries.begin(), adjacentCountries.end(),

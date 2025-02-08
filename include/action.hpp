@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "board.hpp"
+#include "world_map.hpp"
 
 enum class ActionType { Coup, Realignment, PlaceInfluence, Event, SpaceRace };
 
@@ -23,7 +23,7 @@ class PlaceInfluence : public Action {
       const std::vector<std::pair<CountryEnum, int>>& targetCountries)
       : Action{ActionType::PlaceInfluence}, targetCountries_(targetCountries){};
 
-  void execute(Board& country, const Side side);
+  void execute(WorldMap& country, const Side side);
 
  private:
   std::vector<std::pair<CountryEnum, int>> targetCountries_;

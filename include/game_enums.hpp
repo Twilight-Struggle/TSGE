@@ -1,6 +1,8 @@
 #pragma once
 
 enum class CountryEnum {
+  USSR,
+  USA,
   MEXICO,
   CUBA,
   GUATEMALA,
@@ -87,13 +89,17 @@ enum class CountryEnum {
   FINLAND,
 };
 
-enum class Continent {
+enum class Region {
   CENTRAL_AMERICA,
   SOUTH_AMERICA,
   AFRICA,
   MIDDLE_EAST,
   ASIA,
   EUROPE,
+  EAST_EUROPE,
+  WEST_EUROPE,
+  SOUTH_EAST_ASIA,
+  SPECIAL,
 };
 
 enum class Side {

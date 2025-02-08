@@ -2,9 +2,11 @@
 
 #include <gtest/gtest.h>
 
+#include "world_map.hpp"
+
 class ActionTest : public ::testing::Test {
  protected:
-  Board board;
+  WorldMap board;
 };
 
 TEST_F(ActionTest, PlaceTest) {

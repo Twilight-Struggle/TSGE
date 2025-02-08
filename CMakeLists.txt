@@ -14,7 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)  # GNU拡張を無効化
 
 add_library(ts_core
     src/country.cpp
-    src/board.cpp
+    src/world_map.cpp
     src/action.cpp
 )
 
@@ -47,3 +47,4 @@ function(add_test TEST_NAME)
 endfunction()
 
 add_test(action_test)
+add_test(world_map_test)
