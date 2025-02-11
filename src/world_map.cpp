@@ -413,7 +413,14 @@ WorldMap::WorldMap()
               std::vector<CountryEnum>{CountryEnum::USSR, CountryEnum::SWEDEN},
               std::set<Region>{Region::EUROPE, Region::EAST_EUROPE,
                                Region::WEST_EUROPE}},
-      } {};
+      } {
+  for (size_t i = static_cast<size_t>(CountryEnum::USSR);
+       i <= static_cast<size_t>(CountryEnum::FINLAND); i++) {
+    for (const auto& region : countries_[i].getRegions()) {
+      regionCountries_[static_cast<size_t>(region)].insert(countries_[i]);
+    }
+  }
+};
 
 Country& WorldMap::getCountry(const CountryEnum countryEnum) {
   auto it = std::find_if(countries_.begin(), countries_.end(),
@@ -426,4 +433,9 @@ Country& WorldMap::getCountry(const CountryEnum countryEnum) {
     // This should never happen
     throw std::runtime_error("Country not found");
   }
+}
+
+const std::set<Country>& WorldMap::getCountriesInRegion(
+    const Region region) const {
+  return regionCountries_[static_cast<size_t>(region)];
 }

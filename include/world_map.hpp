@@ -10,7 +10,9 @@ class WorldMap {
   ~WorldMap() = default;
 
   Country& getCountry(const CountryEnum countryEnum);
+  const std::set<Country>& getCountriesInRegion(const Region region) const;
 
  private:
   std::array<Country, 86> countries_;
+  std::array<std::set<Country>, 10> regionCountries_;
 };

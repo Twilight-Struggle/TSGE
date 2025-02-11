@@ -30,6 +30,8 @@ class Country {
     return influence_[static_cast<int>(side)];
   }
   CountryEnum getId() const { return id_; }
+  const std::set<Region>& getRegions() const { return regions_; }
+  bool operator<(const Country& other) const { return id_ < other.id_; }
 
  private:
   const CountryEnum id_;
