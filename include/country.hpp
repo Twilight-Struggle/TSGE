@@ -20,8 +20,8 @@ class Country {
   Country(const CountryEnum id, const int stability, const bool battleground,
           const std::vector<CountryEnum>& adjacentCountries,
           const Region region)
-      : Country(id, stability, battleground, adjacentCountries,
-                std::set<Region>{region}) {}
+      : Country{id, stability, battleground, adjacentCountries,
+                std::set<Region>{region}} {}
 
   bool addInfluence(const Side side, int num);
   bool removeInfluence(const Side side, int num);
@@ -31,6 +31,11 @@ class Country {
   }
   CountryEnum getId() const { return id_; }
   const std::set<Region>& getRegions() const { return regions_; }
+  const std::vector<CountryEnum>& getAdjacentCountries() const {
+    return adjacentCountries_;
+  }
+  Side getControlSide() const;
+  int getOverControlNum() const;
   bool operator<(const Country& other) const { return id_ < other.id_; }
 
  private:

@@ -105,4 +105,16 @@ enum class Region {
 enum class Side {
   USSR,
   USA,
+  Neutral,
 };
+
+inline Side getOpponentSide(Side side) {
+  switch (side) {
+    case Side::USSR:
+      return Side::USA;
+    case Side::USA:
+      return Side::USSR;
+    case Side::Neutral:
+      return Side::Neutral;
+  }
+}

@@ -11,6 +11,7 @@ class WorldMap {
 
   Country& getCountry(const CountryEnum countryEnum);
   const std::set<Country>& getCountriesInRegion(const Region region) const;
+  const std::set<CountryEnum> placeableCountries(const Side side) const;
 
  private:
   std::array<Country, 86> countries_;
