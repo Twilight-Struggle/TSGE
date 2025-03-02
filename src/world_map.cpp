@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "country.hpp"
+#include "game_enums.hpp"
 
 WorldMap::WorldMap()
     : countries_{
@@ -433,6 +434,22 @@ Country& WorldMap::getCountry(const CountryEnum countryEnum) {
     // This should never happen
     throw std::runtime_error("Country not found");
   }
+}
+
+const std::set<CountryEnum> WorldMap::placeableCountries(
+    const Side side) const {
+  std::set<CountryEnum> placeableCountries;
+  for (const auto& country : countries_) {
+    if (country.getInfluence(side) > 0) {
+      placeableCountries.insert(country.getId());
+      for (const auto& adjacentCountry : country.getAdjacentCountries()) {
+        if (countries_[static_cast<size_t>(adjacentCountry)].getInfluence(
+                side) > 0)
+          placeableCountries.insert(adjacentCountry);
+      }
+    }
+  }
+  return placeableCountries;
 }
 
 const std::set<Country>& WorldMap::getCountriesInRegion(
