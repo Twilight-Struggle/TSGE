@@ -481,12 +481,16 @@ const std::set<CountryEnum> WorldMap::placeableCountries(
     if (country.getRegions().count(Region::SPECIAL) > 0) {
       continue;
     }
+    // 1つでも影響力があれば
     if (country.getInfluence(side) > 0) {
       placeableCountries.insert(country.getId());
-      for (const auto& adjacentCountry : country.getAdjacentCountries()) {
-        if (countries_[static_cast<size_t>(adjacentCountry)].getInfluence(
-                side) > 0)
-          placeableCountries.insert(adjacentCountry);
+    }
+    // 隣接国に影響力があれば
+    for (const auto& adjacentCountry : country.getAdjacentCountries()) {
+      if (countries_[static_cast<size_t>(adjacentCountry)].getInfluence(side) >
+          0) {
+        placeableCountries.insert(country.getId());
+        break;
       }
     }
   }
