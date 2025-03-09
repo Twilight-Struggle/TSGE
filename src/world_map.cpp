@@ -1,5 +1,7 @@
 #include "world_map.hpp"
 
+#include <sys/stat.h>
+
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -421,6 +423,41 @@ WorldMap::WorldMap()
       regionCountries_[static_cast<size_t>(region)].insert(countries_[i]);
     }
   }
+  // map初期化
+  countries_[static_cast<size_t>(CountryEnum::USSR)].addInfluence(Side::USSR,
+                                                                  999);
+  countries_[static_cast<size_t>(CountryEnum::NORTH_KOREA)].addInfluence(
+      Side::USSR, 3);
+  countries_[static_cast<size_t>(CountryEnum::EAST_GERMANY)].addInfluence(
+      Side::USSR, 3);
+  countries_[static_cast<size_t>(CountryEnum::FINLAND)].addInfluence(Side::USSR,
+                                                                     1);
+  countries_[static_cast<size_t>(CountryEnum::SYRIA)].addInfluence(Side::USSR,
+                                                                   1);
+  countries_[static_cast<size_t>(CountryEnum::IRAQ)].addInfluence(Side::USSR,
+                                                                  1);
+
+  countries_[static_cast<size_t>(CountryEnum::USA)].addInfluence(Side::USA,
+                                                                 999);
+  countries_[static_cast<size_t>(CountryEnum::AUSTRALIA)].addInfluence(
+      Side::USA, 4);
+  countries_[static_cast<size_t>(CountryEnum::PHILIPPINES)].addInfluence(
+      Side::USA, 1);
+  countries_[static_cast<size_t>(CountryEnum::CANADA)].addInfluence(Side::USA,
+                                                                    2);
+  countries_[static_cast<size_t>(CountryEnum::UNITED_KINGDOM)].addInfluence(
+      Side::USA, 5);
+  countries_[static_cast<size_t>(CountryEnum::PANAMA)].addInfluence(Side::USA,
+                                                                    1);
+  countries_[static_cast<size_t>(CountryEnum::ISRAEL)].addInfluence(Side::USA,
+                                                                    1);
+  countries_[static_cast<size_t>(CountryEnum::IRAN)].addInfluence(Side::USA, 1);
+  countries_[static_cast<size_t>(CountryEnum::SOUTH_KOREA)].addInfluence(
+      Side::USA, 1);
+  countries_[static_cast<size_t>(CountryEnum::JAPAN)].addInfluence(Side::USA,
+                                                                   1);
+  countries_[static_cast<size_t>(CountryEnum::SOUTH_AFRICA)].addInfluence(
+      Side::USA, 1);
 };
 
 Country& WorldMap::getCountry(const CountryEnum countryEnum) {
@@ -440,6 +477,10 @@ const std::set<CountryEnum> WorldMap::placeableCountries(
     const Side side) const {
   std::set<CountryEnum> placeableCountries;
   for (const auto& country : countries_) {
+    // USSRとUSAはここで除外
+    if (country.getRegions().count(Region::SPECIAL) > 0) {
+      continue;
+    }
     if (country.getInfluence(side) > 0) {
       placeableCountries.insert(country.getId());
       for (const auto& adjacentCountry : country.getAdjacentCountries()) {
@@ -452,7 +493,7 @@ const std::set<CountryEnum> WorldMap::placeableCountries(
   return placeableCountries;
 }
 
-const std::set<Country>& WorldMap::getCountriesInRegion(
+const std::set<Country>& WorldMap::countriesInRegion(
     const Region region) const {
   return regionCountries_[static_cast<size_t>(region)];
 }
