@@ -16,6 +16,7 @@ add_library(ts_core
     src/country.cpp
     src/world_map.cpp
     src/action.cpp
+    src/randomizer.cpp
 )
 
 # インクルードディレクトリの設定

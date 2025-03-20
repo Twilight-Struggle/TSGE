@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "game_enums.hpp"
 #include "world_map.hpp"
 
 enum class ActionType { Coup, Realignment, PlaceInfluence, Event, SpaceRace };
@@ -38,4 +39,16 @@ class PlaceInfluence : public Action {
  private:
   std::vector<std::pair<CountryEnum, int>> targetCountries_;
   std::set<CountryEnum> placeableCountries_;
+};
+
+class Realigment : public Action {
+ public:
+  Realigment(const Side side, CountryEnum targetCountry)
+      : Action{ActionType::Realignment, side, 1},
+        targetCountry_{targetCountry} {};
+
+  bool execute(WorldMap& worldMap) override;
+
+ private:
+  CountryEnum targetCountry_;
 };

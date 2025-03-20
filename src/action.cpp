@@ -1,5 +1,8 @@
 #include "action.hpp"
 
+#include "country.hpp"
+#include "game_enums.hpp"
+#include "randomizer.hpp"
 #include "world_map.hpp"
 
 bool PlaceInfluence::execute(WorldMap& worldMap) {
@@ -45,4 +48,38 @@ bool PlaceInfluence::execute(WorldMap& worldMap) {
   } else {
     return false;
   }
+}
+
+bool Realigment::execute(WorldMap& worldmap) {
+  auto country = worldmap.getCountry(targetCountry_);
+  if ((side_ == Side::USSR && country.getInfluence(Side::USA) == 0) ||
+      (side_ == Side::USA && country.getInfluence(Side::USSR) == 0)) {
+    return false;
+  }
+  auto ussr_dice = Randomizer::getInstance().rollDice();
+  auto usa_dice = Randomizer::getInstance().rollDice();
+  if (country.getInfluence(Side::USSR) > country.getInfluence(Side::USA)) {
+    ussr_dice += 1;
+  } else if (country.getInfluence(Side::USA) >
+             country.getInfluence(Side::USSR)) {
+    usa_dice += 1;
+  }
+  std::vector<Country> adjacentCountries;
+  for (const auto& adjacentCountry : country.getAdjacentCountries()) {
+    adjacentCountries.push_back(worldmap.getCountry(adjacentCountry));
+  }
+  for (const auto& adjacentCountry : adjacentCountries) {
+    if (adjacentCountry.getControlSide() == Side::USSR) {
+      ussr_dice += 1;
+    } else if (adjacentCountry.getControlSide() == Side::USA) {
+      usa_dice += 1;
+    }
+  }
+  auto difference = ussr_dice - usa_dice;
+  if (difference > 0) {
+    country.removeInfluence(Side::USA, difference);
+  } else if (difference < 0) {
+    country.removeInfluence(Side::USSR, -difference);
+  }
+  return true;
 }

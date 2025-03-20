@@ -50,3 +50,16 @@ TEST_F(ActionTest, PlaceTest) {
       worldMap.placeableCountries(Side::USSR));
   EXPECT_TRUE(action_overControlNum_2.execute(worldMap));
 }
+
+TEST_F(ActionTest, RealigmentTest) {
+  // 相手が置いてない国には影響力排除判定ができない
+  Realigment action_cant_realigment_ussr(Side::USSR, CountryEnum::ANGOLA);
+  EXPECT_FALSE(action_cant_realigment_ussr.execute(worldMap));
+  Realigment action_cant_realigment_usa(Side::USA, CountryEnum::AFGHANISTAN);
+  EXPECT_FALSE(action_cant_realigment_usa.execute(worldMap));
+  // 相手が置いている国には影響力排除判定ができる
+  Realigment action_can_realigment_ussr(Side::USSR, CountryEnum::SOUTH_KOREA);
+  EXPECT_TRUE(action_can_realigment_ussr.execute(worldMap));
+  Realigment action_can_realigment_usa(Side::USA, CountryEnum::NORTH_KOREA);
+  EXPECT_TRUE(action_can_realigment_usa.execute(worldMap));
+}
