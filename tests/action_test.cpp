@@ -63,3 +63,16 @@ TEST_F(ActionTest, RealigmentTest) {
   Realigment action_can_realigment_usa(Side::USA, CountryEnum::NORTH_KOREA);
   EXPECT_TRUE(action_can_realigment_usa.execute(worldMap));
 }
+
+TEST_F(ActionTest, CoupTest) {
+  // 相手が置いてない国にはクーデターできない
+  Coup action_cant_coup_ussr(Side::USSR, 3, CountryEnum::ANGOLA);
+  EXPECT_FALSE(action_cant_coup_ussr.execute(worldMap));
+  Coup action_cant_coup_usa(Side::USA, 3, CountryEnum::AFGHANISTAN);
+  EXPECT_FALSE(action_cant_coup_usa.execute(worldMap));
+  // 相手が置いている国にはクーデターできる
+  Coup action_can_coup_ussr(Side::USSR, 3, CountryEnum::SOUTH_KOREA);
+  EXPECT_TRUE(action_can_coup_ussr.execute(worldMap));
+  Coup action_can_coup_usa(Side::USA, 3, CountryEnum::NORTH_KOREA);
+  EXPECT_TRUE(action_can_coup_usa.execute(worldMap));
+}

@@ -29,6 +29,8 @@ class Country {
   int getInfluence(const Side side) const {
     return influence_[static_cast<int>(side)];
   }
+  int getStability() const { return stability_; }
+  bool isBattleground() const { return battleground_; }
   CountryEnum getId() const { return id_; }
   const std::set<Region>& getRegions() const { return regions_; }
   const std::vector<CountryEnum>& getAdjacentCountries() const {

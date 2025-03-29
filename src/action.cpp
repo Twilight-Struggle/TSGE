@@ -83,3 +83,29 @@ bool Realigment::execute(WorldMap& worldmap) {
   }
   return true;
 }
+
+bool Coup::execute(WorldMap& worldmap) {
+  auto targetCountry = worldmap.getCountry(targetCountry_);
+  if ((side_ == Side::USSR && targetCountry.getInfluence(Side::USA) == 0) ||
+      (side_ == Side::USA && targetCountry.getInfluence(Side::USSR) == 0)) {
+    return false;
+  } else {
+    auto coup_dice = Randomizer::getInstance().rollDice();
+    coup_dice += opeValue_;
+    const auto defence_value = targetCountry.getStability() * 2;
+    coup_dice -= defence_value;
+    if (coup_dice < 0) {
+      coup_dice = 0;
+    }
+    bool success = (coup_dice == 0) ? false : true;
+    // Side::Neutralの場合はない
+    bool diff = targetCountry.getInfluence(getOpponentSide(side_)) - coup_dice;
+    if (diff > 0) {
+      targetCountry.removeInfluence(getOpponentSide(side_), coup_dice);
+    } else {
+      targetCountry.clearInfluence(getOpponentSide(side_));
+      targetCountry.addInfluence(side_, -diff);
+    }
+    return true;
+  }
+}

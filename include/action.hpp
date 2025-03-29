@@ -17,7 +17,7 @@ class Action {
   ActionType getType() const { return type_; }
 
  protected:
-  Side side_;
+  const Side side_;
   int opeValue_;
 
  private:
@@ -37,18 +37,30 @@ class PlaceInfluence : public Action {
   bool execute(WorldMap& worldMap) override;
 
  private:
-  std::vector<std::pair<CountryEnum, int>> targetCountries_;
-  std::set<CountryEnum> placeableCountries_;
+  const std::vector<std::pair<CountryEnum, int>> targetCountries_;
+  const std::set<CountryEnum> placeableCountries_;
 };
 
 class Realigment : public Action {
  public:
-  Realigment(const Side side, CountryEnum targetCountry)
+  Realigment(const Side side, const CountryEnum targetCountry)
       : Action{ActionType::Realignment, side, 1},
         targetCountry_{targetCountry} {};
 
   bool execute(WorldMap& worldMap) override;
 
  private:
-  CountryEnum targetCountry_;
+  const CountryEnum targetCountry_;
+};
+
+class Coup : public Action {
+ public:
+  Coup(const Side side, const int opeValue, const CountryEnum targetCountry)
+      : Action{ActionType::Coup, side, opeValue},
+        targetCountry_{targetCountry} {};
+
+  bool execute(WorldMap& worldMap) override;
+
+ private:
+  const CountryEnum targetCountry_;
 };
