@@ -2,8 +2,8 @@
 
 #include <vector>
 
+#include "game.hpp"
 #include "game_enums.hpp"
-#include "world_map.hpp"
 
 enum class ActionType : uint8_t {
   Coup,
@@ -18,7 +18,7 @@ class Action {
   Action(ActionType type, Side side, int opeValue)
       : type_{type}, side_{side}, opeValue_{opeValue} {};
   virtual ~Action() = default;
-  virtual bool execute(WorldMap& worldMap) = 0;
+  virtual bool execute(Game& game) = 0;
 
   ActionType getType() const { return type_; }
 
@@ -40,7 +40,7 @@ class PlaceInfluence : public Action {
         targetCountries_{targetCountries},
         placeableCountries_{placeableCountries} {};
 
-  bool execute(WorldMap& worldMap) override;
+  bool execute(Game& game) override;
 
  private:
   const std::vector<std::pair<CountryEnum, int>> targetCountries_;
@@ -53,7 +53,7 @@ class Realigment : public Action {
       : Action{ActionType::Realignment, side, 1},
         targetCountry_{targetCountry} {};
 
-  bool execute(WorldMap& worldMap) override;
+  bool execute(Game& game) override;
 
  private:
   const CountryEnum targetCountry_;
@@ -65,8 +65,16 @@ class Coup : public Action {
       : Action{ActionType::Coup, side, opeValue},
         targetCountry_{targetCountry} {};
 
-  bool execute(WorldMap& worldMap) override;
+  bool execute(Game& game) override;
 
  private:
   const CountryEnum targetCountry_;
+};
+
+class SpaceRace : public Action {
+ public:
+  SpaceRace(Side side, int opeValue)
+      : Action{ActionType::SpaceRace, side, opeValue} {};
+
+  bool execute(Game& game) override;
 };

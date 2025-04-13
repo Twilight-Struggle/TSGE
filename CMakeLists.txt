@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # GNU拡張を無効化
 
 add_library(ts_core
+    src/game.cpp
     src/country.cpp
     src/world_map.cpp
     src/action.cpp
