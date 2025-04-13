@@ -112,3 +112,16 @@ bool Coup::execute(Game& game) {
     return true;
   }
 }
+
+bool SpaceRace::execute(Game& game) {
+  auto& spaceTrack = game.getSpaceTrack();
+  if (spaceTrack.canSpace(side_, opeValue_)) {
+    auto roll = Randomizer::getInstance().rollDice();
+    if (roll <= spaceTrack.getRollMax(side_)) {
+      spaceTrack.advanceSpaceTrack(side_, 1);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
