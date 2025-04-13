@@ -17,6 +17,7 @@ add_library(ts_core
     src/world_map.cpp
     src/action.cpp
     src/randomizer.cpp
+    src/trackers.cpp
 )
 
 # インクルードディレクトリの設定
@@ -49,3 +50,4 @@ endfunction()
 
 add_test(action_test)
 add_test(world_map_test)
+add_test(trackers_test)
