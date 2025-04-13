@@ -1,6 +1,8 @@
 #pragma once
 
-enum class CountryEnum {
+#include <cstdint>
+
+enum class CountryEnum : uint8_t {
   USSR,
   USA,
   MEXICO,
@@ -89,7 +91,7 @@ enum class CountryEnum {
   FINLAND,
 };
 
-enum class Region {
+enum class Region : uint8_t {
   CENTRAL_AMERICA,
   SOUTH_AMERICA,
   AFRICA,
@@ -102,7 +104,7 @@ enum class Region {
   SPECIAL,
 };
 
-enum class Side {
+enum class Side : uint8_t {
   USSR,
   USA,
   Neutral,

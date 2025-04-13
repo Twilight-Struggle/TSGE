@@ -9,9 +9,9 @@ class WorldMap {
   WorldMap();
   ~WorldMap() = default;
 
-  Country& getCountry(const CountryEnum countryEnum);
-  const std::set<Country>& countriesInRegion(const Region region) const;
-  const std::set<CountryEnum> placeableCountries(const Side side) const;
+  Country& getCountry(CountryEnum countryEnum);
+  const std::set<Country>& countriesInRegion(Region region) const;
+  const std::set<CountryEnum> placeableCountries(Side side) const;
 
  private:
   std::array<Country, 86> countries_;

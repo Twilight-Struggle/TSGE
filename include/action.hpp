@@ -5,11 +5,17 @@
 #include "game_enums.hpp"
 #include "world_map.hpp"
 
-enum class ActionType { Coup, Realignment, PlaceInfluence, Event, SpaceRace };
+enum class ActionType : uint8_t {
+  Coup,
+  Realignment,
+  PlaceInfluence,
+  Event,
+  SpaceRace
+};
 
 class Action {
  public:
-  Action(const ActionType type, const Side side, const int opeValue)
+  Action(ActionType type, Side side, int opeValue)
       : type_{type}, side_{side}, opeValue_{opeValue} {};
   virtual ~Action() = default;
   virtual bool execute(WorldMap& worldMap) = 0;
@@ -27,7 +33,7 @@ class Action {
 class PlaceInfluence : public Action {
  public:
   PlaceInfluence(
-      const Side side, const int opeValue,
+      Side side, int opeValue,
       const std::vector<std::pair<CountryEnum, int>>& targetCountries,
       const std::set<CountryEnum>& placeableCountries)
       : Action{ActionType::PlaceInfluence, side, opeValue},
@@ -43,7 +49,7 @@ class PlaceInfluence : public Action {
 
 class Realigment : public Action {
  public:
-  Realigment(const Side side, const CountryEnum targetCountry)
+  Realigment(Side side, CountryEnum targetCountry)
       : Action{ActionType::Realignment, side, 1},
         targetCountry_{targetCountry} {};
 
@@ -55,7 +61,7 @@ class Realigment : public Action {
 
 class Coup : public Action {
  public:
-  Coup(const Side side, const int opeValue, const CountryEnum targetCountry)
+  Coup(Side side, int opeValue, CountryEnum targetCountry)
       : Action{ActionType::Coup, side, opeValue},
         targetCountry_{targetCountry} {};
 

@@ -7,7 +7,7 @@
 
 class Country {
  public:
-  Country(const CountryEnum id, const int stability, const bool battleground,
+  Country(CountryEnum id, int stability, bool battleground,
           const std::vector<CountryEnum>& adjacentCountries,
           const std::set<Region>& regions)
       : id_{id},
@@ -17,16 +17,16 @@ class Country {
         regions_{regions},
         influence_({0, 0}) {}
 
-  Country(const CountryEnum id, const int stability, const bool battleground,
+  Country(CountryEnum id, int stability, bool battleground,
           const std::vector<CountryEnum>& adjacentCountries,
           const Region region)
       : Country{id, stability, battleground, adjacentCountries,
                 std::set<Region>{region}} {}
 
-  bool addInfluence(const Side side, int num);
-  bool removeInfluence(const Side side, int num);
-  bool clearInfluence(const Side side);
-  int getInfluence(const Side side) const {
+  bool addInfluence(Side side, int num);
+  bool removeInfluence(Side side, int num);
+  bool clearInfluence(Side side);
+  int getInfluence(Side side) const {
     return influence_[static_cast<int>(side)];
   }
   int getStability() const { return stability_; }

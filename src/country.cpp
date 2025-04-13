@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-bool Country::addInfluence(const Side side, int num) {
+bool Country::addInfluence(Side side, int num) {
   if (num < 0) {
     return false;
   }
@@ -12,7 +12,7 @@ bool Country::addInfluence(const Side side, int num) {
   return true;
 }
 
-bool Country::removeInfluence(const Side side, int num) {
+bool Country::removeInfluence(Side side, int num) {
   if (num < 0) {
     return false;
   }
@@ -25,7 +25,7 @@ bool Country::removeInfluence(const Side side, int num) {
   return true;
 }
 
-bool Country::clearInfluence(const Side side) {
+bool Country::clearInfluence(Side side) {
   influence_[static_cast<int>(side)] = 0;
 
   return true;
