@@ -7,8 +7,9 @@ class SpaceTrack {
  public:
   SpaceTrack() = default;
   bool advanceSpaceTrack(Side side, int num);
-  bool effectEnabled(Side side, int num);
-  bool canSpace(Side side);
+  bool effectEnabled(Side side, int num) const;
+  bool canSpaceChallenge(Side side) const;
+  bool canSpace(Side side, int opeValue) const;
   void spaceTried(Side side) { spaceTried_[static_cast<std::size_t>(side)]++; }
   int getRollMax(Side side) const;
 
