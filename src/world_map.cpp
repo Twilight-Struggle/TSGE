@@ -460,7 +460,7 @@ WorldMap::WorldMap()
       Side::USA, 1);
 };
 
-Country& WorldMap::getCountry(const CountryEnum countryEnum) {
+Country& WorldMap::getCountry(CountryEnum countryEnum) {
   auto it = std::find_if(countries_.begin(), countries_.end(),
                          [countryEnum](const Country& country) {
                            return country.getId() == countryEnum;
@@ -473,8 +473,7 @@ Country& WorldMap::getCountry(const CountryEnum countryEnum) {
   }
 }
 
-const std::set<CountryEnum> WorldMap::placeableCountries(
-    const Side side) const {
+const std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
   std::set<CountryEnum> placeableCountries;
   for (const auto& country : countries_) {
     // USSRとUSAはここで除外
@@ -497,7 +496,6 @@ const std::set<CountryEnum> WorldMap::placeableCountries(
   return placeableCountries;
 }
 
-const std::set<Country>& WorldMap::countriesInRegion(
-    const Region region) const {
+const std::set<Country>& WorldMap::countriesInRegion(Region region) const {
   return regionCountries_[static_cast<size_t>(region)];
 }

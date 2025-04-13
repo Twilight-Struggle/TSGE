@@ -5,7 +5,8 @@
 #include "randomizer.hpp"
 #include "world_map.hpp"
 
-bool PlaceInfluence::execute(WorldMap& worldMap) {
+bool PlaceInfluence::execute(Game& game) {
+  auto& worldMap = game.getWorldMap();
   int cumsumOpeValue = 0;
   for (const auto& targetCountry : targetCountries_) {
     // if targetCountry.first not in placeableCountries_
@@ -50,7 +51,8 @@ bool PlaceInfluence::execute(WorldMap& worldMap) {
   }
 }
 
-bool Realigment::execute(WorldMap& worldmap) {
+bool Realigment::execute(Game& game) {
+  auto& worldmap = game.getWorldMap();
   auto country = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && country.getInfluence(Side::USA) == 0) ||
       (side_ == Side::USA && country.getInfluence(Side::USSR) == 0)) {
@@ -84,7 +86,8 @@ bool Realigment::execute(WorldMap& worldmap) {
   return true;
 }
 
-bool Coup::execute(WorldMap& worldmap) {
+bool Coup::execute(Game& game) {
+  auto& worldmap = game.getWorldMap();
   auto targetCountry = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && targetCountry.getInfluence(Side::USA) == 0) ||
       (side_ == Side::USA && targetCountry.getInfluence(Side::USSR) == 0)) {
