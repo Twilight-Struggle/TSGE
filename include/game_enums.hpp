@@ -120,3 +120,14 @@ inline Side getOpponentSide(Side side) {
       return Side::Neutral;
   }
 }
+
+inline int getVpMultiplier(Side side) {
+  switch (side) {
+    case Side::USSR:
+      return 1;
+    case Side::USA:
+      return -1;
+    case Side::Neutral:
+      return 0;
+  }
+}
