@@ -1,17 +1,19 @@
 #include "trackers.hpp"
 
+#include "game.hpp"
 #include "game_enums.hpp"
 
-bool SpaceTrack::advanceSpaceTrack(Side side, int num) {
-  // TODO:将来的にはGameインスタンスを引数に取る(得点変更のため)
+bool SpaceTrack::advanceSpaceTrack(Game& game, Side side, int num) {
   spaceTrack_[static_cast<int>(side)] += num;
 
   for (const auto& i : {1, 3, 5, 7, 8}) {
     if (spaceTrack_[static_cast<std::size_t>(side)] == i) {
       if (spaceTrack_[static_cast<std::size_t>(getOpponentSide(side))] < i) {
-        // TODO:得点計算有利
+        // 得点計算有利
+        game.changeVp(spaceVps_[i - 1][0] * getVpMultiplier(side));
       } else {
-        // TODO:得点計算不利
+        // 得点計算不利
+        game.changeVp(spaceVps_[i - 1][1] * getVpMultiplier(side));
       }
     }
     // TODO:8に到達した場合そのターンのARを増やす

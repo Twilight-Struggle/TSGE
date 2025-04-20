@@ -118,7 +118,7 @@ bool SpaceRace::execute(Game& game) {
   if (spaceTrack.canSpace(side_, opeValue_)) {
     auto roll = Randomizer::getInstance().rollDice();
     if (roll <= spaceTrack.getRollMax(side_)) {
-      spaceTrack.advanceSpaceTrack(side_, 1);
+      spaceTrack.advanceSpaceTrack(game, side_, 1);
     }
     return true;
   } else {

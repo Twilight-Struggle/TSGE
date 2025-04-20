@@ -3,10 +3,12 @@
 
 #include "game_enums.hpp"
 
+class Game;
+
 class SpaceTrack {
  public:
   SpaceTrack() = default;
-  bool advanceSpaceTrack(Side side, int num);
+  bool advanceSpaceTrack(Game& game, Side side, int num);
   bool effectEnabled(Side side, int num) const;
   bool canSpaceChallenge(Side side) const;
   bool canSpace(Side side, int opeValue) const;
