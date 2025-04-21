@@ -4,13 +4,14 @@
 
 #include "game.hpp"
 
-class SpaceTrackTest : public ::testing::Test {
+class TrackTest : public ::testing::Test {
  protected:
-  SpaceTrack spaceTrack;
   Game game;
+  SpaceTrack spaceTrack;
+  DefconTrack defconTrack{game};
 };
 
-TEST_F(SpaceTrackTest, SpaceTrackTest) {
+TEST_F(TrackTest, SpaceTrackTest) {
   EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 0));
   EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 1));
   EXPECT_TRUE(spaceTrack.canSpaceChallenge(Side::USSR));
@@ -25,7 +26,7 @@ TEST_F(SpaceTrackTest, SpaceTrackTest) {
   EXPECT_FALSE(spaceTrack.canSpaceChallenge(Side::USSR));
 }
 
-TEST_F(SpaceTrackTest, SpaceTrackCanSpaceTest) {
+TEST_F(TrackTest, SpaceTrackCanSpaceTest) {
   EXPECT_TRUE(spaceTrack.canSpace(Side::USSR, 2));
   EXPECT_TRUE(spaceTrack.advanceSpaceTrack(game, Side::USSR, 4));
   EXPECT_EQ(game.getVp(), 0);
@@ -38,4 +39,12 @@ TEST_F(SpaceTrackTest, SpaceTrackCanSpaceTest) {
   EXPECT_TRUE(spaceTrack.advanceSpaceTrack(game, Side::USSR, 1));
   EXPECT_EQ(game.getVp(), 6);
   EXPECT_FALSE(spaceTrack.canSpace(Side::USSR, 4));
+}
+
+TEST_F(TrackTest, DefconTrackTest) {
+  EXPECT_TRUE(defconTrack.setDefcon(4));
+  EXPECT_FALSE(defconTrack.setDefcon(0));
+  EXPECT_FALSE(defconTrack.setDefcon(6));
+  EXPECT_TRUE(defconTrack.changeDefcon(-1));
+  EXPECT_EQ(defconTrack.getDefcon(), 3);
 }

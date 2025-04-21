@@ -53,3 +53,31 @@ bool SpaceTrack::canSpace(Side side, int opeValue) const {
 int SpaceTrack::getRollMax(Side side) const {
   return rollMax_[spaceTrack_[static_cast<std::size_t>(side)]];
 }
+
+DefconTrack::DefconTrack(Game& game) : game_{game} {}
+
+bool DefconTrack::setDefcon(int defcon) {
+  if (defcon < 1 || defcon > 5) return false;
+  auto defconChanged = defcon_ != defcon;
+  defcon_ = defcon;
+  if (defcon_ < 2) {
+    // TODO:ゲーム終了
+  }
+  if (defconChanged && defcon_ == 2) {
+    // TODO:NORADの効果を適用
+  }
+  return true;
+}
+
+bool DefconTrack::changeDefcon(int delta) {
+  auto newDefcon = defcon_ + std::min(delta, 5 - defcon_);
+  auto defconChanged = defcon_ != newDefcon;
+  defcon_ = newDefcon;
+  if (defcon_ < 2) {
+    // TODO:ゲーム終了
+  }
+  if (defconChanged && defcon_ == 2) {
+    // TODO:NORADの効果を適用
+  }
+  return true;
+}

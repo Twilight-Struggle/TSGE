@@ -22,3 +22,15 @@ class SpaceTrack {
       {{2, 1}, {0, 0}, {2, 0}, {0, 0}, {3, 1}, {0, 0}, {4, 2}, {2, 0}}};
   static constexpr std::array<int, 8> rollMax_ = {3, 4, 3, 4, 3, 4, 3, 2};
 };
+
+class DefconTrack {
+ public:
+  DefconTrack(Game& game);
+  bool setDefcon(int defcon);
+  bool changeDefcon(int delta);
+  int getDefcon() const { return defcon_; }
+
+ private:
+  int defcon_ = 5;
+  Game& game_;
+};
