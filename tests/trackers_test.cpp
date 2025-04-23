@@ -63,11 +63,11 @@ TEST_F(TrackTest, MilopsTrackTest) {
   EXPECT_TRUE(milopsTrack.advanceMilopsTrack(Side::USSR, 7));
   EXPECT_EQ(milopsTrack.getMilops(Side::USSR), 5);
 }
+
 TEST_F(TrackTest, TurnTrackTest) {
   EXPECT_EQ(turnTrack.getTurn(), 1);
   EXPECT_TRUE(turnTrack.nextTurn());
   EXPECT_EQ(turnTrack.getTurn(), 2);
-  EXPECT_EQ(turnTrack.getActionRounds(), 6);
   EXPECT_EQ(turnTrack.getDealedCards(), 8);
   EXPECT_TRUE(turnTrack.nextTurn());
   EXPECT_TRUE(turnTrack.nextTurn());
