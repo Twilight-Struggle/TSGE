@@ -93,3 +93,9 @@ bool MilopsTrack::advanceMilopsTrack(Side side, int num) {
       std::min(num, 5 - milopsTrack_[static_cast<std::size_t>(side)]);
   return true;
 }
+
+bool TurnTrack::nextTurn() {
+  if (turn_ >= 10) return false;
+  turn_++;
+  return true;
+}

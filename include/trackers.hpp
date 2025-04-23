@@ -47,3 +47,17 @@ class MilopsTrack {
  private:
   std::array<int, 2> milopsTrack_ = {0, 0};
 };
+
+class TurnTrack {
+ public:
+  TurnTrack() = default;
+  int getTurn() const { return turn_; }
+  bool nextTurn();
+  int getActionRounds() const { return actionRounds_[turn_ - 1]; }
+  int getDealedCards() const { return dealedCards_[turn_ - 1]; }
+
+ private:
+  int turn_ = 1;
+  std::array<int, 10> actionRounds_ = {6, 6, 6, 7, 7, 7, 7, 7, 7, 7};
+  std::array<int, 10> dealedCards_ = {8, 8, 8, 9, 9, 9, 9, 9, 9, 9};
+};
