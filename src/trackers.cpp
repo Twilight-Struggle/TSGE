@@ -81,3 +81,15 @@ bool DefconTrack::changeDefcon(int delta) {
   }
   return true;
 }
+
+bool MilopsTrack::resetMilopsTrack() {
+  milopsTrack_[static_cast<std::size_t>(Side::USSR)] = 0;
+  milopsTrack_[static_cast<std::size_t>(Side::USA)] = 0;
+  return true;
+}
+
+bool MilopsTrack::advanceMilopsTrack(Side side, int num) {
+  milopsTrack_[static_cast<std::size_t>(side)] +=
+      std::min(num, 5 - milopsTrack_[static_cast<std::size_t>(side)]);
+  return true;
+}

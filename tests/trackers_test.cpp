@@ -3,12 +3,14 @@
 #include <gtest/gtest.h>
 
 #include "game.hpp"
+#include "game_enums.hpp"
 
 class TrackTest : public ::testing::Test {
  protected:
   Game game;
   SpaceTrack spaceTrack;
   DefconTrack defconTrack{game};
+  MilopsTrack milopsTrack;
 };
 
 TEST_F(TrackTest, SpaceTrackTest) {
@@ -47,4 +49,16 @@ TEST_F(TrackTest, DefconTrackTest) {
   EXPECT_FALSE(defconTrack.setDefcon(6));
   EXPECT_TRUE(defconTrack.changeDefcon(-1));
   EXPECT_EQ(defconTrack.getDefcon(), 3);
+}
+
+TEST_F(TrackTest, MilopsTrackTest) {
+  EXPECT_TRUE(milopsTrack.advanceMilopsTrack(Side::USSR, 2));
+  EXPECT_EQ(milopsTrack.getMilops(Side::USSR), 2);
+  EXPECT_TRUE(milopsTrack.advanceMilopsTrack(Side::USA, 3));
+  EXPECT_EQ(milopsTrack.getMilops(Side::USA), 3);
+  EXPECT_TRUE(milopsTrack.resetMilopsTrack());
+  EXPECT_EQ(milopsTrack.getMilops(Side::USSR), 0);
+  EXPECT_EQ(milopsTrack.getMilops(Side::USA), 0);
+  EXPECT_TRUE(milopsTrack.advanceMilopsTrack(Side::USSR, 7));
+  EXPECT_EQ(milopsTrack.getMilops(Side::USSR), 5);
 }

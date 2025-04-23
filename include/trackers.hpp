@@ -34,3 +34,16 @@ class DefconTrack {
   int defcon_ = 5;
   Game& game_;
 };
+
+class MilopsTrack {
+ public:
+  MilopsTrack() = default;
+  int getMilops(Side side) const {
+    return milopsTrack_[static_cast<std::size_t>(side)];
+  }
+  bool resetMilopsTrack();
+  bool advanceMilopsTrack(Side side, int num);
+
+ private:
+  std::array<int, 2> milopsTrack_ = {0, 0};
+};
