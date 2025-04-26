@@ -3,7 +3,13 @@
 #include "trackers.hpp"
 #include "world_map.hpp"
 
-Game::Game() : worldMap_{WorldMap()}, spaceTrack_{SpaceTrack()} {}
+Game::Game()
+    : worldMap_{WorldMap()},
+      spaceTrack_{SpaceTrack()},
+      defconTrack_(DefconTrack{*this}),
+      milopsTrack_(MilopsTrack()),
+      turnTrack_(TurnTrack()),
+      actionRoundTrack_(ActionRoundTrack()) {}
 
 void Game::changeVp(int delta) {
   vp_ += delta;
