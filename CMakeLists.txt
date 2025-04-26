@@ -19,6 +19,7 @@ add_library(ts_core
     src/action.cpp
     src/randomizer.cpp
     src/trackers.cpp
+    src/cards.cpp
 )
 
 # インクルードディレクトリの設定
@@ -52,3 +53,4 @@ endfunction()
 add_test(action_test)
 add_test(world_map_test)
 add_test(trackers_test)
+add_test(cards_test)
