@@ -104,7 +104,7 @@ enum class Region : uint8_t {
   SPECIAL,
 };
 
-enum class ActionType : uint8_t {
+enum class MoveType : uint8_t {
   Coup,
   Realignment,
   PlaceInfluence,
