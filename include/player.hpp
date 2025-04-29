@@ -1,5 +1,7 @@
-#include "game.hpp"
+#pragma once
 #include "move.hpp"
+
+class Game;
 
 template <typename DecisionPolicy>
 class Player {

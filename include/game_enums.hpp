@@ -112,6 +112,11 @@ enum class MoveType : uint8_t {
   SpaceRace
 };
 
+enum class StateType : uint8_t {
+  AR_USSR,
+  AR_USA,
+};
+
 enum class Side : uint8_t {
   USSR,
   USA,

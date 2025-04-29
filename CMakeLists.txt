@@ -7,6 +7,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(TS)
 
+option(PROD "Enable production build (no TEST macros)" OFF)
+
 # C++20を使用する場合
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +22,7 @@ add_library(ts_core
     src/randomizer.cpp
     src/trackers.cpp
     src/cards.cpp
+    src/policies.cpp
 )
 
 # インクルードディレクトリの設定
@@ -27,6 +30,9 @@ target_include_directories(ts_core
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+if (NOT PROD)
+    target_compile_definitions(ts_core PRIVATE TEST=1)
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -47,6 +53,7 @@ function(add_test TEST_NAME)
             GTest::gtest_main
             ts_core
     )
+    target_compile_definitions(${TEST_NAME} PRIVATE TEST=1)
     gtest_discover_tests(${TEST_NAME})
 endfunction()
 
