@@ -104,6 +104,14 @@ enum class Region : uint8_t {
   SPECIAL,
 };
 
+enum class ActionType : uint8_t {
+  Coup,
+  Realignment,
+  PlaceInfluence,
+  Event,
+  SpaceRace
+};
+
 enum class Side : uint8_t {
   USSR,
   USA,

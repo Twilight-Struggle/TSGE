@@ -5,14 +5,6 @@
 #include "game.hpp"
 #include "game_enums.hpp"
 
-enum class ActionType : uint8_t {
-  Coup,
-  Realignment,
-  PlaceInfluence,
-  Event,
-  SpaceRace
-};
-
 class Action {
  public:
   Action(ActionType type, Side side, int opeValue)
@@ -34,17 +26,14 @@ class PlaceInfluence : public Action {
  public:
   PlaceInfluence(
       Side side, int opeValue,
-      const std::vector<std::pair<CountryEnum, int>>& targetCountries,
-      const std::set<CountryEnum>& placeableCountries)
+      const std::vector<std::pair<CountryEnum, int>>& targetCountries)
       : Action{ActionType::PlaceInfluence, side, opeValue},
-        targetCountries_{targetCountries},
-        placeableCountries_{placeableCountries} {};
+        targetCountries_{targetCountries} {};
 
   bool execute(Game& game) override;
 
  private:
   const std::vector<std::pair<CountryEnum, int>> targetCountries_;
-  const std::set<CountryEnum> placeableCountries_;
 };
 
 class Realigment : public Action {

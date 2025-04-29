@@ -1,7 +1,6 @@
 #include "action.hpp"
 
 #include "country.hpp"
-#include "game_enums.hpp"
 #include "randomizer.hpp"
 #include "world_map.hpp"
 
@@ -10,8 +9,9 @@ bool PlaceInfluence::execute(Game& game) {
   int cumsumOpeValue = 0;
   for (const auto& targetCountry : targetCountries_) {
     // if targetCountry.first not in placeableCountries_
-    if (placeableCountries_.find(targetCountry.first) ==
-        placeableCountries_.end()) {
+    auto placeableCountries = game.getWorldMap().placeableCountries(side_);
+    if (placeableCountries.find(targetCountry.first) ==
+        placeableCountries.end()) {
       return false;
     }
     const auto country = worldMap.getCountry(targetCountry.first);
