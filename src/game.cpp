@@ -69,7 +69,7 @@ void Game::next() {
   }
 }
 
-void Game::actionRound(Side side) {
+void Game::actionExecute(Side side) {
   auto& currentPlayer = players_[static_cast<int>(side)];
   auto input = currentPlayer.decideMove(*this);
 }

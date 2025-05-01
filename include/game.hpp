@@ -36,5 +36,5 @@ class Game {
 
   std::stack<StateType> states_;
   std::array<Player<TestPolicy>, 2> players_;
-  void actionRound(Side side);
+  void actionExecute(Side side);
 };
