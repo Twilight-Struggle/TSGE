@@ -2,8 +2,9 @@
 
 #include <vector>
 
-#include "game.hpp"
 #include "game_enums.hpp"
+
+class Game;
 
 class Action {
  public:

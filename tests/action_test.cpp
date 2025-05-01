@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include "game.hpp"
+
 class ActionTest : public ::testing::Test {
  protected:
   Game Game;

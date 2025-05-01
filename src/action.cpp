@@ -1,8 +1,8 @@
 #include "action.hpp"
 
 #include "country.hpp"
+#include "game.hpp"
 #include "randomizer.hpp"
-#include "world_map.hpp"
 
 bool PlaceInfluence::execute(Game& game) {
   auto& worldMap = game.getWorldMap();
