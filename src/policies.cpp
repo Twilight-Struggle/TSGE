@@ -4,7 +4,7 @@
 
 #include "game.hpp"
 
-TestPolicy::TestPolicy(std::vector<std::unique_ptr<Move>>& moves)
+TestPolicy::TestPolicy(std::vector<std::unique_ptr<Move>>&& moves)
     : moves_{std::move(moves)} {}
 
 std::unique_ptr<Move> TestPolicy::decideMove(const Game& game) {

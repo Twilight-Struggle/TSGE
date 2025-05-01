@@ -7,10 +7,9 @@ class Game;
 
 class Card {
  public:
-  Card(int id, const std::string& name, int ops, Side side,
-       bool removedAfterEvent)
+  Card(int id, std::string&& name, int ops, Side side, bool removedAfterEvent)
       : id_{id},
-        name_{name},
+        name_{std::move(name)},
         ops_{ops},
         side_{side},
         removedAfterEvent_{removedAfterEvent} {}

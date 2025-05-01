@@ -8,19 +8,18 @@
 class Country {
  public:
   Country(CountryEnum id, int stability, bool battleground,
-          const std::vector<CountryEnum>& adjacentCountries,
-          const std::set<Region>& regions)
+          std::vector<CountryEnum>&& adjacentCountries,
+          std::set<Region>&& regions)
       : id_{id},
         stability_{stability},
         battleground_{battleground},
-        adjacentCountries_{adjacentCountries},
-        regions_{regions},
+        adjacentCountries_{std::move(adjacentCountries)},
+        regions_{std::move(regions)},
         influence_({0, 0}) {}
 
   Country(CountryEnum id, int stability, bool battleground,
-          const std::vector<CountryEnum>& adjacentCountries,
-          const Region region)
-      : Country{id, stability, battleground, adjacentCountries,
+          std::vector<CountryEnum>&& adjacentCountries, Region region)
+      : Country{id, stability, battleground, std::move(adjacentCountries),
                 std::set<Region>{region}} {}
 
   bool addInfluence(Side side, int num);
@@ -47,9 +46,4 @@ class Country {
   const std::vector<CountryEnum> adjacentCountries_;
   std::array<int, 2> influence_;
   const std::set<Region> regions_;
-
-  //   bool isAdjacentTo(const CountryEnum &otherCountryId) const {
-  //     return std::find(adjacentCountries.begin(), adjacentCountries.end(),
-  //                      otherCountryId) != adjacentCountries.end();
-  //   }
 };
