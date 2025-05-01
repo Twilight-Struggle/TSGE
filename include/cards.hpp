@@ -1,27 +1,26 @@
 #pragma once
-#include "card_base.hpp"
+#include "card.hpp"
 #include "cards_enum.hpp"
 
-class DuckAndCover : public CardBase {
+class DuckAndCover : public Card {
  public:
   DuckAndCover()
-      : CardBase(static_cast<int>(CardEnum::DuckAndCover), "DuckAndCover", 3,
-                 Side::USA, false) {}
+      : Card(static_cast<int>(CardEnum::DuckAndCover), "DuckAndCover", 3,
+             Side::USA, false) {}
   bool event(Game& game, Side side) override;
 };
 
-class Fidel : public CardBase {
+class Fidel : public Card {
  public:
   Fidel()
-      : CardBase(static_cast<int>(CardEnum::Fidel), "Fidel", 3, Side::USSR,
-                 true) {}
+      : Card(static_cast<int>(CardEnum::Fidel), "Fidel", 3, Side::USSR, true) {}
   bool event(Game& game, Side side) override;
 };
 
-class NuclearTestBan : public CardBase {
+class NuclearTestBan : public Card {
  public:
   NuclearTestBan()
-      : CardBase(static_cast<int>(CardEnum::NuclearTestBan), "NuclearTestBan",
-                 4, Side::Neutral, false) {}
+      : Card(static_cast<int>(CardEnum::NuclearTestBan), "NuclearTestBan", 4,
+             Side::Neutral, false) {}
   bool event(Game& game, Side side) override;
 };

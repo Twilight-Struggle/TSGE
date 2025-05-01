@@ -5,16 +5,16 @@
 
 class Game;
 
-class CardBase {
+class Card {
  public:
-  CardBase(int id, const std::string& name, int ops, Side side,
-           bool removedAfterEvent)
+  Card(int id, const std::string& name, int ops, Side side,
+       bool removedAfterEvent)
       : id_{id},
         name_{name},
         ops_{ops},
         side_{side},
         removedAfterEvent_{removedAfterEvent} {}
-  virtual ~CardBase() = default;
+  virtual ~Card() = default;
   virtual bool event(Game& game, Side side) = 0;
 
  protected:
