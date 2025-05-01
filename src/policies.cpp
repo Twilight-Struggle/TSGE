@@ -4,11 +4,12 @@
 
 #include "game.hpp"
 
-TestPolicy::TestPolicy(std::vector<Move>& moves) : moves_{std::move(moves)} {}
+TestPolicy::TestPolicy(std::vector<std::unique_ptr<Move>>& moves)
+    : moves_{std::move(moves)} {}
 
-Move TestPolicy::decideMove(const Game& game) {
+std::unique_ptr<Move> TestPolicy::decideMove(const Game& game) {
   if (currentMoveIndex_ >= moves_.size()) {
     throw std::runtime_error("No more moves available");
   }
-  return moves_[currentMoveIndex_++];
+  return std::move(moves_[currentMoveIndex_++]);
 }

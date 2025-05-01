@@ -1,12 +1,13 @@
 #pragma once
-#include "move.hpp"
+#include <memory>
 
+class Move;
 class Game;
 
 template <typename DecisionPolicy>
 class Player {
  public:
-  Move decideMove(const Game& game) {
+  std::unique_ptr<Move> decideMove(const Game& game) {
     return decision_policy_.decideMove(game);
   }
 

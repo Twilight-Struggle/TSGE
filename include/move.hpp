@@ -1,18 +1,24 @@
 #pragma once
+#include <memory>
 #include <vector>
 
 #include "cards_enum.hpp"
 #include "game_enums.hpp"
 
+class Action;
+
 class Move {
  public:
-  Move(MoveType MoveType) : MoveType_{MoveType} {}
+  Move(MoveType MoveType, CardEnum card) : MoveType_{MoveType}, card_{card} {}
   virtual ~Move() = default;
 
   MoveType getMoveType() const { return MoveType_; }
+  CardEnum getCard() const { return card_; }
+  virtual std::unique_ptr<Action> toAction(Side side, int opeValue) const = 0;
 
  private:
   MoveType MoveType_;
+  const CardEnum card_;
 };
 
 class PlaceInfluenceMove : public Move {
@@ -20,39 +26,29 @@ class PlaceInfluenceMove : public Move {
   PlaceInfluenceMove(
       CardEnum card,
       const std::vector<std::pair<CountryEnum, int>>& targetCountries)
-      : Move{MoveType::PlaceInfluence},
-        card_{card},
+      : Move{MoveType::PlaceInfluence, card},
         targetCountries_{targetCountries} {}
 
-  CardEnum getCard() const { return card_; }
   const std::vector<std::pair<CountryEnum, int>>& getTargetCountries() const {
     return targetCountries_;
   }
 
  private:
-  const CardEnum card_;
   const std::vector<std::pair<CountryEnum, int>> targetCountries_;
 };
 
 class CoupMove : public Move {
  public:
   CoupMove(CardEnum card, CountryEnum targetCountry)
-      : Move{MoveType::Coup}, card_{card}, targetCountry_{targetCountry} {}
+      : Move{MoveType::Coup, card}, targetCountry_{targetCountry} {}
 
-  CardEnum getCard() const { return card_; }
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
-  const CardEnum card_;
   const CountryEnum targetCountry_;
 };
 
 class SpaceRaceMove : public Move {
  public:
-  SpaceRaceMove(CardEnum card) : Move{MoveType::SpaceRace}, card_{card} {}
-
-  CardEnum getCard() const { return card_; }
-
- private:
-  const CardEnum card_;
+  SpaceRaceMove(CardEnum card) : Move{MoveType::SpaceRace, card} {}
 };
