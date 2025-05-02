@@ -1,7 +1,10 @@
 #pragma once
 
+#include <array>
+#include <memory>
 #include <stack>
 
+#include "card.hpp"
 #include "game_enums.hpp"
 #include "player.hpp"
 #include "policies.hpp"
@@ -11,9 +14,13 @@
 class Game {
  public:
 #ifdef TEST
-  Game();
+  Game()
+      : Game(Player<TestPolicy>{}, Player<TestPolicy>{}, defaultCardPool()) {}
+  Game(Player<TestPolicy>&& p1, Player<TestPolicy>&& p2)
+      : Game(std::move(p1), std::move(p2), defaultCardPool()) {}
 #endif
-  Game(Player<TestPolicy>& player1, Player<TestPolicy>& player2);
+  Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
+       const std::array<std::unique_ptr<Card>, 111>& cardpool);
   WorldMap& getWorldMap() { return worldMap_; }
   SpaceTrack& getSpaceTrack() { return spaceTrack_; }
   DefconTrack& getDefconTrack() { return defconTrack_; }
@@ -26,6 +33,13 @@ class Game {
   void next();
 
  private:
+#ifdef TEST
+  static const std::array<std::unique_ptr<Card>, 111>& defaultCardPool() {
+    static std::array<std::unique_ptr<Card>, 111> pool{};
+    return pool;
+  }
+#endif
+
   WorldMap worldMap_;
   SpaceTrack spaceTrack_;
   DefconTrack defconTrack_;
@@ -36,5 +50,6 @@ class Game {
 
   std::stack<StateType> states_;
   std::array<Player<TestPolicy>, 2> players_;
+  const std::array<std::unique_ptr<Card>, 111>& cardpool_;
   void actionExecute(Side side);
 };

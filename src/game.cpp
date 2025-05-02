@@ -8,36 +8,29 @@
 
 #include "game_enums.hpp"
 #include "trackers.hpp"
-#include "world_map.hpp"
 
-#ifdef TEST
-Game::Game(Player<TestPolicy>& player1, Player<TestPolicy>& player2)
+Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
+           const std::array<std::unique_ptr<Card>, 111>& cardpool)
     : worldMap_{WorldMap()},
       spaceTrack_{SpaceTrack()},
       defconTrack_{DefconTrack{*this}},
       milopsTrack_{MilopsTrack()},
       turnTrack_{TurnTrack()},
       actionRoundTrack_{ActionRoundTrack()},
-      players_{{std::move(player1), std::move(player2)}} {}
-
-Game::Game()
-    : worldMap_{WorldMap()},
-      spaceTrack_{SpaceTrack()},
-      defconTrack_{DefconTrack{*this}},
-      milopsTrack_{MilopsTrack()},
-      turnTrack_{TurnTrack()},
-      actionRoundTrack_{ActionRoundTrack()} {}
-#endif
+      players_{{std::move(player1), std::move(player2)}},
+      cardpool_{cardpool} {}
 
 #ifndef TEST
-Game::Game(Player<TestPolicy>& player1, Player<TestPolicy>& player2)
+Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
+           const std::array<std::unique_ptr<Card>, 111>& cardpool)
     : worldMap_{WorldMap()},
       spaceTrack_{SpaceTrack()},
       defconTrack_{DefconTrack{*this}},
       milopsTrack_{MilopsTrack()},
       turnTrack_{TurnTrack()},
       actionRoundTrack_{ActionRoundTrack()},
-      players_{{std::move(player1), std::move(player2)}} {
+      players_{{std::move(player1), std::move(player2)}},
+      cardpool_{cardpool} {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> firstSecond(0, 1);
