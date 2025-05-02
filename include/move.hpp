@@ -6,6 +6,7 @@
 #include "game_enums.hpp"
 
 class Action;
+class Game;
 
 class Move {
  public:
@@ -14,7 +15,8 @@ class Move {
 
   MoveType getMoveType() const { return MoveType_; }
   CardEnum getCard() const { return card_; }
-  virtual std::unique_ptr<Action> toAction(Side side, int opeValue) const = 0;
+  virtual std::unique_ptr<Action> toAction(const Game& game,
+                                           Side side) const = 0;
 
  private:
   MoveType MoveType_;
@@ -29,6 +31,7 @@ class PlaceInfluenceMove : public Move {
       : Move{MoveType::PlaceInfluence, card},
         targetCountries_{targetCountries} {}
 
+  std::unique_ptr<Action> toAction(const Game& game, Side side) const;
   const std::vector<std::pair<CountryEnum, int>>& getTargetCountries() const {
     return targetCountries_;
   }
@@ -42,6 +45,7 @@ class CoupMove : public Move {
   CoupMove(CardEnum card, CountryEnum targetCountry)
       : Move{MoveType::Coup, card}, targetCountry_{targetCountry} {}
 
+  std::unique_ptr<Action> toAction(const Game& game, Side side) const;
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
@@ -51,4 +55,6 @@ class CoupMove : public Move {
 class SpaceRaceMove : public Move {
  public:
   SpaceRaceMove(CardEnum card) : Move{MoveType::SpaceRace, card} {}
+
+  std::unique_ptr<Action> toAction(const Game& game, Side side) const;
 };
