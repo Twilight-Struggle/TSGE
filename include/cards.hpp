@@ -21,6 +21,6 @@ class NuclearTestBan : public Card {
  public:
   NuclearTestBan()
       : Card(static_cast<int>(CardEnum::NuclearTestBan), "NuclearTestBan", 4,
-             Side::Neutral, false) {}
+             Side::NEUTRAL, false) {}
   bool event(Game& game, Side side) override;
 };

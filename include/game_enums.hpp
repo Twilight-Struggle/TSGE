@@ -105,11 +105,11 @@ enum class Region : uint8_t {
 };
 
 enum class MoveType : uint8_t {
-  Coup,
-  Realignment,
-  PlaceInfluence,
-  Event,
-  SpaceRace
+  COUP,
+  REALIGNMENT,
+  PLACE_INFLUENCE,
+  EVENT,
+  SPACE_RACE
 };
 
 enum class StateType : uint8_t {
@@ -120,7 +120,7 @@ enum class StateType : uint8_t {
 enum class Side : uint8_t {
   USSR,
   USA,
-  Neutral,
+  NEUTRAL,
 };
 
 inline Side getOpponentSide(Side side) {
@@ -129,8 +129,8 @@ inline Side getOpponentSide(Side side) {
       return Side::USA;
     case Side::USA:
       return Side::USSR;
-    case Side::Neutral:
-      return Side::Neutral;
+    case Side::NEUTRAL:
+      return Side::NEUTRAL;
   }
 }
 
@@ -140,7 +140,7 @@ inline int getVpMultiplier(Side side) {
       return 1;
     case Side::USA:
       return -1;
-    case Side::Neutral:
+    case Side::NEUTRAL:
       return 0;
   }
 }

@@ -28,7 +28,7 @@ class PlaceInfluence : public Action {
   PlaceInfluence(
       Side side, int opeValue,
       const std::vector<std::pair<CountryEnum, int>>& targetCountries)
-      : Action{MoveType::PlaceInfluence, side, opeValue},
+      : Action{MoveType::PLACE_INFLUENCE, side, opeValue},
         targetCountries_{targetCountries} {};
 
   bool execute(Game& game) const override;
@@ -40,7 +40,7 @@ class PlaceInfluence : public Action {
 class Realigment : public Action {
  public:
   Realigment(Side side, CountryEnum targetCountry)
-      : Action{MoveType::Realignment, side, 1},
+      : Action{MoveType::REALIGNMENT, side, 1},
         targetCountry_{targetCountry} {};
 
   bool execute(Game& game) const override;
@@ -52,7 +52,7 @@ class Realigment : public Action {
 class Coup : public Action {
  public:
   Coup(Side side, int opeValue, CountryEnum targetCountry)
-      : Action{MoveType::Coup, side, opeValue},
+      : Action{MoveType::COUP, side, opeValue},
         targetCountry_{targetCountry} {};
 
   bool execute(Game& game) const override;
@@ -64,7 +64,7 @@ class Coup : public Action {
 class SpaceRace : public Action {
  public:
   SpaceRace(Side side, int opeValue)
-      : Action{MoveType::SpaceRace, side, opeValue} {};
+      : Action{MoveType::SPACE_RACE, side, opeValue} {};
 
   bool execute(Game& game) const override;
 };

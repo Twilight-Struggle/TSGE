@@ -16,7 +16,7 @@ bool PlaceInfluence::execute(Game& game) const {
     }
     const auto country = worldMap.getCountry(targetCountry.first);
     if (country.getControlSide() == side_ ||
-        country.getControlSide() == Side::Neutral) {
+        country.getControlSide() == Side::NEUTRAL) {
       cumsumOpeValue += targetCountry.second;
     } else {
       // 相手が支配している場合ペナルティがある

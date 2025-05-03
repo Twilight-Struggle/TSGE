@@ -41,7 +41,7 @@ Side Country::getControlSide() const {
              stability_) {
     return Side::USA;
   } else {
-    return Side::Neutral;
+    return Side::NEUTRAL;
   }
 }
 

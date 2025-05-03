@@ -28,7 +28,7 @@ class PlaceInfluenceMove : public Move {
  public:
   PlaceInfluenceMove(CardEnum card,
                      std::vector<std::pair<CountryEnum, int>>&& targetCountries)
-      : Move{MoveType::PlaceInfluence, card},
+      : Move{MoveType::PLACE_INFLUENCE, card},
         targetCountries_{std::move(targetCountries)} {}
 
   std::unique_ptr<const Action> toAction(const std::unique_ptr<Card>& card,
@@ -44,7 +44,7 @@ class PlaceInfluenceMove : public Move {
 class CoupMove : public Move {
  public:
   CoupMove(CardEnum card, CountryEnum targetCountry)
-      : Move{MoveType::Coup, card}, targetCountry_{targetCountry} {}
+      : Move{MoveType::COUP, card}, targetCountry_{targetCountry} {}
 
   std::unique_ptr<const Action> toAction(const std::unique_ptr<Card>& card,
                                          Side side) const;
@@ -56,7 +56,7 @@ class CoupMove : public Move {
 
 class SpaceRaceMove : public Move {
  public:
-  SpaceRaceMove(CardEnum card) : Move{MoveType::SpaceRace, card} {}
+  SpaceRaceMove(CardEnum card) : Move{MoveType::SPACE_RACE, card} {}
 
   std::unique_ptr<const Action> toAction(const std::unique_ptr<Card>& card,
                                          Side side) const;

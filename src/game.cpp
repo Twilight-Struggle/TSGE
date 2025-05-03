@@ -66,7 +66,7 @@ void Game::actionExecute(Side side) {
   auto& card = getCardpool()[static_cast<int>(moveInput->getCard())];
   auto action = moveInput->toAction(card, side);
   // TODO: Eventの場合
-  if (moveInput->getMoveType() == MoveType::Event) {
+  if (moveInput->getMoveType() == MoveType::EVENT) {
     if (!card->event(*this, side)) {
       throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
     }
