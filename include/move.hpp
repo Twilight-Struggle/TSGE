@@ -61,3 +61,24 @@ class SpaceRaceMove : public Move {
   std::unique_ptr<const Action> toAction(const std::unique_ptr<Card>& card,
                                          Side side) const;
 };
+
+class RealigmentMove : public Move {
+ public:
+  RealigmentMove(CardEnum card, CountryEnum targetCountry)
+      : Move{MoveType::REALIGNMENT, card}, targetCountry_{targetCountry} {}
+
+  std::unique_ptr<const Action> toAction(const std::unique_ptr<Card>& card,
+                                         Side side) const;
+  CountryEnum getTargetCountry() const { return targetCountry_; }
+
+ private:
+  const CountryEnum targetCountry_;
+};
+
+class EventMove : public Move {
+ public:
+  EventMove(CardEnum card) : Move{MoveType::EVENT, card} {}
+
+  std::unique_ptr<const Action> toAction(const std::unique_ptr<Card>& card,
+                                         Side side) const;
+};

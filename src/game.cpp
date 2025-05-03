@@ -63,6 +63,12 @@ void Game::next() {
   }
 }
 
+void mayFail(bool success) {
+  if (!success) {
+    throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
+  }
+}
+
 void Game::actionExecute(Side side) {
   auto& currentPlayer = players_[static_cast<int>(side)];
   auto moveInput = currentPlayer.decideMove(*this);
@@ -70,9 +76,7 @@ void Game::actionExecute(Side side) {
   auto action = moveInput->toAction(card, side);
   // Eventの場合
   if (moveInput->getMoveType() == MoveType::EVENT) {
-    if (!card->event(*this, side)) {
-      throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
-    }
+    mayFail(card->event(*this, side));
     if (card->getSide() == getOpponentSide(side)) {
       actionExecuteAfterEvent(side, card);
       states_.push(StateType::AR_COMPLETE);
@@ -80,14 +84,21 @@ void Game::actionExecute(Side side) {
   }
   // それ以外
   else {
-    if (!action->execute(*this)) {
-      throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
+    // Realignment
+    if (moveInput->getMoveType() == MoveType::REALIGNMENT) {
+      mayFail(action->execute(*this));
+      auto ops = card->getOps();
+      for (int i = 0; i < ops - 1; ++i) {
+        auto moveInput = currentPlayer.decideMove(*this);
+        auto action = moveInput->toAction(card, side);
+        mayFail(action->execute(*this));
+      }
+    } else {
+      mayFail(action->execute(*this));
     }
     if (card->getSide() == getOpponentSide(side)) {
       // TODO:イベント発動条件を満たしていたら
-      if (!card->event(*this, side)) {
-        throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
-      }
+      mayFail(card->event(*this, side));
     }
     states_.push(StateType::AR_COMPLETE);
   }

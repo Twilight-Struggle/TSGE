@@ -19,3 +19,8 @@ std::unique_ptr<const Action> SpaceRaceMove::toAction(
     const std::unique_ptr<Card>& card, Side side) const {
   return std::make_unique<SpaceRace>(side, card->getOps());
 }
+
+std::unique_ptr<const Action> RealigmentMove::toAction(
+    const std::unique_ptr<Card>& card, Side side) const {
+  return std::make_unique<Realigment>(side, targetCountry_);
+}
