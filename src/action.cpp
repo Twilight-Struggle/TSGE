@@ -4,7 +4,7 @@
 #include "game.hpp"
 #include "randomizer.hpp"
 
-bool PlaceInfluence::execute(Game& game) {
+bool PlaceInfluence::execute(Game& game) const {
   auto& worldMap = game.getWorldMap();
   int cumsumOpeValue = 0;
   for (const auto& targetCountry : targetCountries_) {
@@ -51,7 +51,7 @@ bool PlaceInfluence::execute(Game& game) {
   }
 }
 
-bool Realigment::execute(Game& game) {
+bool Realigment::execute(Game& game) const {
   auto& worldmap = game.getWorldMap();
   auto country = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && country.getInfluence(Side::USA) == 0) ||
@@ -86,7 +86,7 @@ bool Realigment::execute(Game& game) {
   return true;
 }
 
-bool Coup::execute(Game& game) {
+bool Coup::execute(Game& game) const {
   auto& worldmap = game.getWorldMap();
   auto targetCountry = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && targetCountry.getInfluence(Side::USA) == 0) ||
@@ -113,7 +113,7 @@ bool Coup::execute(Game& game) {
   }
 }
 
-bool SpaceRace::execute(Game& game) {
+bool SpaceRace::execute(Game& game) const {
   auto& spaceTrack = game.getSpaceTrack();
   if (spaceTrack.canSpace(side_, opeValue_)) {
     auto roll = Randomizer::getInstance().rollDice();

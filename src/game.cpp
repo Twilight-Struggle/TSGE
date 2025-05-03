@@ -6,8 +6,7 @@
 #endif
 #include <stdexcept>
 
-#include "game_enums.hpp"
-#include "trackers.hpp"
+#include "action.hpp"
 
 Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
            const std::array<std::unique_ptr<Card>, 111>& cardpool)
@@ -51,11 +50,10 @@ void Game::next() {
   switch (states_.top()) {
     case StateType::AR_USSR:
       states_.pop();
-      states_.push(StateType::AR_USA);
+      actionExecute(Side::USSR);
       break;
     case StateType::AR_USA:
       states_.pop();
-      states_.push(StateType::AR_USSR);
       break;
     default:
       throw std::runtime_error("Invalid state");
@@ -64,5 +62,21 @@ void Game::next() {
 
 void Game::actionExecute(Side side) {
   auto& currentPlayer = players_[static_cast<int>(side)];
-  auto input = currentPlayer.decideMove(*this);
+  auto moveInput = currentPlayer.decideMove(*this);
+  auto& card = getCardpool()[static_cast<int>(moveInput->getCard())];
+  auto action = moveInput->toAction(card, side);
+  // TODO: Eventの場合
+  if (moveInput->getMoveType() == MoveType::Event) {
+    if (!card->event(*this, side)) {
+      throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
+    }
+    if (card->getSide() == getOpponentSide(side)) {
+    }
+  }
+  // それ以外
+  else {
+    if (!action->execute(*this)) {
+      throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
+    }
+  }
 }

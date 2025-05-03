@@ -17,6 +17,7 @@ class Card {
   virtual bool event(Game& game, Side side) = 0;
 
   int getOps() const { return ops_; }
+  Side getSide() const { return side_; }
 
  protected:
   int id_;

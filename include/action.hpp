@@ -11,7 +11,7 @@ class Action {
   Action(MoveType type, Side side, int opeValue)
       : type_{type}, side_{side}, opeValue_{opeValue} {};
   virtual ~Action() = default;
-  virtual bool execute(Game& game) = 0;
+  virtual bool execute(Game& game) const = 0;
 
   MoveType getType() const { return type_; }
 
@@ -31,7 +31,7 @@ class PlaceInfluence : public Action {
       : Action{MoveType::PlaceInfluence, side, opeValue},
         targetCountries_{targetCountries} {};
 
-  bool execute(Game& game) override;
+  bool execute(Game& game) const override;
 
  private:
   const std::vector<std::pair<CountryEnum, int>> targetCountries_;
@@ -43,7 +43,7 @@ class Realigment : public Action {
       : Action{MoveType::Realignment, side, 1},
         targetCountry_{targetCountry} {};
 
-  bool execute(Game& game) override;
+  bool execute(Game& game) const override;
 
  private:
   const CountryEnum targetCountry_;
@@ -55,7 +55,7 @@ class Coup : public Action {
       : Action{MoveType::Coup, side, opeValue},
         targetCountry_{targetCountry} {};
 
-  bool execute(Game& game) override;
+  bool execute(Game& game) const override;
 
  private:
   const CountryEnum targetCountry_;
@@ -66,5 +66,5 @@ class SpaceRace : public Action {
   SpaceRace(Side side, int opeValue)
       : Action{MoveType::SpaceRace, side, opeValue} {};
 
-  bool execute(Game& game) override;
+  bool execute(Game& game) const override;
 };
