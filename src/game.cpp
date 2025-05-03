@@ -1,5 +1,7 @@
 #include "game.hpp"
 
+#include "game_enums.hpp"
+
 #ifndef TEST
 #include <cstddef>
 #include <random>
@@ -54,6 +56,7 @@ void Game::next() {
       break;
     case StateType::AR_USA:
       states_.pop();
+      actionExecute(Side::USA);
       break;
     default:
       throw std::runtime_error("Invalid state");
@@ -65,12 +68,14 @@ void Game::actionExecute(Side side) {
   auto moveInput = currentPlayer.decideMove(*this);
   auto& card = getCardpool()[static_cast<int>(moveInput->getCard())];
   auto action = moveInput->toAction(card, side);
-  // TODO: Eventの場合
+  // Eventの場合
   if (moveInput->getMoveType() == MoveType::EVENT) {
     if (!card->event(*this, side)) {
       throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
     }
     if (card->getSide() == getOpponentSide(side)) {
+      actionExecuteAfterEvent(side, card);
+      states_.push(StateType::AR_COMPLETE);
     }
   }
   // それ以外
@@ -78,5 +83,15 @@ void Game::actionExecute(Side side) {
     if (!action->execute(*this)) {
       throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
     }
+    if (card->getSide() == getOpponentSide(side)) {
+      // TODO:イベント発動条件を満たしていたら
+      if (!card->event(*this, side)) {
+        throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
+      }
+    }
+    states_.push(StateType::AR_COMPLETE);
   }
 }
+
+void Game::actionExecuteAfterEvent(Side side,
+                                   const std::unique_ptr<Card>& card) {}

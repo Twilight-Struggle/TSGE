@@ -115,6 +115,7 @@ enum class MoveType : uint8_t {
 enum class StateType : uint8_t {
   AR_USSR,
   AR_USA,
+  AR_COMPLETE,
 };
 
 enum class Side : uint8_t {

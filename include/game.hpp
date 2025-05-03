@@ -56,4 +56,5 @@ class Game {
   std::array<Player<TestPolicy>, 2> players_;
   const std::array<std::unique_ptr<Card>, 111>& cardpool_;
   void actionExecute(Side side);
+  void actionExecuteAfterEvent(Side side, const std::unique_ptr<Card>& card);
 };
