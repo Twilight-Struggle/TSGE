@@ -15,8 +15,8 @@ class Move {
 
   MoveType getMoveType() const { return MoveType_; }
   CardEnum getCard() const { return card_; }
-  virtual std::unique_ptr<Action> toAction(const Game& game,
-                                           Side side) const = 0;
+  virtual std::unique_ptr<const Action> toAction(const Game& game,
+                                                 Side side) const = 0;
 
  private:
   MoveType MoveType_;
@@ -25,13 +25,12 @@ class Move {
 
 class PlaceInfluenceMove : public Move {
  public:
-  PlaceInfluenceMove(
-      CardEnum card,
-      const std::vector<std::pair<CountryEnum, int>>& targetCountries)
+  PlaceInfluenceMove(CardEnum card,
+                     std::vector<std::pair<CountryEnum, int>>&& targetCountries)
       : Move{MoveType::PlaceInfluence, card},
-        targetCountries_{targetCountries} {}
+        targetCountries_{std::move(targetCountries)} {}
 
-  std::unique_ptr<Action> toAction(const Game& game, Side side) const;
+  std::unique_ptr<const Action> toAction(const Game& game, Side side) const;
   const std::vector<std::pair<CountryEnum, int>>& getTargetCountries() const {
     return targetCountries_;
   }
@@ -45,7 +44,7 @@ class CoupMove : public Move {
   CoupMove(CardEnum card, CountryEnum targetCountry)
       : Move{MoveType::Coup, card}, targetCountry_{targetCountry} {}
 
-  std::unique_ptr<Action> toAction(const Game& game, Side side) const;
+  std::unique_ptr<const Action> toAction(const Game& game, Side side) const;
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
@@ -56,5 +55,5 @@ class SpaceRaceMove : public Move {
  public:
   SpaceRaceMove(CardEnum card) : Move{MoveType::SpaceRace, card} {}
 
-  std::unique_ptr<Action> toAction(const Game& game, Side side) const;
+  std::unique_ptr<const Action> toAction(const Game& game, Side side) const;
 };

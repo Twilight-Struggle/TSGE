@@ -16,6 +16,8 @@ class Card {
   virtual ~Card() = default;
   virtual bool event(Game& game, Side side) = 0;
 
+  int getOps() const { return ops_; }
+
  protected:
   int id_;
   std::string name_;

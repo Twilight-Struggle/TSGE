@@ -27,7 +27,11 @@ class Game {
   MilopsTrack& getMilopsTrack() { return milopsTrack_; }
   TurnTrack& getTurnTrack() { return turnTrack_; }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
+  const std::array<std::unique_ptr<Card>, 111>& getCardpool() const {
+    return cardpool_;
+  }
   int getVp() const { return vp_; }
+
   void changeVp(int delta);
 
   void next();
