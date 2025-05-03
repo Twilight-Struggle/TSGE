@@ -2,6 +2,7 @@
 
 #include "country.hpp"
 #include "game.hpp"
+#include "game_enums.hpp"
 #include "randomizer.hpp"
 
 bool PlaceInfluence::execute(Game& game) const {
@@ -52,6 +53,11 @@ bool PlaceInfluence::execute(Game& game) const {
 }
 
 bool Realigment::execute(Game& game) const {
+  // USSRかUSAならパス
+  if (targetCountry_ == CountryEnum::USSR ||
+      targetCountry_ == CountryEnum::USA) {
+    return true;
+  }
   auto& worldmap = game.getWorldMap();
   auto country = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && country.getInfluence(Side::USA) == 0) ||
@@ -87,6 +93,10 @@ bool Realigment::execute(Game& game) const {
 }
 
 bool Coup::execute(Game& game) const {
+  if (targetCountry_ == CountryEnum::USSR ||
+      targetCountry_ == CountryEnum::USA) {
+    return false;
+  }
   auto& worldmap = game.getWorldMap();
   auto targetCountry = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && targetCountry.getInfluence(Side::USA) == 0) ||
@@ -101,7 +111,6 @@ bool Coup::execute(Game& game) const {
       coup_dice = 0;
     }
     bool success = (coup_dice == 0) ? false : true;
-    // Side::Neutralの場合はない
     bool diff = targetCountry.getInfluence(getOpponentSide(side_)) - coup_dice;
     if (diff > 0) {
       targetCountry.removeInfluence(getOpponentSide(side_), coup_dice);

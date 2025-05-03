@@ -63,7 +63,7 @@ void Game::next() {
   }
 }
 
-void mayFail(bool success) {
+void Game::mayFail(bool success) {
   if (!success) {
     throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
   }
