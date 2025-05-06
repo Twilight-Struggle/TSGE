@@ -18,7 +18,7 @@ add_library(ts_core
     src/game.cpp
     src/country.cpp
     src/world_map.cpp
-    src/action.cpp
+    src/command.cpp
     src/randomizer.cpp
     src/trackers.cpp
     src/cards.cpp
@@ -57,7 +57,7 @@ function(add_test TEST_NAME)
     gtest_discover_tests(${TEST_NAME})
 endfunction()
 
-add_test(action_test)
+add_test(command_test)
 add_test(world_map_test)
 add_test(trackers_test)
 add_test(cards_test)

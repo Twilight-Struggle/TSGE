@@ -31,13 +31,6 @@ Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
 }
 #endif
 
-void Game::changeVp(int delta) {
-  vp_ += delta;
-  if (vp_ <= -20 || vp_ >= 20) {
-    // TODO:ゲーム終了
-  }
-}
-
 void Game::next() {
   switch (states_.top()) {
     case StateType::AR_USSR:
@@ -76,15 +69,15 @@ void Game::actionExecute(Side side) {
   else {
     // Realignment
     if (moveInput->getMoveType() == MoveType::REALIGNMENT) {
-      mayFail(action->execute(*this), "Realignment failed");
+      mayFail(action->apply(this->getBoard()), "Realignment failed");
       auto ops = card->getOps();
       for (int i = 0; i < ops - 1; ++i) {
         auto moveInput = currentPlayer.decideMove(*this);
         auto action = moveInput->toAction(card, side);
-        mayFail(action->execute(*this), "Realignment failed");
+        mayFail(action->apply(this->getBoard()), "Realignment failed");
       }
     } else {
-      mayFail(action->execute(*this), "Action failed");
+      mayFail(action->apply(this->getBoard()), "Action failed");
     }
     if (card->getSide() == getOpponentSide(side)) {
       // TODO:イベント発動条件を満たしていたら
@@ -103,15 +96,15 @@ void Game::actionExecuteAfterEvent(Side side,
   auto action = moveInput->toAction(card, side);
   // Realignment
   if (moveInput->getMoveType() == MoveType::REALIGNMENT) {
-    mayFail(action->execute(*this), "Realignment failed");
+    mayFail(action->apply(this->getBoard()), "Realignment failed");
     auto ops = card->getOps();
     for (int i = 0; i < ops - 1; ++i) {
       auto moveInput = currentPlayer.decideMove(*this);
       auto action = moveInput->toAction(card, side);
-      mayFail(action->execute(*this), "Realignment failed");
+      mayFail(action->apply(this->getBoard()), "Realignment failed");
     }
   } else {
-    mayFail(action->execute(*this), "Action failed");
+    mayFail(action->apply(this->getBoard()), "Action failed");
   }
   states_.push(StateType::AR_COMPLETE);
 }

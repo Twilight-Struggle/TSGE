@@ -17,6 +17,13 @@ class Board {
   MilopsTrack& getMilopsTrack() { return milopsTrack_; }
   TurnTrack& getTurnTrack() { return turnTrack_; }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
+  int getVp() const { return vp_; }
+  void changeVp(int delta) {
+    vp_ += delta;
+    if (vp_ <= -20 || vp_ >= 20) {
+      // TODO:ゲーム終了
+    }
+  }
 
  private:
   WorldMap worldMap_;
@@ -25,4 +32,5 @@ class Board {
   MilopsTrack milopsTrack_;
   TurnTrack turnTrack_;
   ActionRoundTrack actionRoundTrack_;
+  int vp_ = 0;
 };

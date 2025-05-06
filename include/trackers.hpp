@@ -3,12 +3,12 @@
 
 #include "game_enums.hpp"
 
-class Game;
+class Board;
 
 class SpaceTrack {
  public:
   SpaceTrack() = default;
-  bool advanceSpaceTrack(Game& game, Side side, int num);
+  bool advanceSpaceTrack(Board& game, Side side, int num);
   bool effectEnabled(Side side, int num) const;
   bool canSpaceChallenge(Side side) const;
   bool canSpace(Side side, int opeValue) const;
@@ -26,8 +26,8 @@ class SpaceTrack {
 class DefconTrack {
  public:
   DefconTrack() = default;
-  bool setDefcon(int defcon, Game& game);
-  bool changeDefcon(int delta, Game& game);
+  bool setDefcon(int defcon, Board& game);
+  bool changeDefcon(int delta, Board& game);
   int getDefcon() const { return defcon_; }
 
  private:

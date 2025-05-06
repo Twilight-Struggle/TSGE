@@ -5,12 +5,12 @@
 #include "game_enums.hpp"
 #include "randomizer.hpp"
 
-bool PlaceInfluence::execute(Game& game) const {
-  auto& worldMap = game.getWorldMap();
+bool PlaceInfluence::apply(Board& board) const {
+  auto& worldMap = board.getWorldMap();
   int cumsumOpeValue = 0;
   for (const auto& targetCountry : targetCountries_) {
     // if targetCountry.first not in placeableCountries_
-    auto placeableCountries = game.getWorldMap().placeableCountries(side_);
+    auto placeableCountries = board.getWorldMap().placeableCountries(side_);
     if (placeableCountries.find(targetCountry.first) ==
         placeableCountries.end()) {
       return false;
@@ -52,13 +52,13 @@ bool PlaceInfluence::execute(Game& game) const {
   }
 }
 
-bool Realigment::execute(Game& game) const {
+bool Realigment::apply(Board& board) const {
   // USSRかUSAならパス
   if (targetCountry_ == CountryEnum::USSR ||
       targetCountry_ == CountryEnum::USA) {
     return true;
   }
-  auto& worldmap = game.getWorldMap();
+  auto& worldmap = board.getWorldMap();
   auto country = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && country.getInfluence(Side::USA) == 0) ||
       (side_ == Side::USA && country.getInfluence(Side::USSR) == 0)) {
@@ -92,12 +92,12 @@ bool Realigment::execute(Game& game) const {
   return true;
 }
 
-bool Coup::execute(Game& game) const {
+bool Coup::apply(Board& board) const {
   if (targetCountry_ == CountryEnum::USSR ||
       targetCountry_ == CountryEnum::USA) {
     return false;
   }
-  auto& worldmap = game.getWorldMap();
+  auto& worldmap = board.getWorldMap();
   auto targetCountry = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && targetCountry.getInfluence(Side::USA) == 0) ||
       (side_ == Side::USA && targetCountry.getInfluence(Side::USSR) == 0)) {
@@ -122,12 +122,12 @@ bool Coup::execute(Game& game) const {
   }
 }
 
-bool SpaceRace::execute(Game& game) const {
-  auto& spaceTrack = game.getSpaceTrack();
+bool SpaceRace::apply(Board& board) const {
+  auto& spaceTrack = board.getSpaceTrack();
   if (spaceTrack.canSpace(side_, opeValue_)) {
     auto roll = Randomizer::getInstance().rollDice();
     if (roll <= spaceTrack.getRollMax(side_)) {
-      spaceTrack.advanceSpaceTrack(game, side_, 1);
+      spaceTrack.advanceSpaceTrack(board, side_, 1);
     }
     return true;
   } else {

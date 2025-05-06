@@ -23,9 +23,7 @@ class Game {
   const std::array<std::unique_ptr<Card>, 111>& getCardpool() const {
     return cardpool_;
   }
-  int getVp() const { return vp_; }
-
-  void changeVp(int delta);
+  Board& getBoard() { return board_; }
 
   void next();
 
@@ -37,7 +35,6 @@ class Game {
   }
 #endif
   Board board_;
-  int vp_ = 0;
 
   std::stack<StateType> states_;
   std::array<Player<TestPolicy>, 2> players_;

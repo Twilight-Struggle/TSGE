@@ -3,17 +3,17 @@
 #include "game.hpp"
 #include "game_enums.hpp"
 
-bool SpaceTrack::advanceSpaceTrack(Game& game, Side side, int num) {
+bool SpaceTrack::advanceSpaceTrack(Board& board, Side side, int num) {
   spaceTrack_[static_cast<int>(side)] += num;
 
   for (const auto& i : {1, 3, 5, 7, 8}) {
     if (spaceTrack_[static_cast<std::size_t>(side)] == i) {
       if (spaceTrack_[static_cast<std::size_t>(getOpponentSide(side))] < i) {
         // 得点計算有利
-        game.changeVp(spaceVps_[i - 1][0] * getVpMultiplier(side));
+        board.changeVp(spaceVps_[i - 1][0] * getVpMultiplier(side));
       } else {
         // 得点計算不利
-        game.changeVp(spaceVps_[i - 1][1] * getVpMultiplier(side));
+        board.changeVp(spaceVps_[i - 1][1] * getVpMultiplier(side));
       }
     }
     // TODO:8に到達した場合そのターンのARを増やす
@@ -54,7 +54,7 @@ int SpaceTrack::getRollMax(Side side) const {
   return rollMax_[spaceTrack_[static_cast<std::size_t>(side)]];
 }
 
-bool DefconTrack::setDefcon(int defcon, Game& game) {
+bool DefconTrack::setDefcon(int defcon, Board& board) {
   if (defcon < 1 || defcon > 5) return false;
   auto defconChanged = defcon_ != defcon;
   defcon_ = defcon;
@@ -67,7 +67,7 @@ bool DefconTrack::setDefcon(int defcon, Game& game) {
   return true;
 }
 
-bool DefconTrack::changeDefcon(int delta, Game& game) {
+bool DefconTrack::changeDefcon(int delta, Board& board) {
   auto newDefcon = defcon_ + std::min(delta, 5 - defcon_);
   auto defconChanged = defcon_ != newDefcon;
   defcon_ = newDefcon;
