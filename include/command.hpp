@@ -71,3 +71,10 @@ class SpaceRace : public Command {
 };
 
 using CommandPtr = std::shared_ptr<Command>;
+
+class Request : public Command {
+ public:
+  Side waitingForSide;
+
+  bool apply(Board&) const override { return true; }
+};
