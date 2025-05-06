@@ -63,7 +63,7 @@ void Game::next() {
   }
 }
 
-void Game::mayFail(bool success) {
+void Game::mayFail(bool success, const std::string& message) {
   if (!success) {
     throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
   }
@@ -76,7 +76,7 @@ void Game::actionExecute(Side side) {
   auto action = moveInput->toAction(card, side);
   // Eventの場合
   if (moveInput->getMoveType() == MoveType::EVENT) {
-    mayFail(card->event(*this, side));
+    mayFail(card->event(*this, side), "Event failed");
     if (card->getSide() == getOpponentSide(side)) {
       actionExecuteAfterEvent(side, card);
       states_.push(StateType::AR_COMPLETE);
@@ -86,23 +86,42 @@ void Game::actionExecute(Side side) {
   else {
     // Realignment
     if (moveInput->getMoveType() == MoveType::REALIGNMENT) {
-      mayFail(action->execute(*this));
+      mayFail(action->execute(*this), "Realignment failed");
       auto ops = card->getOps();
       for (int i = 0; i < ops - 1; ++i) {
         auto moveInput = currentPlayer.decideMove(*this);
         auto action = moveInput->toAction(card, side);
-        mayFail(action->execute(*this));
+        mayFail(action->execute(*this), "Realignment failed");
       }
     } else {
-      mayFail(action->execute(*this));
+      mayFail(action->execute(*this), "Action failed");
     }
     if (card->getSide() == getOpponentSide(side)) {
       // TODO:イベント発動条件を満たしていたら
-      mayFail(card->event(*this, side));
+      mayFail(card->event(*this, side), "Event failed");
     }
     states_.push(StateType::AR_COMPLETE);
   }
 }
 
 void Game::actionExecuteAfterEvent(Side side,
-                                   const std::unique_ptr<Card>& card) {}
+                                   const std::unique_ptr<Card>& card) {
+  auto& currentPlayer = players_[static_cast<int>(side)];
+  auto moveInput = currentPlayer.decideMove(*this);
+  auto& card_in = getCardpool()[static_cast<int>(moveInput->getCard())];
+  mayFail(card != card_in, "Card mismatch");
+  auto action = moveInput->toAction(card, side);
+  // Realignment
+  if (moveInput->getMoveType() == MoveType::REALIGNMENT) {
+    mayFail(action->execute(*this), "Realignment failed");
+    auto ops = card->getOps();
+    for (int i = 0; i < ops - 1; ++i) {
+      auto moveInput = currentPlayer.decideMove(*this);
+      auto action = moveInput->toAction(card, side);
+      mayFail(action->execute(*this), "Realignment failed");
+    }
+  } else {
+    mayFail(action->execute(*this), "Action failed");
+  }
+  states_.push(StateType::AR_COMPLETE);
+}
