@@ -1,15 +1,15 @@
-#include "action.hpp"
+#include "command.hpp"
 
 #include <gtest/gtest.h>
 
 #include "game.hpp"
 
-class ActionTest : public ::testing::Test {
+class CommandTest : public ::testing::Test {
  protected:
   Game Game;
 };
 
-TEST_F(ActionTest, PlaceTest) {
+TEST_F(CommandTest, PlaceTest) {
   // 置く権利のない場所には置けない
   PlaceInfluence action_non_placeable(
       Side::USSR, 3, {{CountryEnum::ANGOLA, 1}, {CountryEnum::AFGHANISTAN, 2}});
@@ -43,7 +43,7 @@ TEST_F(ActionTest, PlaceTest) {
   EXPECT_TRUE(action_overControlNum_2.execute(Game));
 }
 
-TEST_F(ActionTest, RealigmentTest) {
+TEST_F(CommandTest, RealigmentTest) {
   // 相手が置いてない国には影響力排除判定ができない
   Realigment action_cant_realigment_ussr(Side::USSR, CountryEnum::ANGOLA);
   EXPECT_FALSE(action_cant_realigment_ussr.execute(Game));
@@ -56,7 +56,7 @@ TEST_F(ActionTest, RealigmentTest) {
   EXPECT_TRUE(action_can_realigment_usa.execute(Game));
 }
 
-TEST_F(ActionTest, CoupTest) {
+TEST_F(CommandTest, CoupTest) {
   // 相手が置いてない国にはクーデターできない
   Coup action_cant_coup_ussr(Side::USSR, 3, CountryEnum::ANGOLA);
   EXPECT_FALSE(action_cant_coup_ussr.execute(Game));

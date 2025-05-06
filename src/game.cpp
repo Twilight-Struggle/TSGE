@@ -8,7 +8,7 @@
 #endif
 #include <stdexcept>
 
-#include "action.hpp"
+#include "command.hpp"
 
 Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
            const std::array<std::unique_ptr<Card>, 111>& cardpool)
