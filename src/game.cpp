@@ -56,7 +56,7 @@ void Game::actionExecute(Side side) {
   auto& currentPlayer = players_[static_cast<int>(side)];
   auto moveInput = currentPlayer.decideMove(*this);
   auto& card = getCardpool()[static_cast<int>(moveInput->getCard())];
-  auto action = moveInput->toAction(card, side);
+  auto action = moveInput->toCommand(card, side);
   // Eventの場合
   if (moveInput->getMoveType() == MoveType::EVENT) {
     mayFail(card->event(*this, side), "Event failed");
@@ -73,7 +73,7 @@ void Game::actionExecute(Side side) {
       auto ops = card->getOps();
       for (int i = 0; i < ops - 1; ++i) {
         auto moveInput = currentPlayer.decideMove(*this);
-        auto action = moveInput->toAction(card, side);
+        auto action = moveInput->toCommand(card, side);
         mayFail(action->apply(this->getBoard()), "Realignment failed");
       }
     } else {
@@ -93,14 +93,14 @@ void Game::actionExecuteAfterEvent(Side side,
   auto moveInput = currentPlayer.decideMove(*this);
   auto& card_in = getCardpool()[static_cast<int>(moveInput->getCard())];
   mayFail(card != card_in, "Card mismatch");
-  auto action = moveInput->toAction(card, side);
+  auto action = moveInput->toCommand(card, side);
   // Realignment
   if (moveInput->getMoveType() == MoveType::REALIGNMENT) {
     mayFail(action->apply(this->getBoard()), "Realignment failed");
     auto ops = card->getOps();
     for (int i = 0; i < ops - 1; ++i) {
       auto moveInput = currentPlayer.decideMove(*this);
-      auto action = moveInput->toAction(card, side);
+      auto action = moveInput->toCommand(card, side);
       mayFail(action->apply(this->getBoard()), "Realignment failed");
     }
   } else {

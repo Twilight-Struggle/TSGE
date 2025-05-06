@@ -16,7 +16,7 @@ class Move {
 
   MoveType getMoveType() const { return MoveType_; }
   CardEnum getCard() const { return card_; }
-  virtual std::unique_ptr<const Command> toAction(
+  virtual std::unique_ptr<const Command> toCommand(
       const std::unique_ptr<Card>& card, Side side) const = 0;
 
  private:
@@ -31,8 +31,8 @@ class PlaceInfluenceMove : public Move {
       : Move{MoveType::PLACE_INFLUENCE, card},
         targetCountries_{std::move(targetCountries)} {}
 
-  std::unique_ptr<const Command> toAction(const std::unique_ptr<Card>& card,
-                                          Side side) const;
+  std::unique_ptr<const Command> toCommand(const std::unique_ptr<Card>& card,
+                                           Side side) const;
   const std::vector<std::pair<CountryEnum, int>>& getTargetCountries() const {
     return targetCountries_;
   }
@@ -46,8 +46,8 @@ class CoupMove : public Move {
   CoupMove(CardEnum card, CountryEnum targetCountry)
       : Move{MoveType::COUP, card}, targetCountry_{targetCountry} {}
 
-  std::unique_ptr<const Command> toAction(const std::unique_ptr<Card>& card,
-                                          Side side) const;
+  std::unique_ptr<const Command> toCommand(const std::unique_ptr<Card>& card,
+                                           Side side) const;
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
@@ -58,8 +58,8 @@ class SpaceRaceMove : public Move {
  public:
   SpaceRaceMove(CardEnum card) : Move{MoveType::SPACE_RACE, card} {}
 
-  std::unique_ptr<const Command> toAction(const std::unique_ptr<Card>& card,
-                                          Side side) const;
+  std::unique_ptr<const Command> toCommand(const std::unique_ptr<Card>& card,
+                                           Side side) const;
 };
 
 class RealigmentMove : public Move {
@@ -67,8 +67,8 @@ class RealigmentMove : public Move {
   RealigmentMove(CardEnum card, CountryEnum targetCountry)
       : Move{MoveType::REALIGNMENT, card}, targetCountry_{targetCountry} {}
 
-  std::unique_ptr<const Command> toAction(const std::unique_ptr<Card>& card,
-                                          Side side) const;
+  std::unique_ptr<const Command> toCommand(const std::unique_ptr<Card>& card,
+                                           Side side) const;
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
@@ -79,6 +79,6 @@ class EventMove : public Move {
  public:
   EventMove(CardEnum card) : Move{MoveType::EVENT, card} {}
 
-  std::unique_ptr<const Command> toAction(const std::unique_ptr<Card>& card,
-                                          Side side) const;
+  std::unique_ptr<const Command> toCommand(const std::unique_ptr<Card>& card,
+                                           Side side) const;
 };
