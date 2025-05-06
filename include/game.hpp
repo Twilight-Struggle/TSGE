@@ -2,7 +2,6 @@
 
 #include <array>
 #include <memory>
-#include <stack>
 
 #include "board.hpp"
 #include "card.hpp"
@@ -36,7 +35,6 @@ class Game {
 #endif
   Board board_;
 
-  std::stack<StateType> states_;
   std::array<Player<TestPolicy>, 2> players_;
   const std::array<std::unique_ptr<Card>, 111>& cardpool_;
   void mayFail(bool success, const std::string& message);
