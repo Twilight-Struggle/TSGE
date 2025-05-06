@@ -12,24 +12,14 @@
 
 Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
            const std::array<std::unique_ptr<Card>, 111>& cardpool)
-    : worldMap_{WorldMap()},
-      spaceTrack_{SpaceTrack()},
-      defconTrack_{DefconTrack{*this}},
-      milopsTrack_{MilopsTrack()},
-      turnTrack_{TurnTrack()},
-      actionRoundTrack_{ActionRoundTrack()},
+    : board_{Board()},
       players_{{std::move(player1), std::move(player2)}},
       cardpool_{cardpool} {}
 
 #ifndef TEST
 Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
            const std::array<std::unique_ptr<Card>, 111>& cardpool)
-    : worldMap_{WorldMap()},
-      spaceTrack_{SpaceTrack()},
-      defconTrack_{DefconTrack{*this}},
-      milopsTrack_{MilopsTrack()},
-      turnTrack_{TurnTrack()},
-      actionRoundTrack_{ActionRoundTrack()},
+    : board_{Board()},
       players_{{std::move(player1), std::move(player2)}},
       cardpool_{cardpool} {
   std::random_device rd;

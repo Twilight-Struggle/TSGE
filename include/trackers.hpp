@@ -25,14 +25,13 @@ class SpaceTrack {
 
 class DefconTrack {
  public:
-  DefconTrack(Game& game);
-  bool setDefcon(int defcon);
-  bool changeDefcon(int delta);
+  DefconTrack() = default;
+  bool setDefcon(int defcon, Game& game);
+  bool changeDefcon(int delta, Game& game);
   int getDefcon() const { return defcon_; }
 
  private:
   int defcon_ = 5;
-  Game& game_;
 };
 
 class MilopsTrack {

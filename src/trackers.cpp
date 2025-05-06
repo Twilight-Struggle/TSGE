@@ -54,9 +54,7 @@ int SpaceTrack::getRollMax(Side side) const {
   return rollMax_[spaceTrack_[static_cast<std::size_t>(side)]];
 }
 
-DefconTrack::DefconTrack(Game& game) : game_{game} {}
-
-bool DefconTrack::setDefcon(int defcon) {
+bool DefconTrack::setDefcon(int defcon, Game& game) {
   if (defcon < 1 || defcon > 5) return false;
   auto defconChanged = defcon_ != defcon;
   defcon_ = defcon;
@@ -69,7 +67,7 @@ bool DefconTrack::setDefcon(int defcon) {
   return true;
 }
 
-bool DefconTrack::changeDefcon(int delta) {
+bool DefconTrack::changeDefcon(int delta, Game& game) {
   auto newDefcon = defcon_ + std::min(delta, 5 - defcon_);
   auto defconChanged = defcon_ != newDefcon;
   defcon_ = newDefcon;

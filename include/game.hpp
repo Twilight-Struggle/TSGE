@@ -4,12 +4,11 @@
 #include <memory>
 #include <stack>
 
+#include "board.hpp"
 #include "card.hpp"
 #include "game_enums.hpp"
 #include "player.hpp"
 #include "policies.hpp"
-#include "trackers.hpp"
-#include "world_map.hpp"
 
 class Game {
  public:
@@ -21,12 +20,6 @@ class Game {
 #endif
   Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
        const std::array<std::unique_ptr<Card>, 111>& cardpool);
-  WorldMap& getWorldMap() { return worldMap_; }
-  SpaceTrack& getSpaceTrack() { return spaceTrack_; }
-  DefconTrack& getDefconTrack() { return defconTrack_; }
-  MilopsTrack& getMilopsTrack() { return milopsTrack_; }
-  TurnTrack& getTurnTrack() { return turnTrack_; }
-  ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
   const std::array<std::unique_ptr<Card>, 111>& getCardpool() const {
     return cardpool_;
   }
@@ -43,13 +36,7 @@ class Game {
     return pool;
   }
 #endif
-
-  WorldMap worldMap_;
-  SpaceTrack spaceTrack_;
-  DefconTrack defconTrack_;
-  MilopsTrack milopsTrack_;
-  TurnTrack turnTrack_;
-  ActionRoundTrack actionRoundTrack_;
+  Board board_;
   int vp_ = 0;
 
   std::stack<StateType> states_;
