@@ -1,5 +1,6 @@
 #include "phase_machine.hpp"
 
+#include <utility>
 #include <variant>
 
 #include "board.hpp"
@@ -7,9 +8,30 @@
 
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
-std::vector<Move> PhaseMachine::step(
+std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
     Board& board, std::optional<std::vector<std::unique_ptr<Move>>> answer) {
   auto& states = board.getStates();
+
+  /*===============================
+   * A) もし前回の答え (Move) が渡されたら
+   *    → Command 列に変換し stack へ push
+   *==============================*/
+  if (answer) {
+    // Requestが残っている場合pop
+    if (!states.empty() && std::holds_alternative<CommandPtr>(states.back())) {
+      auto& cmdPtr = std::get<CommandPtr>(states.back());
+      if (dynamic_cast<Request*>(cmdPtr.get())) {
+        states.pop_back();
+      }
+    }
+    Side side = answer.value()->getSide();  // 仮に Move が覚えているとする
+    auto cmds = answer.value()->toCommand(board, side);
+    for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
+      states.emplace_back(*it);
+
+    answer.reset();
+  }
+
   while (!states.empty()) {
     auto& topState = states.back();
     // ----- スタック最上段が CommandPtr の場合 --------------------
@@ -17,23 +39,13 @@ std::vector<Move> PhaseMachine::step(
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
       if (auto* req = dynamic_cast<Request*>(cmdPtr->get())) {
-        // まだ答えが来ていなければ合法手を列挙して返す
-        if (!answer) return enumerate_moves_for_request(*req, board);
-
-        // 答えが来ていれば request を pop して続きを push
-        states.pop_back();  // Request 除去
-        for (auto it = answer->rbegin(); it != answer->rend(); ++it)
-          states.emplace_back((*it)->toCommand());
-        answer.reset();  // 答えは消費済み
-        continue;        // 先頭からループ
+        return {enumerate_moves_for_request(*req, board), req->waitingForSide};
       }
-
-      // B) ふつうの Command なら即時実行
       (*cmdPtr)->apply(board);
       // board.history.push_back(*cmdPtr);  // undo ログ
       states.pop_back();
-
       continue;
+
     } else {
       // ----- スタック最上段が StateType (フェーズ) -------------------
       auto stateType = std::get<StateType>(topState);
@@ -43,7 +55,9 @@ std::vector<Move> PhaseMachine::step(
         case StateType::AR_USSR:
         case StateType::AR_USA: {
           Side side = stateType == StateType::AR_USSR ? Side::USSR : Side::USA;
-          return enumerate_player_moves(side, board);  // 合法手を返して停止
+          states.emplace_back(StateType::AR_COMPLETE);
+          return {enumerate_player_moves(side, board),
+                  side};  // 合法手を返して停止
         }
 
         case StateType::AR_COMPLETE:
@@ -54,5 +68,6 @@ std::vector<Move> PhaseMachine::step(
       }
     }
   }
-  return {};  // スタックが空→ゲーム終了
+  return {std::vector<std::unique_ptr<Move>>{},
+          Side::NEUTRAL};  // スタックが空→ゲーム終了
 }

@@ -6,6 +6,7 @@
 #include "board.hpp"
 #include "card.hpp"
 #include "game_enums.hpp"
+#include "phase_machine.hpp"
 #include "player.hpp"
 #include "policies.hpp"
 
@@ -38,6 +39,4 @@ class Game {
   std::array<Player<TestPolicy>, 2> players_;
   const std::array<std::unique_ptr<Card>, 111>& cardpool_;
   void mayFail(bool success, const std::string& message);
-  void actionExecute(Side side);
-  void actionExecuteAfterEvent(Side side, const std::unique_ptr<Card>& card);
 };

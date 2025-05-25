@@ -4,13 +4,14 @@
 
 #include "move.hpp"
 
-class Game;
+class Board;
 
 class TestPolicy {
  public:
-  TestPolicy(std::vector<std::unique_ptr<Move>>&& moves);
+  explicit TestPolicy(std::vector<std::unique_ptr<Move>>&& moves);
   TestPolicy() = default;
-  std::unique_ptr<Move> decideMove(const Game& game);
+  std::unique_ptr<Move> decideMove(
+      const Board&, const std::vector<std::unique_ptr<Move>>& legalMoves);
 
  private:
   std::vector<std::unique_ptr<Move>> moves_;

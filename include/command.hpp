@@ -1,18 +1,20 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <vector>
 
 #include "game_enums.hpp"
 
 class Board;
+class Move;
 
 class Command {
  public:
   Command(MoveType type, Side side, int opeValue)
       : type_{type}, side_{side}, opeValue_{opeValue} {};
   virtual ~Command() = default;
-  virtual bool apply(Board& game) const = 0;
+  virtual bool apply(Board& board) const = 0;
 
   MoveType getType() const { return type_; }
 
@@ -32,7 +34,7 @@ class PlaceInfluence : public Command {
       : Command{MoveType::PLACE_INFLUENCE, side, opeValue},
         targetCountries_{targetCountries} {};
 
-  bool apply(Board& game) const override;
+  bool apply(Board& board) const override;
 
  private:
   const std::vector<std::pair<CountryEnum, int>> targetCountries_;
@@ -44,7 +46,7 @@ class Realigment : public Command {
       : Command{MoveType::REALIGNMENT, side, 1},
         targetCountry_{targetCountry} {};
 
-  bool apply(Board& game) const override;
+  bool apply(Board& board) const override;
 
  private:
   const CountryEnum targetCountry_;
@@ -56,7 +58,7 @@ class Coup : public Command {
       : Command{MoveType::COUP, side, opeValue},
         targetCountry_{targetCountry} {};
 
-  bool apply(Board& game) const override;
+  bool apply(Board& board) const override;
 
  private:
   const CountryEnum targetCountry_;
@@ -67,7 +69,7 @@ class SpaceRace : public Command {
   SpaceRace(Side side, int opeValue)
       : Command{MoveType::SPACE_RACE, side, opeValue} {};
 
-  bool apply(Board& game) const override;
+  bool apply(Board& board) const override;
 };
 
 using CommandPtr = std::shared_ptr<Command>;
@@ -75,6 +77,8 @@ using CommandPtr = std::shared_ptr<Command>;
 class Request : public Command {
  public:
   Side waitingForSide;
+  std::function<std::vector<Move>(const Board&)> legalMoves;
+  // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
   bool apply(Board&) const override { return true; }
 };
