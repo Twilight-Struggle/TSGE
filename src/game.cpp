@@ -35,7 +35,7 @@ void Game::next() {
   std::optional<std::unique_ptr<Move>> pending;
   while (true) {
     auto [legalMoves, waitingForSide] =
-        PhaseMachine::step(board_, std::move(pending));
+        PhaseMachine::step(board_, cardpool_, std::move(pending));
     if (legalMoves.empty() && waitingForSide == Side::NEUTRAL) {
       // スタックが空→ゲーム終了
       break;

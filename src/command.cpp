@@ -1,7 +1,7 @@
 #include "command.hpp"
 
+#include "board.hpp"
 #include "country.hpp"
-#include "game.hpp"
 #include "game_enums.hpp"
 #include "randomizer.hpp"
 

@@ -5,7 +5,6 @@
 
 #include "board.hpp"
 #include "card.hpp"
-#include "game_enums.hpp"
 #include "phase_machine.hpp"
 #include "player.hpp"
 #include "policies.hpp"

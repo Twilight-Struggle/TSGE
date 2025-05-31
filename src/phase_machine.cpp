@@ -1,5 +1,6 @@
 #include "phase_machine.hpp"
 
+#include <cstddef>
 #include <utility>
 #include <variant>
 
@@ -9,7 +10,8 @@
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
 std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
-    Board& board, std::optional<std::vector<std::unique_ptr<Move>>> answer) {
+    Board& board, const std::array<std::unique_ptr<Card>, 111>& cardpool_,
+    std::optional<std::unique_ptr<Move>>&& answer) {
   auto& states = board.getStates();
 
   /*===============================
@@ -24,8 +26,11 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
         states.pop_back();
       }
     }
-    Side side = answer.value()->getSide();  // 仮に Move が覚えているとする
-    auto cmds = answer.value()->toCommand(board, side);
+    Side side =
+        answer.value()
+            ->getSide();  // Sideをどこから取得するかは未定　仮にMoveからとする
+    auto cmds = answer.value()->toCommand(
+        cardpool_[static_cast<size_t>(answer.value()->getCard())], side);
     for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
       states.emplace_back(*it);
 
@@ -39,7 +44,7 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
       if (auto* req = dynamic_cast<Request*>(cmdPtr->get())) {
-        return {enumerate_moves_for_request(*req, board), req->waitingForSide};
+        return {req->legalMoves(board), req->waitingForSide};
       }
       (*cmdPtr)->apply(board);
       // board.history.push_back(*cmdPtr);  // undo ログ
@@ -56,12 +61,11 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
         case StateType::AR_USA: {
           Side side = stateType == StateType::AR_USSR ? Side::USSR : Side::USA;
           states.emplace_back(StateType::AR_COMPLETE);
-          return {enumerate_player_moves(side, board),
-                  side};  // 合法手を返して停止
+          return {legalPlayerMoves(board, side), side};  // 合法手を返して停止
         }
 
         case StateType::AR_COMPLETE:
-          push_next_ar(states);  // AR 終了処理して続行
+          push_next_ar(states);  // AR 終了処理して続行(仮コード)
           break;
 
           /* HEADLINE, TURN_END など他のフェーズも同様に */

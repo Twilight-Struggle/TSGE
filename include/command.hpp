@@ -15,6 +15,8 @@ class Command {
       : type_{type}, side_{side}, opeValue_{opeValue} {};
   virtual ~Command() = default;
   virtual bool apply(Board& board) const = 0;
+  // MCTSで必要
+  // virtual bool undo(Board& board) const = 0;
 
   MoveType getType() const { return type_; }
 
@@ -77,7 +79,7 @@ using CommandPtr = std::shared_ptr<Command>;
 class Request : public Command {
  public:
   Side waitingForSide;
-  std::function<std::vector<Move>(const Board&)> legalMoves;
+  std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;
   // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
   bool apply(Board&) const override { return true; }
