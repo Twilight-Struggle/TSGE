@@ -1,5 +1,6 @@
 #pragma once
 
+#include "board.hpp"
 #include "move.hpp"
 
 class LegalMovesGenerator {

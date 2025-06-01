@@ -26,6 +26,7 @@ class Board {
   MilopsTrack& getMilopsTrack() { return milopsTrack_; }
   TurnTrack& getTurnTrack() { return turnTrack_; }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
+  const WorldMap& getWorldMap() const { return worldMap_; }
   int getVp() const { return vp_; }
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {

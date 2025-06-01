@@ -473,6 +473,10 @@ Country& WorldMap::getCountry(CountryEnum countryEnum) {
   }
 }
 
+const Country& WorldMap::getCountry(CountryEnum countryEnum) const {
+  return const_cast<WorldMap*>(this)->getCountry(countryEnum);
+}
+
 const std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
   std::set<CountryEnum> placeableCountries;
   for (const auto& country : countries_) {
