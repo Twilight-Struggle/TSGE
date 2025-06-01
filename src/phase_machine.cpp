@@ -6,6 +6,7 @@
 
 #include "board.hpp"
 #include "command.hpp"
+#include "legal_moves_generator.hpp"
 
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
@@ -61,7 +62,8 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
         case StateType::AR_USA: {
           Side side = stateType == StateType::AR_USSR ? Side::USSR : Side::USA;
           states.emplace_back(StateType::AR_COMPLETE);
-          return {legalPlayerMoves(board, side), side};  // 合法手を返して停止
+          return {LegalMovesGenerator::ArLegalMoves(board, side),
+                  side};  // 合法手を返して停止
         }
 
         case StateType::AR_COMPLETE:
