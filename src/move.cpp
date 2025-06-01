@@ -4,23 +4,22 @@
 
 #include "command.hpp"
 
-CommandPtr PlaceInfluenceMove::toCommand(const std::unique_ptr<Card>& card,
-                                         Side side) const {
-  return std::make_unique<PlaceInfluence>(side, card->getOps(),
-                                          targetCountries_);
+CommandPtr ActionPlaceInfluenceMove::toCommand(
+    const std::unique_ptr<Card>& card, Side side) const {
+  return std::make_unique<ActionPlaceInfluence>(side, card, targetCountries_);
 }
 
-CommandPtr CoupMove::toCommand(const std::unique_ptr<Card>& card,
-                               Side side) const {
-  return std::make_unique<Coup>(side, card->getOps(), targetCountry_);
-}
-
-CommandPtr SpaceRaceMove::toCommand(const std::unique_ptr<Card>& card,
-                                    Side side) const {
-  return std::make_unique<SpaceRace>(side, card->getOps());
-}
-
-CommandPtr RealigmentMove::toCommand(const std::unique_ptr<Card>& card,
+CommandPtr ActionCoupMove::toCommand(const std::unique_ptr<Card>& card,
                                      Side side) const {
-  return std::make_unique<Realigment>(side, targetCountry_);
+  return std::make_unique<ActionCoup>(side, card, targetCountry_);
+}
+
+CommandPtr ActionSpaceRaceMove::toCommand(const std::unique_ptr<Card>& card,
+                                          Side side) const {
+  return std::make_unique<ActionSpaceRace>(side, card);
+}
+
+CommandPtr ActionRealigmentMove::toCommand(const std::unique_ptr<Card>& card,
+                                           Side side) const {
+  return std::make_unique<ActionRealigment>(side, card, targetCountry_);
 }

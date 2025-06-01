@@ -5,7 +5,7 @@
 #include "game_enums.hpp"
 #include "randomizer.hpp"
 
-bool PlaceInfluence::apply(Board& board) const {
+bool ActionPlaceInfluence::apply(Board& board) const {
   auto& worldMap = board.getWorldMap();
   int cumsumOpeValue = 0;
   for (const auto& targetCountry : targetCountries_) {
@@ -41,7 +41,7 @@ bool PlaceInfluence::apply(Board& board) const {
       // 上限6のためここまででいい
     }
   }
-  if (cumsumOpeValue == opeValue_) {
+  if (cumsumOpeValue == card_->getOps()) {
     for (const auto& targetCountry : targetCountries_) {
       worldMap.getCountry(targetCountry.first)
           .addInfluence(side_, targetCountry.second);
@@ -52,7 +52,7 @@ bool PlaceInfluence::apply(Board& board) const {
   }
 }
 
-bool Realigment::apply(Board& board) const {
+bool ActionRealigment::apply(Board& board) const {
   // USSRかUSAならパス
   if (targetCountry_ == CountryEnum::USSR ||
       targetCountry_ == CountryEnum::USA) {
@@ -92,7 +92,7 @@ bool Realigment::apply(Board& board) const {
   return true;
 }
 
-bool Coup::apply(Board& board) const {
+bool ActionCoup::apply(Board& board) const {
   if (targetCountry_ == CountryEnum::USSR ||
       targetCountry_ == CountryEnum::USA) {
     return false;
@@ -104,7 +104,7 @@ bool Coup::apply(Board& board) const {
     return false;
   } else {
     auto coup_dice = Randomizer::getInstance().rollDice();
-    coup_dice += opeValue_;
+    coup_dice += card_->getOps();
     const auto defence_value = targetCountry.getStability() * 2;
     coup_dice -= defence_value;
     if (coup_dice < 0) {
@@ -122,9 +122,9 @@ bool Coup::apply(Board& board) const {
   }
 }
 
-bool SpaceRace::apply(Board& board) const {
+bool ActionSpaceRace::apply(Board& board) const {
   auto& spaceTrack = board.getSpaceTrack();
-  if (spaceTrack.canSpace(side_, opeValue_)) {
+  if (spaceTrack.canSpace(side_, card_->getOps())) {
     auto roll = Randomizer::getInstance().rollDice();
     if (roll <= spaceTrack.getRollMax(side_)) {
       spaceTrack.advanceSpaceTrack(board, side_, 1);

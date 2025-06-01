@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "card.hpp"
 #include "game_enums.hpp"
 
 class Board;
@@ -11,30 +12,26 @@ class Move;
 
 class Command {
  public:
-  Command(MoveType type, Side side, int opeValue)
-      : type_{type}, side_{side}, opeValue_{opeValue} {};
+  Command(Side side, const std::unique_ptr<Card>& card)
+      : side_{side}, card_{card} {};
   virtual ~Command() = default;
   virtual bool apply(Board& board) const = 0;
   // MCTSで必要
   // virtual bool undo(Board& board) const = 0;
 
-  MoveType getType() const { return type_; }
-
  protected:
   const Side side_;
-  int opeValue_;
-
- private:
-  MoveType type_;
+  const std::unique_ptr<Card>& card_;
 };
 
-class PlaceInfluence : public Command {
+using CommandPtr = std::shared_ptr<Command>;
+
+class ActionPlaceInfluence : public Command {
  public:
-  PlaceInfluence(
-      Side side, int opeValue,
+  ActionPlaceInfluence(
+      Side side, const std::unique_ptr<Card>& card,
       const std::vector<std::pair<CountryEnum, int>>& targetCountries)
-      : Command{MoveType::PLACE_INFLUENCE, side, opeValue},
-        targetCountries_{targetCountries} {};
+      : Command{side, card}, targetCountries_{targetCountries} {};
 
   bool apply(Board& board) const override;
 
@@ -42,11 +39,11 @@ class PlaceInfluence : public Command {
   const std::vector<std::pair<CountryEnum, int>> targetCountries_;
 };
 
-class Realigment : public Command {
+class ActionRealigment : public Command {
  public:
-  Realigment(Side side, CountryEnum targetCountry)
-      : Command{MoveType::REALIGNMENT, side, 1},
-        targetCountry_{targetCountry} {};
+  ActionRealigment(Side side, const std::unique_ptr<Card>& card,
+                   CountryEnum targetCountry)
+      : Command{side, card}, targetCountry_{targetCountry} {};
 
   bool apply(Board& board) const override;
 
@@ -54,11 +51,11 @@ class Realigment : public Command {
   const CountryEnum targetCountry_;
 };
 
-class Coup : public Command {
+class ActionCoup : public Command {
  public:
-  Coup(Side side, int opeValue, CountryEnum targetCountry)
-      : Command{MoveType::COUP, side, opeValue},
-        targetCountry_{targetCountry} {};
+  ActionCoup(Side side, const std::unique_ptr<Card>& card,
+             CountryEnum targetCountry)
+      : Command{side, card}, targetCountry_{targetCountry} {};
 
   bool apply(Board& board) const override;
 
@@ -66,21 +63,30 @@ class Coup : public Command {
   const CountryEnum targetCountry_;
 };
 
-class SpaceRace : public Command {
+class ActionSpaceRace : public Command {
  public:
-  SpaceRace(Side side, int opeValue)
-      : Command{MoveType::SPACE_RACE, side, opeValue} {};
+  ActionSpaceRace(Side side, const std::unique_ptr<Card>& card)
+      : Command{side, card} {};
 
   bool apply(Board& board) const override;
 };
-
-using CommandPtr = std::shared_ptr<Command>;
 
 class Request : public Command {
  public:
-  Side waitingForSide;
+  Request(Side side,
+          std::function<std::vector<std::unique_ptr<Move>>(const Board&)>
+              legalMoves)
+      : Command(side, getNullCard()), legalMoves(std::move(legalMoves)) {}
+
   std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;
   // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
   bool apply(Board&) const override { return true; }
+  Side getSide() const { return side_; }
+
+ private:
+  static const std::unique_ptr<Card>& getNullCard() {
+    static std::unique_ptr<Card> nullCard;
+    return nullCard;
+  }
 };

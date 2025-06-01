@@ -45,7 +45,7 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
       if (auto* req = dynamic_cast<Request*>(cmdPtr->get())) {
-        return {req->legalMoves(board), req->waitingForSide};
+        return {req->legalMoves(board), req->getSide()};
       }
       (*cmdPtr)->apply(board);
       // board.history.push_back(*cmdPtr);  // undo ログ
