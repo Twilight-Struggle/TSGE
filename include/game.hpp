@@ -19,9 +19,7 @@ class Game {
 #endif
   Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
        const std::array<std::unique_ptr<Card>, 111>& cardpool);
-  const std::array<std::unique_ptr<Card>, 111>& getCardpool() const {
-    return cardpool_;
-  }
+
   Board& getBoard() { return board_; }
 
   void next();
@@ -36,6 +34,5 @@ class Game {
   Board board_;
 
   std::array<Player<TestPolicy>, 2> players_;
-  const std::array<std::unique_ptr<Card>, 111>& cardpool_;
   void mayFail(bool success, const std::string& message);
 };

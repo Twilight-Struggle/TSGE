@@ -1,0 +1,59 @@
+AIへの質問
+トワイライトストラグルのC++ゲームエンジンの開発を行っています。
+これはAIで利用するためのゲームエンジンです。ゲーム状態をディープラーニングに与えること、
+及びMCTSで探索を行う予定です。
+getLegalMove()等のMCTSに必要なメソッド等も考慮してください。
+ここで以下のような処理をするときの設計を考えていただきたいです。
+
+アクションラウンド(AR)を実行します。処理は以下のとおりです。
+AR1の流れ:
+1:
+USSRのPlayerから行いたい行動及び使うカードを取得します(Move classで管理)。
+行動は次のいずれかです。
+SpaceRace
+PlaceInfluence
+Coup
+Realignment
+Event
+ここでEventが選択されてかつそのカードがUSA側のカードの場合、その次にPlaceInfluence, Coup, Realignmentのいずれかを再び選択することになります。
+つまりEventの処理完了後に再びMoveをUSSR playerから受け入れる必要があるということですね。
+2:
+USSRのPlayerから受け取った行動を実行します。
+もしUSA側のEventが使用された場合、USA Playerに入力を求める場合があります。
+3:
+相手側(USA)のEventを実行した場合、USSR playerがPlaceInfluence, Coup, Realignmentのいずれかを実行。
+逆に相手側(USA)のカードを使用して上で、PlaceInfluence, Coup, Realignmentを実行していたらそのイベントを実行。
+4:
+ARの終了処理を行い、USAプレイヤーに移行。
+5:
+USAのPlayerが上記1-4を実行。
+6:
+AR1終了時処理
+
+プレイヤーから入力される標準アクションとしてPlaceInfluence, Coup, Realignment, Event, Space Raceが存在します。
+しかしカードイベントは様々な入力をプレイヤーに要求します。
+例えば西欧から3つUSAの影響力を取り除く(ただし1カ国上限2つまで)や、
+中南米に2の影響力を任意の1カ国に置く→CoupかRealignmentを選択→中南米に作戦値2でそれを実行　などです。
+この点も考慮しなくてはなりません。
+
+参考にしたコードではStackを利用していました。これを考慮し、以下のような設計を考えました。
+
+メインゲームループ
+Gameインスタンス化。この時点でどちらの陣営か決定し、スタックに、HEADLINE、USA_EXTRA_PLACE、USA_WEST_EUROPE、USSR_EAST_EUROPEをpush。
+game.next()→スタックからUSSR_EAST_EUROPEをpopし、USSRプレイヤー.decideMove()。USSRはUSSR_EAST_EUROPEの行動計画(Move)を返す。
+gameインスタンスでUSSR_EAST_EUROPEのMoveを実行
+game.next()→popし、.decideMove()。PlayerはMoveを返す。
+同様にgameで実行。
+→...
+game.next()→HEADLINEをpopし、USSR.decideMove()、USA.decideMove()でそれぞれMove返却。
+gameで処理し、スタックにAR_USSRをpush
+game.next()→AR_USSRをpopし、USSR.decideMove()でMove。
+gameで処理
+もしEventかつUSA側のカードの場合→USAのイベント実行(このときUSAプレイヤーに入力を求める場合がある)
+→その後再びUSSRプレイヤーにPlaceInfluence, Coup, Realignmentのいずれかを実行してもらう(USSR.decideMove())。
+PlaceInfluence, Coup, RealignmentいずれかでかつUSA側のカードの場合、→USSRの該当アクションをgameインスタンスが処理
+→USAのイベント実行(このときUSAプレイヤーに入力を求める場合がある)
+AR終了。まだUSAのAR権が残っているなら、AR_USAをpush。残っていなくてかつUSSRのAR権が残っているなら、AR_USSRをpush、残っていなければターン終了時処理。
+game.next()→大体の場合AR_USAをpopし、USA.decideMove()でMove。
+gameで処理…USSR側と同様(vice versa)。
+AR終了。まだUSSRのAR権が残っているなら、AR_USSRをpush。残っていなくてかつUSAのAR権が残っているなら、AR_USAをpush、残っていなければターン終了時処理。
