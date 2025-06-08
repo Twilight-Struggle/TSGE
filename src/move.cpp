@@ -5,21 +5,21 @@
 #include "command.hpp"
 
 CommandPtr ActionPlaceInfluenceMove::toCommand(
-    const std::unique_ptr<Card>& card, Side side) const {
-  return std::make_unique<ActionPlaceInfluence>(side, card, targetCountries_);
+    const std::unique_ptr<Card>& card) const {
+  return std::make_unique<ActionPlaceInfluence>(getSide(), card,
+                                                targetCountries_);
 }
 
-CommandPtr ActionCoupMove::toCommand(const std::unique_ptr<Card>& card,
-                                     Side side) const {
-  return std::make_unique<ActionCoup>(side, card, targetCountry_);
+CommandPtr ActionCoupMove::toCommand(const std::unique_ptr<Card>& card) const {
+  return std::make_unique<ActionCoup>(getSide(), card, targetCountry_);
 }
 
-CommandPtr ActionSpaceRaceMove::toCommand(const std::unique_ptr<Card>& card,
-                                          Side side) const {
-  return std::make_unique<ActionSpaceRace>(side, card);
+CommandPtr ActionSpaceRaceMove::toCommand(
+    const std::unique_ptr<Card>& card) const {
+  return std::make_unique<ActionSpaceRace>(getSide(), card);
 }
 
-CommandPtr ActionRealigmentMove::toCommand(const std::unique_ptr<Card>& card,
-                                           Side side) const {
-  return std::make_unique<ActionRealigment>(side, card, targetCountry_);
+CommandPtr ActionRealigmentMove::toCommand(
+    const std::unique_ptr<Card>& card) const {
+  return std::make_unique<ActionRealigment>(getSide(), card, targetCountry_);
 }

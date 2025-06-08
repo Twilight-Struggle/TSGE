@@ -137,8 +137,8 @@ LegalMovesGenerator::ActionPlaceInfluenceLegalMoves(const Board& board,
                           placeableVec, side, bonus);
       }
       for (const auto& pattern : cache[key])
-        results.emplace_back(
-            std::make_unique<ActionPlaceInfluenceMove>(cardEnum, pattern));
+        results.emplace_back(std::make_unique<ActionPlaceInfluenceMove>(
+            cardEnum, side, pattern));
     }
   }
   return results;

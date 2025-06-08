@@ -11,24 +11,25 @@ class Game;
 
 class Move {
  public:
-  Move(CardEnum card) : card_{card} {}
+  Move(CardEnum card, Side side) : card_{card}, side_{side} {}
   virtual ~Move() = default;
 
   CardEnum getCard() const { return card_; }
-  virtual CommandPtr toCommand(const std::unique_ptr<Card>& card,
-                               Side side) const = 0;
+  Side getSide() const { return side_; }
+  virtual CommandPtr toCommand(const std::unique_ptr<Card>& card) const = 0;
 
  private:
   const CardEnum card_;
+  const Side side_;
 };
 
 class ActionPlaceInfluenceMove : public Move {
  public:
-  ActionPlaceInfluenceMove(CardEnum card,
+  ActionPlaceInfluenceMove(CardEnum card, Side side,
                            const std::map<CountryEnum, int>& targetCountries)
-      : Move{card}, targetCountries_{targetCountries} {}
+      : Move{card, side}, targetCountries_{targetCountries} {}
 
-  CommandPtr toCommand(const std::unique_ptr<Card>& card, Side side) const;
+  CommandPtr toCommand(const std::unique_ptr<Card>& card) const override;
   const std::map<CountryEnum, int>& getTargetCountries() const {
     return targetCountries_;
   }
@@ -39,10 +40,10 @@ class ActionPlaceInfluenceMove : public Move {
 
 class ActionCoupMove : public Move {
  public:
-  ActionCoupMove(CardEnum card, CountryEnum targetCountry)
-      : Move{card}, targetCountry_{targetCountry} {}
+  ActionCoupMove(CardEnum card, Side side, CountryEnum targetCountry)
+      : Move{card, side}, targetCountry_{targetCountry} {}
 
-  CommandPtr toCommand(const std::unique_ptr<Card>& card, Side side) const;
+  CommandPtr toCommand(const std::unique_ptr<Card>& card) const override;
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
@@ -51,17 +52,17 @@ class ActionCoupMove : public Move {
 
 class ActionSpaceRaceMove : public Move {
  public:
-  ActionSpaceRaceMove(CardEnum card) : Move{card} {}
+  ActionSpaceRaceMove(CardEnum card, Side side) : Move{card, side} {}
 
-  CommandPtr toCommand(const std::unique_ptr<Card>& card, Side side) const;
+  CommandPtr toCommand(const std::unique_ptr<Card>& card) const override;
 };
 
 class ActionRealigmentMove : public Move {
  public:
-  ActionRealigmentMove(CardEnum card, CountryEnum targetCountry)
-      : Move{card}, targetCountry_{targetCountry} {}
+  ActionRealigmentMove(CardEnum card, Side side, CountryEnum targetCountry)
+      : Move{card, side}, targetCountry_{targetCountry} {}
 
-  CommandPtr toCommand(const std::unique_ptr<Card>& card, Side side) const;
+  CommandPtr toCommand(const std::unique_ptr<Card>& card) const override;
   CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
@@ -70,7 +71,7 @@ class ActionRealigmentMove : public Move {
 
 class ActionEventMove : public Move {
  public:
-  ActionEventMove(CardEnum card) : Move{card} {}
+  ActionEventMove(CardEnum card, Side side) : Move{card, side} {}
 
-  CommandPtr toCommand(const std::unique_ptr<Card>& card, Side side) const;
+  CommandPtr toCommand(const std::unique_ptr<Card>& card) const override;
 };
