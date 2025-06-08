@@ -1,6 +1,7 @@
 #include "legal_moves_generator.hpp"
 
 #include <map>
+#include <utility>
 #include <vector>
 
 #include "cards_enum.hpp"
@@ -134,10 +135,10 @@ LegalMovesGenerator::ActionPlaceInfluenceLegalMoves(const Board& board,
 
         placeInfluenceDfs(0, 0, tmpWorldMap, placed, cache[key], totalOps,
                           placeableVec, side, bonus);
-        for (const auto& pattern : cache[key])
-          results.emplace_back(std::make_unique<ActionPlaceInfluenceMove>(
-              cardEnum, pattern));  // TODO
       }
+      for (const auto& pattern : cache[key])
+        results.emplace_back(
+            std::make_unique<ActionPlaceInfluenceMove>(cardEnum, pattern));
     }
   }
   return results;

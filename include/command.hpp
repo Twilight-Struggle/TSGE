@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -28,15 +29,14 @@ using CommandPtr = std::shared_ptr<Command>;
 
 class ActionPlaceInfluence : public Command {
  public:
-  ActionPlaceInfluence(
-      Side side, const std::unique_ptr<Card>& card,
-      const std::vector<std::pair<CountryEnum, int>>& targetCountries)
+  ActionPlaceInfluence(Side side, const std::unique_ptr<Card>& card,
+                       const std::map<CountryEnum, int>& targetCountries)
       : Command{side, card}, targetCountries_{targetCountries} {};
 
   bool apply(Board& board) const override;
 
  private:
-  const std::vector<std::pair<CountryEnum, int>> targetCountries_;
+  const std::map<CountryEnum, int> targetCountries_;
 };
 
 class ActionRealigment : public Command {

@@ -1,6 +1,6 @@
 #pragma once
+#include <map>
 #include <memory>
-#include <vector>
 
 #include "card.hpp"
 #include "cards_enum.hpp"
@@ -24,17 +24,17 @@ class Move {
 
 class ActionPlaceInfluenceMove : public Move {
  public:
-  ActionPlaceInfluenceMove(
-      CardEnum card, std::vector<std::pair<CountryEnum, int>>&& targetCountries)
-      : Move{card}, targetCountries_{std::move(targetCountries)} {}
+  ActionPlaceInfluenceMove(CardEnum card,
+                           const std::map<CountryEnum, int>& targetCountries)
+      : Move{card}, targetCountries_{targetCountries} {}
 
   CommandPtr toCommand(const std::unique_ptr<Card>& card, Side side) const;
-  const std::vector<std::pair<CountryEnum, int>>& getTargetCountries() const {
+  const std::map<CountryEnum, int>& getTargetCountries() const {
     return targetCountries_;
   }
 
  private:
-  const std::vector<std::pair<CountryEnum, int>> targetCountries_;
+  const std::map<CountryEnum, int> targetCountries_;
 };
 
 class ActionCoupMove : public Move {
