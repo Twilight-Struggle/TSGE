@@ -1,8 +1,10 @@
 #pragma once
 
+#include <array>
 #include <variant>
 #include <vector>
 
+#include "cards_enum.hpp"
 #include "command.hpp"
 #include "game_enums.hpp"
 #include "trackers.hpp"
@@ -10,13 +12,22 @@
 
 class Board {
  public:
-  Board()
-      : worldMap_{},
+  Board(const std::array<std::unique_ptr<Card>, 111>& cardpool)
+      : cardpool_{cardpool},
+        worldMap_{},
         spaceTrack_{},
         defconTrack_{},
         milopsTrack_{},
         turnTrack_{},
-        actionRoundTrack_{} {}
+        actionRoundTrack_{},
+        playerHands_{} {
+    for (auto& hand : playerHands_) {
+      hand.reserve(9);
+    }
+  }
+  const std::array<std::unique_ptr<Card>, 111>& getCardpool() const {
+    return cardpool_;
+  }
   std::vector<std::variant<StateType, CommandPtr>>& getStates() {
     return states_;
   }
@@ -26,7 +37,13 @@ class Board {
   MilopsTrack& getMilopsTrack() { return milopsTrack_; }
   TurnTrack& getTurnTrack() { return turnTrack_; }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
+  std::vector<CardEnum>& getPlayerHand(Side side) {
+    return playerHands_[static_cast<size_t>(side)];
+  }
   const WorldMap& getWorldMap() const { return worldMap_; }
+  const std::vector<CardEnum>& getPlayerHand(Side side) const {
+    return playerHands_[static_cast<size_t>(side)];
+  }
   int getVp() const { return vp_; }
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {
@@ -40,6 +57,7 @@ class Board {
   }
 
  private:
+  const std::array<std::unique_ptr<Card>, 111>& cardpool_;
   std::vector<std::variant<StateType, CommandPtr>> states_;
   WorldMap worldMap_;
   SpaceTrack spaceTrack_;
@@ -47,5 +65,6 @@ class Board {
   MilopsTrack milopsTrack_;
   TurnTrack turnTrack_;
   ActionRoundTrack actionRoundTrack_;
+  std::array<std::vector<CardEnum>, 2> playerHands_;
   int vp_ = 0;
 };

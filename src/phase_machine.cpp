@@ -11,8 +11,7 @@
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
 std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
-    Board& board, const std::array<std::unique_ptr<Card>, 111>& cardpool_,
-    std::optional<std::unique_ptr<Move>>&& answer) {
+    Board& board, std::optional<std::unique_ptr<Move>>&& answer) {
   auto& states = board.getStates();
 
   /*===============================
@@ -30,8 +29,9 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
     Side side =
         answer.value()
             ->getSide();  // Sideをどこから取得するかは未定　仮にMoveからとする
+    auto& cardpool = board.getCardpool();
     auto cmds = answer.value()->toCommand(
-        cardpool_[static_cast<size_t>(answer.value()->getCard())], side);
+        cardpool[static_cast<size_t>(answer.value()->getCard())], side);
     for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
       states.emplace_back(*it);
 
