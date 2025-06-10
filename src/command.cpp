@@ -6,50 +6,12 @@
 #include "randomizer.hpp"
 
 bool ActionPlaceInfluence::apply(Board& board) const {
-  auto& worldMap = board.getWorldMap();
-  int cumsumOpeValue = 0;
   for (const auto& targetCountry : targetCountries_) {
-    // if targetCountry.first not in placeableCountries_
-    auto placeableCountries = board.getWorldMap().placeableCountries(side_);
-    if (placeableCountries.find(targetCountry.first) ==
-        placeableCountries.end()) {
-      return false;
-    }
-    const auto country = worldMap.getCountry(targetCountry.first);
-    if (country.getControlSide() == side_ ||
-        country.getControlSide() == Side::NEUTRAL) {
-      cumsumOpeValue += targetCountry.second;
-    } else {
-      // 相手が支配している場合ペナルティがある
-      const auto overControlNum = country.getOverControlNum();
-      if (overControlNum == 0) {
-        cumsumOpeValue += targetCountry.second + 1;
-      } else if (overControlNum == 1) {
-        if (targetCountry.second == 1)
-          cumsumOpeValue += targetCountry.second + 1;
-        else  // targetCountry.second >= 2
-          cumsumOpeValue += targetCountry.second + 2;
-
-      } else {  // overControlNum >= 2
-        if (targetCountry.second == 1)
-          cumsumOpeValue += targetCountry.second + 1;
-        else if (targetCountry.second == 2)
-          cumsumOpeValue += targetCountry.second + 2;
-        else  // targetCountry.second >= 3
-          cumsumOpeValue += targetCountry.second + 3;
-      }
-      // 上限6のためここまででいい
-    }
+    board.getWorldMap()
+        .getCountry(targetCountry.first)
+        .addInfluence(side_, targetCountry.second);
   }
-  if (cumsumOpeValue == card_->getOps()) {
-    for (const auto& targetCountry : targetCountries_) {
-      worldMap.getCountry(targetCountry.first)
-          .addInfluence(side_, targetCountry.second);
-    }
-    return true;
-  } else {
-    return false;
-  }
+  return true;
 }
 
 bool ActionRealigment::apply(Board& board) const {
