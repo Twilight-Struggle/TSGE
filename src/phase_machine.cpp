@@ -29,10 +29,9 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
     auto& cardpool = board.getCardpool();
     auto cmds = answer.value()->toCommand(
         cardpool[static_cast<size_t>(answer.value()->getCard())]);
-    states.emplace_back(std::move(cmds));
-    // おそらくコマンドは複数あるので、逆順にスタックに積む　現状はなし
-    // for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
-    //   states.emplace_back(*it);
+    // 逆順にスタックに積む
+    for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
+      states.emplace_back(*it);
 
     answer.reset();
   }

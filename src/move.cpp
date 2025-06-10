@@ -3,23 +3,38 @@
 #include <memory>
 
 #include "command.hpp"
+#include "game_enums.hpp"
 
-CommandPtr ActionPlaceInfluenceMove::toCommand(
+std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
-  return std::make_unique<ActionPlaceInfluence>(getSide(), card,
-                                                targetCountries_);
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_unique<ActionPlaceInfluence>(
+      getSide(), card, targetCountries_));
+  if (getOpponentSide(getSide()) == card->getSide()) {
+    // TODO 相手のイベントが発動 EventCommand push
+  }
+  return commands;
 }
 
-CommandPtr ActionCoupMove::toCommand(const std::unique_ptr<Card>& card) const {
-  return std::make_unique<ActionCoup>(getSide(), card, targetCountry_);
+std::vector<CommandPtr> ActionCoupMove::toCommand(
+    const std::unique_ptr<Card>& card) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(
+      std::make_unique<ActionCoup>(getSide(), card, targetCountry_));
+  return commands;
 }
 
-CommandPtr ActionSpaceRaceMove::toCommand(
+std::vector<CommandPtr> ActionSpaceRaceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
-  return std::make_unique<ActionSpaceRace>(getSide(), card);
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_unique<ActionSpaceRace>(getSide(), card));
+  return commands;
 }
 
-CommandPtr ActionRealigmentMove::toCommand(
+std::vector<CommandPtr> ActionRealigmentMove::toCommand(
     const std::unique_ptr<Card>& card) const {
-  return std::make_unique<ActionRealigment>(getSide(), card, targetCountry_);
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(
+      std::make_unique<ActionRealigment>(getSide(), card, targetCountry_));
+  return commands;
 }
