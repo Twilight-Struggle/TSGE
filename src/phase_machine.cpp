@@ -43,6 +43,8 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
       if (auto* req = dynamic_cast<Request*>(cmdPtr->get())) {
+        // TODO:
+        // req->legalMoves(board)={}の可能性があるのでこの場合はPhaseを進める処理が必要
         return {req->legalMoves(board), req->getSide()};
       }
       (*cmdPtr)->apply(board);
@@ -60,6 +62,8 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
         case StateType::AR_USA: {
           Side side = stateType == StateType::AR_USSR ? Side::USSR : Side::USA;
           states.emplace_back(StateType::AR_COMPLETE);
+          // TODO:
+          // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
           return {LegalMovesGenerator::ArLegalMoves(board, side),
                   side};  // 合法手を返して停止
         }

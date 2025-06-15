@@ -8,6 +8,13 @@
 #include "command.hpp"
 #include "game_enums.hpp"
 
+enum class AdditionalOpsType : uint8_t {
+  NONE = 0,
+  CHINA_CARD = 1 << 0,
+  VIETNAM_REVOLTS = 1 << 1,
+  BOTH = CHINA_CARD | VIETNAM_REVOLTS
+};
+
 class Game;
 
 class Move {
@@ -73,6 +80,33 @@ class ActionRealigmentMove : public Move {
 
  private:
   const CountryEnum targetCountry_;
+};
+
+// Request内部で使用される、追加のRequestを生成しないRealignmentMove
+class RealignmentRequestMove : public Move {
+ public:
+  RealignmentRequestMove(CardEnum card, Side side, CountryEnum targetCountry,
+                         const std::vector<CountryEnum>& history,
+                         int remainingOps, 
+                         AdditionalOpsType appliedAdditionalOps = AdditionalOpsType::NONE)
+      : Move{card, side}, targetCountry_{targetCountry}, 
+        realignmentHistory_{history}, remainingOps_{remainingOps},
+        appliedAdditionalOps_{appliedAdditionalOps} {}
+
+  std::vector<CommandPtr> toCommand(
+      const std::unique_ptr<Card>& card) const override;
+  CountryEnum getTargetCountry() const { return targetCountry_; }
+  const std::vector<CountryEnum>& getRealignmentHistory() const { 
+    return realignmentHistory_; 
+  }
+  int getRemainingOps() const { return remainingOps_; }
+  AdditionalOpsType getAppliedAdditionalOps() const { return appliedAdditionalOps_; }
+
+ private:
+  const CountryEnum targetCountry_;
+  const std::vector<CountryEnum> realignmentHistory_;
+  const int remainingOps_;
+  const AdditionalOpsType appliedAdditionalOps_;
 };
 
 class ActionEventMove : public Move {

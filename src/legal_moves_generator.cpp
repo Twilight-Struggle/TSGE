@@ -1,12 +1,38 @@
 #include "legal_moves_generator.hpp"
 
+#include <cstddef>
 #include <map>
 #include <utility>
 #include <vector>
 
 #include "cards_enum.hpp"
 #include "game_enums.hpp"
+#include "move.hpp"
 #include "world_map.hpp"
+
+// ヘルパー関数：履歴のすべての国が特定の地域に属するかチェック
+static bool isAllInRegion(const std::vector<CountryEnum>& history,
+                          const Board& board, Region region) {
+  if (history.empty()) return false;
+
+  for (const auto& country : history) {
+    const auto& countryObj = board.getWorldMap().getCountry(country);
+    if (!countryObj.getRegions().contains(region)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool isAllInAsia(const std::vector<CountryEnum>& history,
+                        const Board& board) {
+  return isAllInRegion(history, board, Region::ASIA);
+}
+
+static bool isAllInSoutheastAsia(const std::vector<CountryEnum>& history,
+                                 const Board& board) {
+  return isAllInRegion(history, board, Region::SOUTH_EAST_ASIA);
+}
 
 struct BonusCondition {
   /// 全配置がこの条件(例えば全部アジアにおいてる)を満たしていれば true
@@ -141,5 +167,147 @@ LegalMovesGenerator::ActionPlaceInfluenceLegalMoves(const Board& board,
             cardEnum, side, pattern));
     }
   }
+  return results;
+}
+
+std::vector<std::unique_ptr<Move>>
+LegalMovesGenerator::ActionRealignmentLegalMoves(const Board& board,
+                                                 Side side) {
+  auto& hands = board.getPlayerHand(side);
+  if (hands.empty()) return {};
+
+  const auto& worldMap = board.getWorldMap();
+  std::vector<std::unique_ptr<Move>> results;
+
+  // 相手側を取得
+  Side opponentSide = getOpponentSide(side);
+
+  // 全ての国を調べて、相手の影響力がある国を対象とする
+  // USA/USSRを除く84か国（インデックス2から85まで）
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < worldMap.getCountriesCount(); ++i) {
+    CountryEnum countryEnum = static_cast<CountryEnum>(i);
+
+    const auto& country = worldMap.getCountry(countryEnum);
+
+    // 相手の影響力が0の国は対象外
+    if (country.getInfluence(opponentSide) == 0) {
+      continue;
+    }
+
+    // 各手札から対象国へのRealignmentMoveを生成
+    for (CardEnum cardEnum : hands) {
+      results.emplace_back(
+          std::make_unique<ActionRealigmentMove>(cardEnum, side, countryEnum));
+    }
+  }
+
+  return results;
+}
+
+std::vector<std::unique_ptr<Move>>
+LegalMovesGenerator::RealignmentRequestLegalMoves(
+    const Board& board, Side side, CardEnum cardEnum,
+    const std::vector<CountryEnum>& history, int remainingOps,
+    AdditionalOpsType appliedAdditionalOps) {
+  const auto& worldMap = board.getWorldMap();
+
+  std::vector<std::unique_ptr<Move>> results;
+
+  // 相手側を取得
+  Side opponentSide = getOpponentSide(side);
+
+  // 全ての国を調べて、相手の影響力がある国を対象とする
+  // USA/USSRを除く84か国（インデックス2から85まで）
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < worldMap.getCountriesCount(); ++i) {
+    CountryEnum countryEnum = static_cast<CountryEnum>(i);
+
+    const auto& country = worldMap.getCountry(countryEnum);
+
+    // 相手の影響力が0の国は対象外
+    if (country.getInfluence(opponentSide) == 0) {
+      continue;
+    }
+
+    results.emplace_back(std::make_unique<RealignmentRequestMove>(
+        cardEnum, side, countryEnum, history, remainingOps, appliedAdditionalOps));
+  }
+  // RealignRequestMoveではUSSR=パスも選択可能
+  results.emplace_back(std::make_unique<RealignmentRequestMove>(
+      cardEnum, side, CountryEnum::USSR, history, remainingOps, appliedAdditionalOps));
+
+  return results;
+}
+
+std::vector<std::unique_ptr<Move>>
+LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
+    const Board& board, Side side, CardEnum cardEnum,
+    const std::vector<CountryEnum>& history,
+    AdditionalOpsType appliedAdditionalOps) {
+  std::vector<std::unique_ptr<Move>> results;
+  const auto& worldMap = board.getWorldMap();
+  Side opponentSide = getOpponentSide(side);
+
+  // 中国カードの追加Opsチェック
+  bool chinaCardBonus = false;
+  if (static_cast<uint8_t>(appliedAdditionalOps) & static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD)) {
+    // 既に中国カードボーナスが適用されている
+  } else {
+    // TODO: カードが中国カードかどうかの判定が必要
+    // if (cardEnum == CHINA_CARD && isAllInAsia(history, board)) {
+    //   chinaCardBonus = true;
+    // }
+  }
+
+  // ベトナム蜂起の追加Opsチェック
+  bool vietnamRevoltsBonus = false;
+  if (static_cast<uint8_t>(appliedAdditionalOps) & static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS)) {
+    // 既にベトナム蜂起ボーナスが適用されている
+  } else {
+    // TODO: ベトナム蜂起が有効かどうかの判定が必要
+    // if (board.isVietnamRevoltsActive() && isAllInSoutheastAsia(history, board)) {
+    //   vietnamRevoltsBonus = true;
+    // }
+  }
+
+  // 中国カードボーナスの処理
+  if (chinaCardBonus) {
+    AdditionalOpsType newAppliedOps = static_cast<AdditionalOpsType>(
+        static_cast<uint8_t>(appliedAdditionalOps) | static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD));
+    
+    // アジア地域限定の合法手を生成
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < worldMap.getCountriesCount(); ++i) {
+      CountryEnum countryEnum = static_cast<CountryEnum>(i);
+      const auto& country = worldMap.getCountry(countryEnum);
+      
+      if (country.getInfluence(opponentSide) == 0) continue;
+      if (!country.getRegions().contains(Region::ASIA)) continue;
+      
+      results.emplace_back(std::make_unique<RealignmentRequestMove>(
+          cardEnum, side, countryEnum, history, 1, newAppliedOps));
+    }
+  }
+
+  // ベトナム蜂起ボーナスの処理
+  if (vietnamRevoltsBonus) {
+    AdditionalOpsType newAppliedOps = static_cast<AdditionalOpsType>(
+        static_cast<uint8_t>(appliedAdditionalOps) | static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS));
+    
+    // 東南アジア地域限定の合法手を生成
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < worldMap.getCountriesCount(); ++i) {
+      CountryEnum countryEnum = static_cast<CountryEnum>(i);
+      const auto& country = worldMap.getCountry(countryEnum);
+      
+      if (country.getInfluence(opponentSide) == 0) continue;
+      if (!country.getRegions().contains(Region::SOUTH_EAST_ASIA)) continue;
+      
+      results.emplace_back(std::make_unique<RealignmentRequestMove>(
+          cardEnum, side, countryEnum, history, 1, newAppliedOps));
+    }
+  }
+
   return results;
 }
