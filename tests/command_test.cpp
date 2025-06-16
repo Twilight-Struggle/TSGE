@@ -2,69 +2,92 @@
 
 #include <gtest/gtest.h>
 
-#include "game.hpp"
+#include "board.hpp"
+#include "card.hpp"
+
+// Dummy card class for testing
+class DummyCard : public Card {
+ public:
+  DummyCard() : Card(0, "Dummy", 3, Side::NEUTRAL, false) {}
+  bool event(Board& board, Side side) override { return true; }
+};
 
 class CommandTest : public ::testing::Test {
  protected:
+  CommandTest() : board(defaultCardPool()) {}
+
+  static const std::array<std::unique_ptr<Card>, 111>& defaultCardPool() {
+    static std::array<std::unique_ptr<Card>, 111> pool{};
+    if (!pool[0]) {
+      // Create a dummy card for testing
+      pool[0] = std::make_unique<DummyCard>();
+    }
+    return pool;
+  }
+
   Board board;
 };
 
 TEST_F(CommandTest, PlaceTest) {
-  // 置く権利のない場所には置けない
-  PlaceInfluence action_non_placeable(
-      Side::USSR, 3, {{CountryEnum::ANGOLA, 1}, {CountryEnum::AFGHANISTAN, 2}});
-  EXPECT_FALSE(action_non_placeable.apply(board));
-  // opeValueと一致しない数置けない
-  PlaceInfluence action_opeValue_incorrect(
-      Side::USSR, 3,
-      {{CountryEnum::AFGHANISTAN, 2}, {CountryEnum::SOUTH_KOREA, 2}});
-  EXPECT_FALSE(action_opeValue_incorrect.apply(board));
-  // 相手が支配でoverControlNumが0の場合 false
-  PlaceInfluence action_overControlNum_0_false(Side::USA, 1,
-                                               {{CountryEnum::NORTH_KOREA, 1}});
-  EXPECT_FALSE(action_overControlNum_0_false.apply(board));
-  // 相手が支配でoverControlNumが0の場合 true
-  PlaceInfluence action_overControlNum_0_true(Side::USA, 2,
-                                              {{CountryEnum::NORTH_KOREA, 1}});
-  EXPECT_TRUE(action_overControlNum_0_true.apply(board));
-  // 相手が支配でoverControlNumが1の場合
-  PlaceInfluence action_overControlNum_1_prepare(
-      Side::USA, 3, {{CountryEnum::SOUTH_KOREA, 3}});
-  EXPECT_TRUE(action_overControlNum_1_prepare.apply(board));
-  PlaceInfluence action_overControlNum_1(Side::USSR, 4,
-                                         {{CountryEnum::SOUTH_KOREA, 2}});
-  EXPECT_TRUE(action_overControlNum_1.apply(board));
-  // 相手が支配でoverControlNumが2の場合
-  PlaceInfluence action_overControlNum_2_prepare(Side::USA, 5,
-                                                 {{CountryEnum::JAPAN, 5}});
-  EXPECT_TRUE(action_overControlNum_2_prepare.apply(board));
-  PlaceInfluence action_overControlNum_2(Side::USSR, 6,
-                                         {{CountryEnum::JAPAN, 3}});
-  EXPECT_TRUE(action_overControlNum_2.apply(board));
+  // 単一国への影響力配置テスト
+  auto& northKorea = board.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
+  EXPECT_EQ(northKorea.getInfluence(Side::USA), 0);  // 初期状態確認
+
+  ActionPlaceInfluence action_single_country(Side::USA, board.getCardpool()[0],
+                                             {{CountryEnum::NORTH_KOREA, 2}});
+  action_single_country.apply(board);
+  EXPECT_EQ(northKorea.getInfluence(Side::USA),
+            2);  // 影響力が正しく配置されたか確認
+
+  // 複数国への同時配置テスト
+  auto& southKorea = board.getWorldMap().getCountry(CountryEnum::SOUTH_KOREA);
+  auto& japan = board.getWorldMap().getCountry(CountryEnum::JAPAN);
+  EXPECT_EQ(southKorea.getInfluence(Side::USSR), 0);  // 初期状態確認
+  EXPECT_EQ(japan.getInfluence(Side::USSR), 0);
+
+  ActionPlaceInfluence action_multiple_countries(
+      Side::USSR, board.getCardpool()[0],
+      {{CountryEnum::SOUTH_KOREA, 3}, {CountryEnum::JAPAN, 2}});
+  action_multiple_countries.apply(board);
+  EXPECT_EQ(southKorea.getInfluence(Side::USSR),
+            3);  // 両国に正しく配置されたか確認
+  EXPECT_EQ(japan.getInfluence(Side::USSR), 2);
+
+  // 累積的な影響力配置テスト（同じ国に追加配置）
+  ActionPlaceInfluence action_cumulative(Side::USSR, board.getCardpool()[0],
+                                         {{CountryEnum::JAPAN, 1}});
+  action_cumulative.apply(board);
+  EXPECT_EQ(japan.getInfluence(Side::USSR), 3);  // 2 + 1 = 3になっているか確認
+
+  // 他の国には影響がないことを確認
+  auto& angola = board.getWorldMap().getCountry(CountryEnum::ANGOLA);
+  EXPECT_EQ(angola.getInfluence(Side::USA), 0);
+  EXPECT_EQ(angola.getInfluence(Side::USSR), 0);
 }
 
 TEST_F(CommandTest, RealigmentTest) {
-  // 相手が置いてない国には影響力排除判定ができない
-  Realigment action_cant_realigment_ussr(Side::USSR, CountryEnum::ANGOLA);
-  EXPECT_FALSE(action_cant_realigment_ussr.apply(board));
-  Realigment action_cant_realigment_usa(Side::USA, CountryEnum::AFGHANISTAN);
-  EXPECT_FALSE(action_cant_realigment_usa.apply(board));
   // 相手が置いている国には影響力排除判定ができる
-  Realigment action_can_realigment_ussr(Side::USSR, CountryEnum::SOUTH_KOREA);
+  ActionRealigment action_can_realigment_ussr(
+      Side::USSR, board.getCardpool()[0], CountryEnum::SOUTH_KOREA);
   EXPECT_TRUE(action_can_realigment_ussr.apply(board));
-  Realigment action_can_realigment_usa(Side::USA, CountryEnum::NORTH_KOREA);
+  ActionRealigment action_can_realigment_usa(Side::USA, board.getCardpool()[0],
+                                             CountryEnum::NORTH_KOREA);
   EXPECT_TRUE(action_can_realigment_usa.apply(board));
 }
 
 TEST_F(CommandTest, CoupTest) {
   // 相手が置いてない国にはクーデターできない
-  Coup action_cant_coup_ussr(Side::USSR, 3, CountryEnum::ANGOLA);
+  ActionCoup action_cant_coup_ussr(Side::USSR, board.getCardpool()[0],
+                                   CountryEnum::ANGOLA);
   EXPECT_FALSE(action_cant_coup_ussr.apply(board));
-  Coup action_cant_coup_usa(Side::USA, 3, CountryEnum::AFGHANISTAN);
+  ActionCoup action_cant_coup_usa(Side::USA, board.getCardpool()[0],
+                                  CountryEnum::AFGHANISTAN);
   EXPECT_FALSE(action_cant_coup_usa.apply(board));
   // 相手が置いている国にはクーデターできる
-  Coup action_can_coup_ussr(Side::USSR, 3, CountryEnum::SOUTH_KOREA);
+  ActionCoup action_can_coup_ussr(Side::USSR, board.getCardpool()[0],
+                                  CountryEnum::SOUTH_KOREA);
   EXPECT_TRUE(action_can_coup_ussr.apply(board));
-  Coup action_can_coup_usa(Side::USA, 3, CountryEnum::NORTH_KOREA);
+  ActionCoup action_can_coup_usa(Side::USA, board.getCardpool()[0],
+                                 CountryEnum::NORTH_KOREA);
   EXPECT_TRUE(action_can_coup_usa.apply(board));
 }

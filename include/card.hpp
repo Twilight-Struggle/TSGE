@@ -3,7 +3,7 @@
 
 #include "game_enums.hpp"
 
-class Game;
+class Board;
 
 class Card {
  public:
@@ -14,7 +14,7 @@ class Card {
         side_{side},
         removedAfterEvent_{removedAfterEvent} {}
   virtual ~Card() = default;
-  virtual bool event(Game& game, Side side) = 0;
+  virtual bool event(Board& board, Side side) = 0;
 
   int getOps() const { return ops_; }
   Side getSide() const { return side_; }

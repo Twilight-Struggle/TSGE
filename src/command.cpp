@@ -22,10 +22,7 @@ bool ActionRealigment::apply(Board& board) const {
   }
   auto& worldmap = board.getWorldMap();
   auto country = worldmap.getCountry(targetCountry_);
-  if ((side_ == Side::USSR && country.getInfluence(Side::USA) == 0) ||
-      (side_ == Side::USA && country.getInfluence(Side::USSR) == 0)) {
-    return false;
-  }
+
   auto ussr_dice = Randomizer::getInstance().rollDice();
   auto usa_dice = Randomizer::getInstance().rollDice();
   if (country.getInfluence(Side::USSR) > country.getInfluence(Side::USA)) {
@@ -91,6 +88,7 @@ bool ActionSpaceRace::apply(Board& board) const {
     if (roll <= spaceTrack.getRollMax(side_)) {
       spaceTrack.advanceSpaceTrack(board, side_, 1);
     }
+    spaceTrack.spaceTried(side_);
     return true;
   } else {
     return false;

@@ -2,11 +2,18 @@
 
 #include <gtest/gtest.h>
 
-#include "game.hpp"
+#include "board.hpp"
 #include "game_enums.hpp"
 
 class TrackTest : public ::testing::Test {
  protected:
+  TrackTest() : board(defaultCardPool()) {}
+
+  static const std::array<std::unique_ptr<Card>, 111>& defaultCardPool() {
+    static std::array<std::unique_ptr<Card>, 111> pool{};
+    return pool;
+  }
+
   Board board;
   SpaceTrack spaceTrack;
   DefconTrack defconTrack;
