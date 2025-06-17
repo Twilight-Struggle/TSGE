@@ -4,7 +4,7 @@
 #include "game_enums.hpp"
 
 bool DuckAndCover::event(Board& board, Side side) {
-  board.getDefconTrack().changeDefcon(-1, board);
+  board.getDefconTrack().changeDefcon(-1);
   board.changeVp(getVpMultiplier(Side::USA) *
                  (5 - board.getDefconTrack().getDefcon()));
   return true;
@@ -22,6 +22,6 @@ bool Fidel::event(Board& board, Side side) {
 bool NuclearTestBan::event(Board& board, Side side) {
   board.changeVp((board.getDefconTrack().getDefcon() - 2) *
                  getVpMultiplier(side));
-  board.getDefconTrack().changeDefcon(2, board);
+  board.getDefconTrack().changeDefcon(2);
   return true;
 }

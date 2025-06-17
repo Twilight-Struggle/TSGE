@@ -71,6 +71,38 @@ class ActionSpaceRace : public Command {
   bool apply(Board& board) const override;
 };
 
+class ChangeDefconCommand : public Command {
+ public:
+  explicit ChangeDefconCommand(int delta)
+      : Command(Side::USSR, getNullCard()), delta_{delta} {}
+
+  bool apply(Board& board) const override;
+
+ private:
+  const int delta_;
+
+  static const std::unique_ptr<Card>& getNullCard() {
+    static std::unique_ptr<Card> nullCard;
+    return nullCard;
+  }
+};
+
+class ChangeVPCommand : public Command {
+ public:
+  explicit ChangeVPCommand(int delta)
+      : Command(Side::USSR, getNullCard()), delta_{delta} {}
+
+  bool apply(Board& board) const override;
+
+ private:
+  const int delta_;
+
+  static const std::unique_ptr<Card>& getNullCard() {
+    static std::unique_ptr<Card> nullCard;
+    return nullCard;
+  }
+};
+
 class Request : public Command {
  public:
   Request(Side side,

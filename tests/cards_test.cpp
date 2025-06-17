@@ -66,7 +66,7 @@ TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
   EXPECT_TRUE(sut.event(board, Side::USSR));
   EXPECT_EQ(board.getVp(), 3);
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);
-  EXPECT_TRUE(board.getDefconTrack().setDefcon(2, board));
+  EXPECT_TRUE(board.getDefconTrack().setDefcon(2));
   EXPECT_TRUE(sut.event(board, Side::USA));
   EXPECT_EQ(board.getVp(), 3);
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 4);

@@ -86,11 +86,64 @@ bool ActionSpaceRace::apply(Board& board) const {
   if (spaceTrack.canSpace(side_, card_->getOps())) {
     auto roll = Randomizer::getInstance().rollDice();
     if (roll <= spaceTrack.getRollMax(side_)) {
-      spaceTrack.advanceSpaceTrack(board, side_, 1);
+      // スペーストラックを進める
+      spaceTrack.advanceSpaceTrack(side_, 1);
+
+      // 新しい位置を取得
+      int newPosition = spaceTrack.getSpaceTrackPosition(side_);
+
+      // VP計算
+      for (const auto& i : {1, 3, 5, 7, 8}) {
+        if (newPosition == i) {
+          auto vpData = SpaceTrack::getSpaceVp(i);
+          int opponentPosition =
+              spaceTrack.getSpaceTrackPosition(getOpponentSide(side_));
+          if (opponentPosition < i) {
+            // 得点計算有利
+            board.changeVp(vpData[0] * getVpMultiplier(side_));
+          } else {
+            // 得点計算不利
+            board.changeVp(vpData[1] * getVpMultiplier(side_));
+          }
+          break;
+        }
+      }
+      // TODO:8に到達した場合そのターンのARを増やす
     }
     spaceTrack.spaceTried(side_);
     return true;
   } else {
     return false;
   }
+}
+
+bool ChangeDefconCommand::apply(Board& board) const {
+  auto& defcon = board.getDefconTrack();
+  int oldDefcon = defcon.getDefcon();
+  defcon.changeDefcon(delta_);
+  int newDefcon = defcon.getDefcon();
+  
+  // Defcon 2未満でゲーム終了チェック
+  if (newDefcon <= 1) {
+    // TODO: ゲーム終了処理
+  }
+  
+  // NORAD効果チェック（Defconが2に変更された場合）
+  if (oldDefcon != newDefcon && newDefcon == 2) {
+    // TODO: NORADの効果を適用
+  }
+  
+  return true;
+}
+
+bool ChangeVPCommand::apply(Board& board) const {
+  board.changeVp(delta_);
+
+  // VP ±20でゲーム終了チェック
+  int vp = board.getVp();
+  if (vp <= -20 || vp >= 20) {
+    // TODO: ゲーム終了処理
+  }
+
+  return true;
 }

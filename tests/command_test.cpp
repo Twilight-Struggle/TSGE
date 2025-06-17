@@ -91,3 +91,48 @@ TEST_F(CommandTest, CoupTest) {
                                  CountryEnum::NORTH_KOREA);
   EXPECT_TRUE(action_can_coup_usa.apply(board));
 }
+
+TEST_F(CommandTest, ChangeDefconCommandTest) {
+  // 初期状態チェック
+  EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);
+  
+  // Defcon変更テスト
+  ChangeDefconCommand changeDefcon(-2);
+  EXPECT_TRUE(changeDefcon.apply(board));
+  EXPECT_EQ(board.getDefconTrack().getDefcon(), 3);
+  
+  // NORAD効果トリガーテスト（Defconを2に変更）
+  board.getDefconTrack().setDefcon(3);
+  ChangeDefconCommand triggerNorad(-1);
+  EXPECT_TRUE(triggerNorad.apply(board));
+  EXPECT_EQ(board.getDefconTrack().getDefcon(), 2);
+  
+  // 範囲制限テスト（changeDefconはclampする）
+  ChangeDefconCommand exceedMax(10);
+  EXPECT_TRUE(exceedMax.apply(board));
+  EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);  // 5でクランプされる
+  
+  ChangeDefconCommand exceedMin(-10);
+  EXPECT_TRUE(exceedMin.apply(board));
+  EXPECT_EQ(board.getDefconTrack().getDefcon(), 1);  // 1でクランプされる
+}
+
+TEST_F(CommandTest, ChangeVPCommandTest) {
+  // 初期状態チェック
+  EXPECT_EQ(board.getVp(), 0);
+  
+  // VP変更テスト
+  ChangeVPCommand changeVP(5);
+  EXPECT_TRUE(changeVP.apply(board));
+  EXPECT_EQ(board.getVp(), 5);
+  
+  // 負のVP変更テスト
+  ChangeVPCommand changeVPNegative(-3);
+  EXPECT_TRUE(changeVPNegative.apply(board));
+  EXPECT_EQ(board.getVp(), 2);
+  
+  // 大きなVP変更テスト（ゲーム終了条件チェック）
+  ChangeVPCommand largeVP(25);
+  EXPECT_TRUE(largeVP.apply(board));
+  EXPECT_EQ(board.getVp(), 27);  // ゲーム終了条件に達するがTODOのため継続
+}

@@ -8,12 +8,14 @@ class Board;
 class SpaceTrack {
  public:
   SpaceTrack() = default;
-  bool advanceSpaceTrack(Board& game, Side side, int num);
+  bool advanceSpaceTrack(Side side, int num);
   bool effectEnabled(Side side, int num) const;
   bool canSpaceChallenge(Side side) const;
   bool canSpace(Side side, int opeValue) const;
   void spaceTried(Side side) { spaceTried_[static_cast<std::size_t>(side)]++; }
   int getRollMax(Side side) const;
+  int getSpaceTrackPosition(Side side) const { return spaceTrack_[static_cast<std::size_t>(side)]; }
+  static std::array<int, 2> getSpaceVp(int position) { return position > 0 && position <= 8 ? spaceVps_[position - 1] : std::array<int, 2>{0, 0}; }
 
  private:
   std::array<int, 2> spaceTrack_ = {0, 0};
@@ -26,8 +28,8 @@ class SpaceTrack {
 class DefconTrack {
  public:
   DefconTrack() = default;
-  bool setDefcon(int defcon, Board& game);
-  bool changeDefcon(int delta, Board& game);
+  bool setDefcon(int defcon);
+  bool changeDefcon(int delta);
   int getDefcon() const { return defcon_; }
 
  private:
