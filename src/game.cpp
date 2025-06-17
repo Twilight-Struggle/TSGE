@@ -34,10 +34,15 @@ Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
 void Game::next() {
   std::optional<std::unique_ptr<Move>> pending;
   while (true) {
-    auto [legalMoves, waitingForSide] =
+    auto [legalMoves, waitingForSide, winner] =
         PhaseMachine::step(board_, std::move(pending));
     if (legalMoves.empty() && waitingForSide == Side::NEUTRAL) {
       // スタックが空→ゲーム終了
+      // 勝利者情報が取得可能になった
+      if (winner.has_value()) {
+        // 勝利者が決定している
+        // TODO: 将来的にPlayer::onGameEnd(winner)を呼び出す
+      }
       break;
     }
     auto& player = players_[static_cast<size_t>(waitingForSide)];

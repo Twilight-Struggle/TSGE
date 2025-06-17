@@ -125,8 +125,8 @@ bool ChangeDefconCommand::apply(Board& board) const {
 
   // Defcon 1でゲーム終了
   if (newDefcon <= 1) {
-    board.pushState(StateType::GAME_END);
-    // TODO: ゲームの勝者をPlayerに返す
+    // DEFCON 1到達でUSA勝利（仮実装）
+    board.pushState(StateType::USA_WIN_END);
   }
 
   // NORAD効果チェック（Defconが2に変更された場合）
@@ -142,9 +142,10 @@ bool ChangeVPCommand::apply(Board& board) const {
 
   // VP ±20でゲーム終了
   int vp = board.getVp();
-  if (vp <= -20 || vp >= 20) {
-    board.pushState(StateType::GAME_END);
-    // TODO: ゲームの勝者をPlayerに返す
+  if (vp <= -20) {
+    board.pushState(StateType::USA_WIN_END);
+  } else if (vp >= 20) {
+    board.pushState(StateType::USSR_WIN_END);
   }
 
   return true;

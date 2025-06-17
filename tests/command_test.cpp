@@ -147,10 +147,11 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   ChangeDefconCommand endByDefcon(-4); // 5 → 1
   EXPECT_TRUE(endByDefcon.apply(board));
   
-  // GAME_ENDがstackにpushされることを確認
+  // 終了StateTypeがstackにpushされることを確認（DEFCON 1で相手の勝利）
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
-  EXPECT_EQ(std::get<StateType>(states.back()), StateType::GAME_END);
+  // DEFCON 1到達で相手の勝利（ここではUSA勝利）
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USA_WIN_END);
   
   // statesをリセット
   states.clear();
@@ -159,8 +160,8 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   ChangeVPCommand endByVP(20);
   EXPECT_TRUE(endByVP.apply(board));
   
-  // GAME_ENDがstackにpushされることを確認
+  // 終了StateTypeがstackにpushされることを確認（VP 20でUSSR勝利）
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
-  EXPECT_EQ(std::get<StateType>(states.back()), StateType::GAME_END);
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USSR_WIN_END);
 }

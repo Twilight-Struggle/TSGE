@@ -49,12 +49,7 @@ class Board {
   void pushState(std::variant<StateType, CommandPtr>&& state) {
     states_.emplace_back(state);
   }
-  void changeVp(int delta) {
-    vp_ += delta;
-    if (vp_ <= -20 || vp_ >= 20) {
-      // TODO:ゲーム終了
-    }
-  }
+  void changeVp(int delta) { vp_ += delta; }
 
  private:
   const std::array<std::unique_ptr<Card>, 111>& cardpool_;

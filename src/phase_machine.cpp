@@ -1,7 +1,6 @@
 #include "phase_machine.hpp"
 
 #include <cstddef>
-#include <utility>
 #include <variant>
 
 #include "board.hpp"
@@ -10,8 +9,9 @@
 
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
-std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
-    Board& board, std::optional<std::unique_ptr<Move>>&& answer) {
+std::tuple<std::vector<std::unique_ptr<Move>>, Side, std::optional<Side>>
+PhaseMachine::step(Board& board,
+                   std::optional<std::unique_ptr<Move>>&& answer) {
   auto& states = board.getStates();
 
   /*===============================
@@ -45,7 +45,7 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
       if (auto* req = dynamic_cast<Request*>(cmdPtr->get())) {
         // TODO:
         // req->legalMoves(board)={}の可能性があるのでこの場合はPhaseを進める処理が必要
-        return {req->legalMoves(board), req->getSide()};
+        return {req->legalMoves(board), req->getSide(), std::nullopt};
       }
       (*cmdPtr)->apply(board);
       // board.history.push_back(*cmdPtr);  // undo ログ
@@ -64,23 +64,31 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
           states.emplace_back(StateType::AR_COMPLETE);
           // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
-          return {LegalMovesGenerator::ArLegalMoves(board, side),
-                  side};  // 合法手を返して停止
+          return {LegalMovesGenerator::ArLegalMoves(board, side), side,
+                  std::nullopt};  // 合法手を返して停止
         }
 
         case StateType::AR_COMPLETE:
           push_next_ar(states);  // AR 終了処理して続行(仮コード)
           break;
 
-        case StateType::GAME_END:
-          // ゲーム終了：スタックをクリアして終了シグナルを返す
-          states.clear();
-          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL};
+        case StateType::USSR_WIN_END: {
+          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+                  Side::USSR};
+        }
+        case StateType::USA_WIN_END: {
+          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+                  Side::USA};
+        }
+        case StateType::DRAW_END: {
+          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+                  Side::NEUTRAL};
+        }
 
           /* HEADLINE, TURN_END など他のフェーズも同様に */
       }
     }
   }
-  return {std::vector<std::unique_ptr<Move>>{},
+  return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
           Side::NEUTRAL};  // スタックが空→ゲーム終了
 }
