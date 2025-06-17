@@ -116,6 +116,7 @@ enum class StateType : uint8_t {
   AR_USSR,
   AR_USA,
   AR_COMPLETE,
+  GAME_END,
 };
 
 enum class Side : uint8_t {

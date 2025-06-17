@@ -72,6 +72,11 @@ std::pair<std::vector<std::unique_ptr<Move>>, Side> PhaseMachine::step(
           push_next_ar(states);  // AR 終了処理して続行(仮コード)
           break;
 
+        case StateType::GAME_END:
+          // ゲーム終了：スタックをクリアして終了シグナルを返す
+          states.clear();
+          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL};
+
           /* HEADLINE, TURN_END など他のフェーズも同様に */
       }
     }

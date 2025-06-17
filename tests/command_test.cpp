@@ -134,5 +134,33 @@ TEST_F(CommandTest, ChangeVPCommandTest) {
   // 大きなVP変更テスト（ゲーム終了条件チェック）
   ChangeVPCommand largeVP(25);
   EXPECT_TRUE(largeVP.apply(board));
-  EXPECT_EQ(board.getVp(), 27);  // ゲーム終了条件に達するがTODOのため継続
+  EXPECT_EQ(board.getVp(), 27);  // ゲーム終了条件に達してGAME_ENDがpushされる
+}
+
+TEST_F(CommandTest, GameEndTriggerTest) {
+  auto& states = board.getStates();
+  
+  // 初期状態：statesが空
+  EXPECT_TRUE(states.empty());
+  
+  // DEFCON 1でゲーム終了トリガー
+  ChangeDefconCommand endByDefcon(-4); // 5 → 1
+  EXPECT_TRUE(endByDefcon.apply(board));
+  
+  // GAME_ENDがstackにpushされることを確認
+  EXPECT_FALSE(states.empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::GAME_END);
+  
+  // statesをリセット
+  states.clear();
+  
+  // VP 20でゲーム終了トリガー
+  ChangeVPCommand endByVP(20);
+  EXPECT_TRUE(endByVP.apply(board));
+  
+  // GAME_ENDがstackにpushされることを確認
+  EXPECT_FALSE(states.empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::GAME_END);
 }

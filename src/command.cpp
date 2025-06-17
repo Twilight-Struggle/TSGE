@@ -122,27 +122,29 @@ bool ChangeDefconCommand::apply(Board& board) const {
   int oldDefcon = defcon.getDefcon();
   defcon.changeDefcon(delta_);
   int newDefcon = defcon.getDefcon();
-  
-  // Defcon 2未満でゲーム終了チェック
+
+  // Defcon 1でゲーム終了
   if (newDefcon <= 1) {
-    // TODO: ゲーム終了処理
+    board.pushState(StateType::GAME_END);
+    // TODO: ゲームの勝者をPlayerに返す
   }
-  
+
   // NORAD効果チェック（Defconが2に変更された場合）
   if (oldDefcon != newDefcon && newDefcon == 2) {
     // TODO: NORADの効果を適用
   }
-  
+
   return true;
 }
 
 bool ChangeVPCommand::apply(Board& board) const {
   board.changeVp(delta_);
 
-  // VP ±20でゲーム終了チェック
+  // VP ±20でゲーム終了
   int vp = board.getVp();
   if (vp <= -20 || vp >= 20) {
-    // TODO: ゲーム終了処理
+    board.pushState(StateType::GAME_END);
+    // TODO: ゲームの勝者をPlayerに返す
   }
 
   return true;
