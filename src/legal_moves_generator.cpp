@@ -11,8 +11,9 @@
 #include "world_map.hpp"
 
 // ヘルパー関数：履歴のすべての国が特定の地域に属するかチェック
-static bool isAllInRegion(const std::vector<CountryEnum>& history,
-                          const Board& board, Region region) {
+template <Region region>
+static inline bool isAllInRegion(const std::vector<CountryEnum>& history,
+                                 const Board& board) {
   if (history.empty()) return false;
 
   for (const auto& country : history) {
@@ -24,14 +25,14 @@ static bool isAllInRegion(const std::vector<CountryEnum>& history,
   return true;
 }
 
-static bool isAllInAsia(const std::vector<CountryEnum>& history,
-                        const Board& board) {
-  return isAllInRegion(history, board, Region::ASIA);
+static inline bool isAllInAsia(const std::vector<CountryEnum>& history,
+                               const Board& board) {
+  return isAllInRegion<Region::ASIA>(history, board);
 }
 
-static bool isAllInSoutheastAsia(const std::vector<CountryEnum>& history,
-                                 const Board& board) {
-  return isAllInRegion(history, board, Region::SOUTH_EAST_ASIA);
+static inline bool isAllInSoutheastAsia(const std::vector<CountryEnum>& history,
+                                        const Board& board) {
+  return isAllInRegion<Region::SOUTH_EAST_ASIA>(history, board);
 }
 
 struct BonusCondition {
@@ -231,11 +232,13 @@ LegalMovesGenerator::RealignmentRequestLegalMoves(
     }
 
     results.emplace_back(std::make_unique<RealignmentRequestMove>(
-        cardEnum, side, countryEnum, history, remainingOps, appliedAdditionalOps));
+        cardEnum, side, countryEnum, history, remainingOps,
+        appliedAdditionalOps));
   }
   // RealignRequestMoveではUSSR=パスも選択可能
   results.emplace_back(std::make_unique<RealignmentRequestMove>(
-      cardEnum, side, CountryEnum::USSR, history, remainingOps, appliedAdditionalOps));
+      cardEnum, side, CountryEnum::USSR, history, remainingOps,
+      appliedAdditionalOps));
 
   return results;
 }
@@ -251,7 +254,8 @@ LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
 
   // 中国カードの追加Opsチェック
   bool chinaCardBonus = false;
-  if (static_cast<uint8_t>(appliedAdditionalOps) & static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD)) {
+  if (static_cast<uint8_t>(appliedAdditionalOps) &
+      static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD)) {
     // 既に中国カードボーナスが適用されている
   } else {
     // TODO: カードが中国カードかどうかの判定が必要
@@ -262,11 +266,13 @@ LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
 
   // ベトナム蜂起の追加Opsチェック
   bool vietnamRevoltsBonus = false;
-  if (static_cast<uint8_t>(appliedAdditionalOps) & static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS)) {
+  if (static_cast<uint8_t>(appliedAdditionalOps) &
+      static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS)) {
     // 既にベトナム蜂起ボーナスが適用されている
   } else {
     // TODO: ベトナム蜂起が有効かどうかの判定が必要
-    // if (board.isVietnamRevoltsActive() && isAllInSoutheastAsia(history, board)) {
+    // if (board.isVietnamRevoltsActive() && isAllInSoutheastAsia(history,
+    // board)) {
     //   vietnamRevoltsBonus = true;
     // }
   }
@@ -274,17 +280,18 @@ LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
   // 中国カードボーナスの処理
   if (chinaCardBonus) {
     AdditionalOpsType newAppliedOps = static_cast<AdditionalOpsType>(
-        static_cast<uint8_t>(appliedAdditionalOps) | static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD));
-    
+        static_cast<uint8_t>(appliedAdditionalOps) |
+        static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD));
+
     // アジア地域限定の合法手を生成
     for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
          i < worldMap.getCountriesCount(); ++i) {
       CountryEnum countryEnum = static_cast<CountryEnum>(i);
       const auto& country = worldMap.getCountry(countryEnum);
-      
+
       if (country.getInfluence(opponentSide) == 0) continue;
       if (!country.getRegions().contains(Region::ASIA)) continue;
-      
+
       results.emplace_back(std::make_unique<RealignmentRequestMove>(
           cardEnum, side, countryEnum, history, 1, newAppliedOps));
     }
@@ -293,17 +300,18 @@ LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
   // ベトナム蜂起ボーナスの処理
   if (vietnamRevoltsBonus) {
     AdditionalOpsType newAppliedOps = static_cast<AdditionalOpsType>(
-        static_cast<uint8_t>(appliedAdditionalOps) | static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS));
-    
+        static_cast<uint8_t>(appliedAdditionalOps) |
+        static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS));
+
     // 東南アジア地域限定の合法手を生成
     for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
          i < worldMap.getCountriesCount(); ++i) {
       CountryEnum countryEnum = static_cast<CountryEnum>(i);
       const auto& country = worldMap.getCountry(countryEnum);
-      
+
       if (country.getInfluence(opponentSide) == 0) continue;
       if (!country.getRegions().contains(Region::SOUTH_EAST_ASIA)) continue;
-      
+
       results.emplace_back(std::make_unique<RealignmentRequestMove>(
           cardEnum, side, countryEnum, history, 1, newAppliedOps));
     }
