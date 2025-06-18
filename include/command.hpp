@@ -25,10 +25,10 @@ class Command {
 
 using CommandPtr = std::shared_ptr<Command>;
 
-class ActionPlaceInfluence : public Command {
+class ActionPlaceInfluenceCommand : public Command {
  public:
-  ActionPlaceInfluence(Side side, const std::unique_ptr<Card>& card,
-                       const std::map<CountryEnum, int>& targetCountries)
+  ActionPlaceInfluenceCommand(Side side, const std::unique_ptr<Card>& card,
+                              const std::map<CountryEnum, int>& targetCountries)
       : Command{side}, card_{card}, targetCountries_{targetCountries} {};
 
   bool apply(Board& board) const override;
@@ -38,10 +38,10 @@ class ActionPlaceInfluence : public Command {
   const std::map<CountryEnum, int> targetCountries_;
 };
 
-class ActionRealigment : public Command {
+class ActionRealigmentCommand : public Command {
  public:
-  ActionRealigment(Side side, const std::unique_ptr<Card>& card,
-                   CountryEnum targetCountry)
+  ActionRealigmentCommand(Side side, const std::unique_ptr<Card>& card,
+                          CountryEnum targetCountry)
       : Command{side}, card_{card}, targetCountry_{targetCountry} {};
 
   bool apply(Board& board) const override;
@@ -51,10 +51,10 @@ class ActionRealigment : public Command {
   const CountryEnum targetCountry_;
 };
 
-class ActionCoup : public Command {
+class ActionCoupCommand : public Command {
  public:
-  ActionCoup(Side side, const std::unique_ptr<Card>& card,
-             CountryEnum targetCountry)
+  ActionCoupCommand(Side side, const std::unique_ptr<Card>& card,
+                    CountryEnum targetCountry)
       : Command{side}, card_{card}, targetCountry_{targetCountry} {};
 
   bool apply(Board& board) const override;
@@ -64,9 +64,9 @@ class ActionCoup : public Command {
   const CountryEnum targetCountry_;
 };
 
-class ActionSpaceRace : public Command {
+class ActionSpaceRaceCommand : public Command {
  public:
-  ActionSpaceRace(Side side, const std::unique_ptr<Card>& card)
+  ActionSpaceRaceCommand(Side side, const std::unique_ptr<Card>& card)
       : Command{side}, card_{card} {};
 
   bool apply(Board& board) const override;
@@ -96,11 +96,11 @@ class ChangeVPCommand : public Command {
   const int delta_;
 };
 
-class Request : public Command {
+class RequestCommand : public Command {
  public:
-  Request(Side side,
-          std::function<std::vector<std::unique_ptr<Move>>(const Board&)>
-              legalMoves)
+  RequestCommand(Side side,
+                 std::function<std::vector<std::unique_ptr<Move>>(const Board&)>
+                     legalMoves)
       : Command(side), legalMoves(std::move(legalMoves)) {}
 
   std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;

@@ -33,8 +33,8 @@ TEST_F(CommandTest, PlaceTest) {
   auto& northKorea = board.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
   EXPECT_EQ(northKorea.getInfluence(Side::USA), 0);  // 初期状態確認
 
-  ActionPlaceInfluence action_single_country(Side::USA, board.getCardpool()[0],
-                                             {{CountryEnum::NORTH_KOREA, 2}});
+  ActionPlaceInfluenceCommand action_single_country(
+      Side::USA, board.getCardpool()[0], {{CountryEnum::NORTH_KOREA, 2}});
   action_single_country.apply(board);
   EXPECT_EQ(northKorea.getInfluence(Side::USA),
             2);  // 影響力が正しく配置されたか確認
@@ -45,7 +45,7 @@ TEST_F(CommandTest, PlaceTest) {
   EXPECT_EQ(southKorea.getInfluence(Side::USSR), 0);  // 初期状態確認
   EXPECT_EQ(japan.getInfluence(Side::USSR), 0);
 
-  ActionPlaceInfluence action_multiple_countries(
+  ActionPlaceInfluenceCommand action_multiple_countries(
       Side::USSR, board.getCardpool()[0],
       {{CountryEnum::SOUTH_KOREA, 3}, {CountryEnum::JAPAN, 2}});
   action_multiple_countries.apply(board);
@@ -54,8 +54,8 @@ TEST_F(CommandTest, PlaceTest) {
   EXPECT_EQ(japan.getInfluence(Side::USSR), 2);
 
   // 累積的な影響力配置テスト（同じ国に追加配置）
-  ActionPlaceInfluence action_cumulative(Side::USSR, board.getCardpool()[0],
-                                         {{CountryEnum::JAPAN, 1}});
+  ActionPlaceInfluenceCommand action_cumulative(
+      Side::USSR, board.getCardpool()[0], {{CountryEnum::JAPAN, 1}});
   action_cumulative.apply(board);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);  // 2 + 1 = 3になっているか確認
 
@@ -67,51 +67,51 @@ TEST_F(CommandTest, PlaceTest) {
 
 TEST_F(CommandTest, RealigmentTest) {
   // 相手が置いている国には影響力排除判定ができる
-  ActionRealigment action_can_realigment_ussr(
+  ActionRealigmentCommand action_can_realigment_ussr(
       Side::USSR, board.getCardpool()[0], CountryEnum::SOUTH_KOREA);
   EXPECT_TRUE(action_can_realigment_ussr.apply(board));
-  ActionRealigment action_can_realigment_usa(Side::USA, board.getCardpool()[0],
-                                             CountryEnum::NORTH_KOREA);
+  ActionRealigmentCommand action_can_realigment_usa(
+      Side::USA, board.getCardpool()[0], CountryEnum::NORTH_KOREA);
   EXPECT_TRUE(action_can_realigment_usa.apply(board));
 }
 
 TEST_F(CommandTest, CoupTest) {
   // 相手が置いてない国にはクーデターできない
-  ActionCoup action_cant_coup_ussr(Side::USSR, board.getCardpool()[0],
-                                   CountryEnum::ANGOLA);
+  ActionCoupCommand action_cant_coup_ussr(Side::USSR, board.getCardpool()[0],
+                                          CountryEnum::ANGOLA);
   EXPECT_FALSE(action_cant_coup_ussr.apply(board));
-  ActionCoup action_cant_coup_usa(Side::USA, board.getCardpool()[0],
-                                  CountryEnum::AFGHANISTAN);
+  ActionCoupCommand action_cant_coup_usa(Side::USA, board.getCardpool()[0],
+                                         CountryEnum::AFGHANISTAN);
   EXPECT_FALSE(action_cant_coup_usa.apply(board));
   // 相手が置いている国にはクーデターできる
-  ActionCoup action_can_coup_ussr(Side::USSR, board.getCardpool()[0],
-                                  CountryEnum::SOUTH_KOREA);
+  ActionCoupCommand action_can_coup_ussr(Side::USSR, board.getCardpool()[0],
+                                         CountryEnum::SOUTH_KOREA);
   EXPECT_TRUE(action_can_coup_ussr.apply(board));
-  ActionCoup action_can_coup_usa(Side::USA, board.getCardpool()[0],
-                                 CountryEnum::NORTH_KOREA);
+  ActionCoupCommand action_can_coup_usa(Side::USA, board.getCardpool()[0],
+                                        CountryEnum::NORTH_KOREA);
   EXPECT_TRUE(action_can_coup_usa.apply(board));
 }
 
 TEST_F(CommandTest, ChangeDefconCommandTest) {
   // 初期状態チェック
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);
-  
+
   // Defcon変更テスト
   ChangeDefconCommand changeDefcon(-2);
   EXPECT_TRUE(changeDefcon.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 3);
-  
+
   // NORAD効果トリガーテスト（Defconを2に変更）
   board.getDefconTrack().setDefcon(3);
   ChangeDefconCommand triggerNorad(-1);
   EXPECT_TRUE(triggerNorad.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 2);
-  
+
   // 範囲制限テスト（changeDefconはclampする）
   ChangeDefconCommand exceedMax(10);
   EXPECT_TRUE(exceedMax.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);  // 5でクランプされる
-  
+
   ChangeDefconCommand exceedMin(-10);
   EXPECT_TRUE(exceedMin.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 1);  // 1でクランプされる
@@ -120,17 +120,17 @@ TEST_F(CommandTest, ChangeDefconCommandTest) {
 TEST_F(CommandTest, ChangeVPCommandTest) {
   // 初期状態チェック
   EXPECT_EQ(board.getVp(), 0);
-  
+
   // VP変更テスト
   ChangeVPCommand changeVP(5);
   EXPECT_TRUE(changeVP.apply(board));
   EXPECT_EQ(board.getVp(), 5);
-  
+
   // 負のVP変更テスト
   ChangeVPCommand changeVPNegative(-3);
   EXPECT_TRUE(changeVPNegative.apply(board));
   EXPECT_EQ(board.getVp(), 2);
-  
+
   // 大きなVP変更テスト（ゲーム終了条件チェック）
   ChangeVPCommand largeVP(25);
   EXPECT_TRUE(largeVP.apply(board));
@@ -139,27 +139,27 @@ TEST_F(CommandTest, ChangeVPCommandTest) {
 
 TEST_F(CommandTest, GameEndTriggerTest) {
   auto& states = board.getStates();
-  
+
   // 初期状態：statesが空
   EXPECT_TRUE(states.empty());
-  
+
   // DEFCON 1でゲーム終了トリガー
-  ChangeDefconCommand endByDefcon(-4); // 5 → 1
+  ChangeDefconCommand endByDefcon(-4);  // 5 → 1
   EXPECT_TRUE(endByDefcon.apply(board));
-  
+
   // 終了StateTypeがstackにpushされることを確認（DEFCON 1で相手の勝利）
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
   // DEFCON 1到達で相手の勝利（ここではUSA勝利）
   EXPECT_EQ(std::get<StateType>(states.back()), StateType::USA_WIN_END);
-  
+
   // statesをリセット
   states.clear();
-  
+
   // VP 20でゲーム終了トリガー
   ChangeVPCommand endByVP(20);
   EXPECT_TRUE(endByVP.apply(board));
-  
+
   // 終了StateTypeがstackにpushされることを確認（VP 20でUSSR勝利）
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));

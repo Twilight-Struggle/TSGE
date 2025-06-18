@@ -22,7 +22,7 @@ PhaseMachine::step(Board& board,
     // Requestが残っている場合pop
     if (!states.empty() && std::holds_alternative<CommandPtr>(states.back())) {
       auto& cmdPtr = std::get<CommandPtr>(states.back());
-      if (dynamic_cast<Request*>(cmdPtr.get())) {
+      if (dynamic_cast<RequestCommand*>(cmdPtr.get())) {
         states.pop_back();
       }
     }
@@ -42,7 +42,7 @@ PhaseMachine::step(Board& board,
     if (auto* cmdPtr = std::get_if<CommandPtr>(&topState)) {
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
-      if (auto* req = dynamic_cast<Request*>(cmdPtr->get())) {
+      if (auto* req = dynamic_cast<RequestCommand*>(cmdPtr->get())) {
         // TODO:
         // req->legalMoves(board)={}の可能性があるのでこの場合はPhaseを進める処理が必要
         return {req->legalMoves(board), req->getSide(), std::nullopt};

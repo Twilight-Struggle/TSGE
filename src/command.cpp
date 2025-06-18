@@ -5,7 +5,7 @@
 #include "game_enums.hpp"
 #include "randomizer.hpp"
 
-bool ActionPlaceInfluence::apply(Board& board) const {
+bool ActionPlaceInfluenceCommand::apply(Board& board) const {
   for (const auto& targetCountry : targetCountries_) {
     board.getWorldMap()
         .getCountry(targetCountry.first)
@@ -14,7 +14,7 @@ bool ActionPlaceInfluence::apply(Board& board) const {
   return true;
 }
 
-bool ActionRealigment::apply(Board& board) const {
+bool ActionRealigmentCommand::apply(Board& board) const {
   // USSRかUSAならパス
   if (targetCountry_ == CountryEnum::USSR ||
       targetCountry_ == CountryEnum::USA) {
@@ -51,7 +51,7 @@ bool ActionRealigment::apply(Board& board) const {
   return true;
 }
 
-bool ActionCoup::apply(Board& board) const {
+bool ActionCoupCommand::apply(Board& board) const {
   if (targetCountry_ == CountryEnum::USSR ||
       targetCountry_ == CountryEnum::USA) {
     return false;
@@ -81,7 +81,7 @@ bool ActionCoup::apply(Board& board) const {
   }
 }
 
-bool ActionSpaceRace::apply(Board& board) const {
+bool ActionSpaceRaceCommand::apply(Board& board) const {
   auto& spaceTrack = board.getSpaceTrack();
   if (spaceTrack.canSpace(side_, card_->getOps())) {
     auto roll = Randomizer::getInstance().rollDice();
