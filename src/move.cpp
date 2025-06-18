@@ -13,7 +13,9 @@ std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
   commands.emplace_back(std::make_unique<ActionPlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
   if (getOpponentSide(getSide()) == card->getSide()) {
-    // TODO 相手のイベントが発動 EventCommand push
+    // Opponent's event is triggered after the action
+    auto eventCommands = card->event(getSide());
+    commands.insert(commands.end(), eventCommands.begin(), eventCommands.end());
   }
   return commands;
 }
@@ -23,6 +25,11 @@ std::vector<CommandPtr> ActionCoupMove::toCommand(
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_unique<ActionCoupCommand>(getSide(), card, targetCountry_));
+  if (getOpponentSide(getSide()) == card->getSide()) {
+    // Opponent's event is triggered after the action
+    auto eventCommands = card->event(getSide());
+    commands.insert(commands.end(), eventCommands.begin(), eventCommands.end());
+  }
   return commands;
 }
 
@@ -54,6 +61,13 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
           return LegalMovesGenerator::RealignmentRequestLegalMoves(
               board, side, card_enum, history, ops, AdditionalOpsType::NONE);
         }));
+  }
+
+  // Check if opponent's event should be triggered
+  if (getOpponentSide(getSide()) == card->getSide()) {
+    // Opponent's event is triggered after all realignment actions
+    auto eventCommands = card->event(getSide());
+    commands.insert(commands.end(), eventCommands.begin(), eventCommands.end());
   }
 
   return commands;
@@ -93,6 +107,35 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
               board, side, card_enum, history, appliedOps);
+        }));
+  }
+
+  return commands;
+}
+
+std::vector<CommandPtr> ActionEventMove::toCommand(
+    const std::unique_ptr<Card>& card) const {
+  std::vector<CommandPtr> commands;
+
+  // Get the card's side and player's side
+  const Side cardSide = card->getSide();
+  const Side playerSide = getSide();
+
+  // Execute the event
+  auto eventCommands = card->event(playerSide);
+  commands.insert(commands.end(), eventCommands.begin(), eventCommands.end());
+
+  // If the card is of the opponent's side, allow the player to perform a
+  // non-event action
+  if (cardSide != playerSide && cardSide != Side::NEUTRAL) {
+    // Add a RequestCommand for the player to choose Place/Realign/Coup action
+    commands.emplace_back(std::make_unique<RequestCommand>(
+        playerSide,
+        [card_enum = getCard(), side = playerSide](
+            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+          // TODO: This should be implemented in LegalMovesGenerator
+          // For now, return empty vector as placeholder
+          return {};
         }));
   }
 

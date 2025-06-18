@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
 
+#include "command.hpp"
 #include "game_enums.hpp"
 
 class Board;
@@ -14,7 +16,7 @@ class Card {
         side_{side},
         removedAfterEvent_{removedAfterEvent} {}
   virtual ~Card() = default;
-  virtual bool event(Board& board, Side side) = 0;
+  virtual std::vector<CommandPtr> event(Side side) const = 0;
 
   int getOps() const { return ops_; }
   Side getSide() const { return side_; }

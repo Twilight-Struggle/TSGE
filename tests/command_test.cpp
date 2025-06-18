@@ -9,7 +9,7 @@
 class DummyCard : public Card {
  public:
   DummyCard() : Card(0, "Dummy", 3, Side::NEUTRAL, false) {}
-  bool event(Board& board, Side side) override { return true; }
+  std::vector<CommandPtr> event(Side side) const override { return {}; }
 };
 
 class CommandTest : public ::testing::Test {

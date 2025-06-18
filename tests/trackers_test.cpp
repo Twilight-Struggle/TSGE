@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "board.hpp"
+#include "card.hpp"
 #include "game_enums.hpp"
 
 class TrackTest : public ::testing::Test {

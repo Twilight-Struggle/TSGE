@@ -5,11 +5,11 @@
 #include <memory>
 #include <vector>
 
-#include "card.hpp"
 #include "game_enums.hpp"
 
 class Board;
 class Move;
+class Card;
 
 class Command {
  public:
