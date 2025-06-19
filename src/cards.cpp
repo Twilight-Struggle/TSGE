@@ -1,17 +1,22 @@
 #include "cards.hpp"
 
+#include <memory>
+
+#include "board.hpp"
 #include "command.hpp"
 #include "game_enums.hpp"
 
+bool DuckAndCover::DefconBasedVpChangeCommand::apply(Board& board) const {
+  int current_defcon = board.getDefconTrack().getDefcon();
+  int vp_change = (5 - current_defcon);
+  board.pushState(std::make_unique<ChangeVpCommand>(Side::USA, vp_change));
+  return true;
+}
+
 std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   std::vector<CommandPtr> commands;
-  commands.push_back(std::make_shared<ChangeDefconCommand>(-1));
-  // Note: VP calculation should be done after DEFCON change
-  // For now, we'll use DEFCON 4 (after -1) as an approximation
-  // TODO: This needs to be handled properly with a new command that can read
-  // current board state
-  commands.push_back(
-      std::make_shared<ChangeVPCommand>(getVpMultiplier(Side::USA) * 1));
+  commands.push_back(std::make_unique<ChangeDefconCommand>(-1));
+  commands.push_back(std::make_unique<DefconBasedVpChangeCommand>(side));
   return commands;
 }
 
@@ -29,14 +34,16 @@ std::vector<CommandPtr> Fidel::event(Side side) const {
   return commands;
 }
 
+bool NuclearTestBan::DefconBasedVpChangeCommand::apply(Board& board) const {
+  int current_defcon = board.getDefconTrack().getDefcon();
+  int vp_change = (current_defcon - 2);
+  board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_change));
+  return true;
+}
+
 std::vector<CommandPtr> NuclearTestBan::event(Side side) const {
   std::vector<CommandPtr> commands;
-  // Note: VP calculation should be done before DEFCON change
-  // For now, we'll use initial DEFCON (5) as an approximation
-  // TODO: This needs to be handled properly with a new command that can read
-  // current board state
-  commands.push_back(
-      std::make_shared<ChangeVPCommand>((5 - 2) * getVpMultiplier(side)));
-  commands.push_back(std::make_shared<ChangeDefconCommand>(2));
+  commands.push_back(std::make_unique<DefconBasedVpChangeCommand>(side));
+  commands.push_back(std::make_unique<ChangeDefconCommand>(2));
   return commands;
 }

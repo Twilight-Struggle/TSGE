@@ -23,7 +23,7 @@ class Command {
   const Side side_;
 };
 
-using CommandPtr = std::shared_ptr<Command>;
+using CommandPtr = std::unique_ptr<Command>;
 
 class ActionPlaceInfluenceCommand : public Command {
  public:
@@ -78,7 +78,7 @@ class ActionSpaceRaceCommand : public Command {
 class ChangeDefconCommand : public Command {
  public:
   explicit ChangeDefconCommand(int delta)
-      : Command(Side::USSR), delta_{delta} {}
+      : Command(Side::NEUTRAL), delta_{delta} {}
 
   bool apply(Board& board) const override;
 
@@ -86,9 +86,10 @@ class ChangeDefconCommand : public Command {
   const int delta_;
 };
 
-class ChangeVPCommand : public Command {
+class ChangeVpCommand : public Command {
  public:
-  explicit ChangeVPCommand(int delta) : Command(Side::USSR), delta_{delta} {}
+  explicit ChangeVpCommand(Side side, int delta)
+      : Command{side}, delta_{delta} {}
 
   bool apply(Board& board) const override;
 

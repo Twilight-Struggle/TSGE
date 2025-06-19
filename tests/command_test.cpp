@@ -121,20 +121,26 @@ TEST_F(CommandTest, ChangeVPCommandTest) {
   // 初期状態チェック
   EXPECT_EQ(board.getVp(), 0);
 
-  // VP変更テスト
-  ChangeVPCommand changeVP(5);
+  // VP変更テスト（USSR側に+5VP）
+  ChangeVpCommand changeVP(Side::USSR, 5);
   EXPECT_TRUE(changeVP.apply(board));
   EXPECT_EQ(board.getVp(), 5);
 
-  // 負のVP変更テスト
-  ChangeVPCommand changeVPNegative(-3);
+  // 負のVP変更テスト（USA側に+3VP、実際は-3VP）
+  ChangeVpCommand changeVPNegative(Side::USA, 3);
   EXPECT_TRUE(changeVPNegative.apply(board));
-  EXPECT_EQ(board.getVp(), 2);
+  EXPECT_EQ(board.getVp(), 2);  // 5 + (-3) = 2
 
   // 大きなVP変更テスト（ゲーム終了条件チェック）
-  ChangeVPCommand largeVP(25);
+  ChangeVpCommand largeVP(Side::USSR, 25);
   EXPECT_TRUE(largeVP.apply(board));
   EXPECT_EQ(board.getVp(), 27);  // ゲーム終了条件に達してGAME_ENDがpushされる
+  
+  // stateにUSSR_WIN_ENDが積まれていることを確認
+  auto& states = board.getStates();
+  EXPECT_FALSE(states.empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USSR_WIN_END);
 }
 
 TEST_F(CommandTest, GameEndTriggerTest) {
@@ -157,7 +163,7 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   states.clear();
 
   // VP 20でゲーム終了トリガー
-  ChangeVPCommand endByVP(20);
+  ChangeVpCommand endByVP(Side::USSR, 20);
   EXPECT_TRUE(endByVP.apply(board));
 
   // 終了StateTypeがstackにpushされることを確認（VP 20でUSSR勝利）

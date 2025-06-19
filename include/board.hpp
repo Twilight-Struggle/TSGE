@@ -47,7 +47,7 @@ class Board {
   int getVp() const { return vp_; }
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {
-    states_.emplace_back(state);
+    states_.emplace_back(std::move(state));
   }
   void changeVp(int delta) { vp_ += delta; }
 

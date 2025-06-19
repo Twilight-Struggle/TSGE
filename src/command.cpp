@@ -138,8 +138,8 @@ bool ChangeDefconCommand::apply(Board& board) const {
   return true;
 }
 
-bool ChangeVPCommand::apply(Board& board) const {
-  board.changeVp(delta_);
+bool ChangeVpCommand::apply(Board& board) const {
+  board.changeVp(delta_ * getVpMultiplier(side_));
 
   // VP ±20でゲーム終了
   int vp = board.getVp();

@@ -31,7 +31,7 @@ PhaseMachine::step(Board& board,
         cardpool[static_cast<size_t>(answer.value()->getCard())]);
     // 逆順にスタックに積む
     for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
-      states.emplace_back(*it);
+      states.emplace_back(std::move(*it));
 
     answer.reset();
   }
