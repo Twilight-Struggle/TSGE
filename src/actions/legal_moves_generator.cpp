@@ -10,29 +10,32 @@
 #include "tsge/game_state/cards_enum.hpp"
 #include "tsge/game_state/world_map.hpp"
 
-// ヘルパー関数：履歴のすべての国が特定の地域に属するかチェック
-template <Region region>
-static inline bool isAllInRegion(const std::vector<CountryEnum>& history,
-                                 const Board& board) {
-  if (history.empty()) return false;
+// CountryEnum抽出用のヘルパー
+template <typename T>
+struct CountryExtractor {
+  static CountryEnum extract(const T& elem) { return elem; }
+};
 
-  for (const auto& country : history) {
+template <typename V>
+struct CountryExtractor<std::pair<const CountryEnum, V>> {
+  static CountryEnum extract(const std::pair<const CountryEnum, V>& elem) {
+    return elem.first;
+  }
+};
+
+// ヘルパー関数：コンテナ内のすべての国が特定の地域に属するかチェック
+template <Region region, typename Container>
+static inline bool isAllInRegion(const Container& countries,
+                                 const Board& board) {
+  for (const auto& elem : countries) {
+    const auto country =
+        CountryExtractor<std::decay_t<decltype(elem)>>::extract(elem);
     const auto& countryObj = board.getWorldMap().getCountry(country);
     if (!countryObj.getRegions().contains(region)) {
       return false;
     }
   }
   return true;
-}
-
-static inline bool isAllInAsia(const std::vector<CountryEnum>& history,
-                               const Board& board) {
-  return isAllInRegion<Region::ASIA>(history, board);
-}
-
-static inline bool isAllInSoutheastAsia(const std::vector<CountryEnum>& history,
-                                        const Board& board) {
-  return isAllInRegion<Region::SOUTH_EAST_ASIA>(history, board);
 }
 
 struct BonusCondition {
@@ -48,19 +51,11 @@ static std::vector<std::pair<int, const BonusCondition*>> computeOpsVariants(
   static const BonusCondition asiaOnly{
       /* すべての国がアジア地域か？ */
       [&board](const std::map<CountryEnum, int>& placed) {
-        for (auto& [c, _] : placed)
-          if (!board.getWorldMap().getCountry(c).getRegions().contains(
-                  Region::ASIA))
-            return false;
-        return true;
+        return isAllInRegion<Region::ASIA>(placed, board);
       }};
   static const BonusCondition seAsiaOnly{
       [&board](const std::map<CountryEnum, int>& placed) {
-        for (auto& [c, _] : placed)
-          if (!board.getWorldMap().getCountry(c).getRegions().contains(
-                  Region::SOUTH_EAST_ASIA))
-            return false;
-        return true;
+        return isAllInRegion<Region::SOUTH_EAST_ASIA>(placed, board);
       }};
 
   std::vector<std::pair<int, const BonusCondition*>> res;
@@ -263,7 +258,8 @@ LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
     // 既に中国カードボーナスが適用されている
   } else {
     // TODO: カードが中国カードかどうかの判定が必要
-    // if (cardEnum == CHINA_CARD && isAllInAsia(history, board)) {
+    // if (cardEnum == CHINA_CARD && isAllInRegion<Region::ASIA>(history,
+    // board)) {
     //   chinaCardBonus = true;
     // }
   }
@@ -275,8 +271,8 @@ LegalMovesGenerator::AdditionalOpsRealignmentLegalMoves(
     // 既にベトナム蜂起ボーナスが適用されている
   } else {
     // TODO: ベトナム蜂起が有効かどうかの判定が必要
-    // if (board.isVietnamRevoltsActive() && isAllInSoutheastAsia(history,
-    // board)) {
+    // if (board.isVietnamRevoltsActive() &&
+    // isAllInRegion<Region::SOUTH_EAST_ASIA>(history, board)) {
     //   vietnamRevoltsBonus = true;
     // }
   }

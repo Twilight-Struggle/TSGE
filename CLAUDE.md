@@ -121,9 +121,9 @@ tests/              # テストファイル（機能別にサブディレクト�
 - **ブランチ予測最適化**：関数内部の分岐では[[unlikely]]属性を稀なケース（エラー処理、早期リターン等）に使用する
 - **vectorの事前確保**：LegalMovesGenerator等でemplace_backループ前にreserve()を行い、メモリ再確保を削減する
 - **小さなメソッドのインライン化**：Country::addInfluence()等の3-5行程度で頻繁に呼ばれるメソッドはヘッダに移動してインライン化する
+- **不要なチェックは削除**:実装の前提条件（例：realignment historyは必ず1つ以上の要素を持つ）を確認し、不要なチェックは削除
 
 ## 将来計画(claudeは読まなくて良い)
-- inline, template合理化
 - CI
 - テスト整理
 - WorldMapCountry定数括りだし
