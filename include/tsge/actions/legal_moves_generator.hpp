@@ -1,8 +1,8 @@
 #pragma once
 
+#include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/game_state/cards_enum.hpp"
-#include "tsge/actions/move.hpp"
 
 class LegalMovesGenerator {
  public:
@@ -12,11 +12,11 @@ class LegalMovesGenerator {
       const Board& board, Side side);
   static std::vector<std::unique_ptr<Move>> RealignmentRequestLegalMoves(
       const Board& board, Side side, CardEnum cardEnum,
-      const std::vector<CountryEnum>& history, int remainingOps, 
+      const std::vector<CountryEnum>& history, int remainingOps,
       AdditionalOpsType appliedAdditionalOps = AdditionalOpsType::NONE);
   static std::vector<std::unique_ptr<Move>> AdditionalOpsRealignmentLegalMoves(
       const Board& board, Side side, CardEnum cardEnum,
-      const std::vector<CountryEnum>& history, 
+      const std::vector<CountryEnum>& history,
       AdditionalOpsType appliedAdditionalOps);
 
  private:

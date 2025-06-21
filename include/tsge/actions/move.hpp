@@ -3,10 +3,10 @@
 #include <memory>
 #include <vector>
 
-#include "tsge/game_state/card.hpp"
-#include "tsge/game_state/cards_enum.hpp"
 #include "tsge/actions/command.hpp"
 #include "tsge/enums/game_enums.hpp"
+#include "tsge/game_state/card.hpp"
+#include "tsge/game_state/cards_enum.hpp"
 
 enum class AdditionalOpsType : uint8_t {
   NONE = 0,
@@ -85,22 +85,26 @@ class ActionRealigmentMove : public Move {
 // Request内部で使用される、追加のRequestを生成しないRealignmentMove
 class RealignmentRequestMove : public Move {
  public:
-  RealignmentRequestMove(CardEnum card, Side side, CountryEnum targetCountry,
-                         const std::vector<CountryEnum>& history,
-                         int remainingOps, 
-                         AdditionalOpsType appliedAdditionalOps = AdditionalOpsType::NONE)
-      : Move{card, side}, targetCountry_{targetCountry}, 
-        realignmentHistory_{history}, remainingOps_{remainingOps},
+  RealignmentRequestMove(
+      CardEnum card, Side side, CountryEnum targetCountry,
+      const std::vector<CountryEnum>& history, int remainingOps,
+      AdditionalOpsType appliedAdditionalOps = AdditionalOpsType::NONE)
+      : Move{card, side},
+        targetCountry_{targetCountry},
+        realignmentHistory_{history},
+        remainingOps_{remainingOps},
         appliedAdditionalOps_{appliedAdditionalOps} {}
 
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
   CountryEnum getTargetCountry() const { return targetCountry_; }
-  const std::vector<CountryEnum>& getRealignmentHistory() const { 
-    return realignmentHistory_; 
+  const std::vector<CountryEnum>& getRealignmentHistory() const {
+    return realignmentHistory_;
   }
   int getRemainingOps() const { return remainingOps_; }
-  AdditionalOpsType getAppliedAdditionalOps() const { return appliedAdditionalOps_; }
+  AdditionalOpsType getAppliedAdditionalOps() const {
+    return appliedAdditionalOps_;
+  }
 
  private:
   const CountryEnum targetCountry_;

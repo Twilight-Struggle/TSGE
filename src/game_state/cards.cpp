@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "tsge/core/board.hpp"
 #include "tsge/actions/command.hpp"
+#include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
 bool DuckAndCover::DefconBasedVpChangeCommand::apply(Board& board) const {

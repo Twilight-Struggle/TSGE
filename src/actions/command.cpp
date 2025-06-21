@@ -1,9 +1,9 @@
 #include "tsge/actions/command.hpp"
 
 #include "tsge/core/board.hpp"
+#include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/card.hpp"
 #include "tsge/game_state/country.hpp"
-#include "tsge/enums/game_enums.hpp"
 #include "tsge/utils/randomizer.hpp"
 
 bool ActionPlaceInfluenceCommand::apply(Board& board) const {
@@ -17,8 +17,8 @@ bool ActionPlaceInfluenceCommand::apply(Board& board) const {
 
 bool ActionRealigmentCommand::apply(Board& board) const {
   // USSRかUSAならパス（まれなケース）
-  if (targetCountry_ == CountryEnum::USSR ||
-      targetCountry_ == CountryEnum::USA) [[unlikely]] {
+  if (targetCountry_ == CountryEnum::USSR || targetCountry_ == CountryEnum::USA)
+      [[unlikely]] {
     return true;
   }
   auto& worldmap = board.getWorldMap();
@@ -53,8 +53,8 @@ bool ActionRealigmentCommand::apply(Board& board) const {
 }
 
 bool ActionCoupCommand::apply(Board& board) const {
-  if (targetCountry_ == CountryEnum::USSR ||
-      targetCountry_ == CountryEnum::USA) [[unlikely]] {
+  if (targetCountry_ == CountryEnum::USSR || targetCountry_ == CountryEnum::USA)
+      [[unlikely]] {
     return false;
   }
   auto& worldmap = board.getWorldMap();

@@ -1,8 +1,8 @@
 #pragma once
 #include <array>
 
-#include "tsge/game_state/country.hpp"
 #include "tsge/enums/game_enums.hpp"
+#include "tsge/game_state/country.hpp"
 
 class WorldMap {
  public:

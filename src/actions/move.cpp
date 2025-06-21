@@ -2,10 +2,10 @@
 
 #include <memory>
 
-#include "tsge/core/board.hpp"
 #include "tsge/actions/command.hpp"
-#include "tsge/enums/game_enums.hpp"
 #include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/core/board.hpp"
+#include "tsge/enums/game_enums.hpp"
 
 std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
     const std::unique_ptr<Card>& card) const {

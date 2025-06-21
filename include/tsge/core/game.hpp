@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "tsge/core/board.hpp"
-#include "tsge/game_state/card.hpp"
 #include "tsge/core/phase_machine.hpp"
+#include "tsge/game_state/card.hpp"
 #include "tsge/players/player.hpp"
 #include "tsge/players/policies.hpp"
 

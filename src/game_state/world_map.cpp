@@ -6,8 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "tsge/game_state/country.hpp"
 #include "tsge/enums/game_enums.hpp"
+#include "tsge/game_state/country.hpp"
 
 WorldMap::WorldMap()
     : countries_{

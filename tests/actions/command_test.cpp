@@ -135,7 +135,7 @@ TEST_F(CommandTest, ChangeVPCommandTest) {
   ChangeVpCommand largeVP(Side::USSR, 25);
   EXPECT_TRUE(largeVP.apply(board));
   EXPECT_EQ(board.getVp(), 27);  // ゲーム終了条件に達してGAME_ENDがpushされる
-  
+
   // stateにUSSR_WIN_ENDが積まれていることを確認
   auto& states = board.getStates();
   EXPECT_FALSE(states.empty());

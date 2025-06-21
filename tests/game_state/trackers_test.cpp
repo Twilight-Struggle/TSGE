@@ -3,8 +3,8 @@
 #include <gtest/gtest.h>
 
 #include "tsge/core/board.hpp"
-#include "tsge/game_state/card.hpp"
 #include "tsge/enums/game_enums.hpp"
+#include "tsge/game_state/card.hpp"
 
 class TrackTest : public ::testing::Test {
  protected:

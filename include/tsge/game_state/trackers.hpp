@@ -14,8 +14,13 @@ class SpaceTrack {
   bool canSpace(Side side, int opeValue) const;
   void spaceTried(Side side) { spaceTried_[static_cast<std::size_t>(side)]++; }
   int getRollMax(Side side) const;
-  int getSpaceTrackPosition(Side side) const { return spaceTrack_[static_cast<std::size_t>(side)]; }
-  static std::array<int, 2> getSpaceVp(int position) { return position > 0 && position <= 8 ? spaceVps_[position - 1] : std::array<int, 2>{0, 0}; }
+  int getSpaceTrackPosition(Side side) const {
+    return spaceTrack_[static_cast<std::size_t>(side)];
+  }
+  static std::array<int, 2> getSpaceVp(int position) {
+    return position > 0 && position <= 8 ? spaceVps_[position - 1]
+                                         : std::array<int, 2>{0, 0};
+  }
 
  private:
   std::array<int, 2> spaceTrack_ = {0, 0};

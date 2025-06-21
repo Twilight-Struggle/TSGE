@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <variant>
 
-#include "tsge/core/board.hpp"
 #include "tsge/actions/command.hpp"
 #include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/core/board.hpp"
 
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
