@@ -1,0 +1,27 @@
+CompileFlags:
+  CompilationDatabase: build
+
+Diagnostics:
+  ClangTidy:
+    Add: [
+      bugprone-*,
+      clang-analyzer-*,
+      cppcoreguidelines-*,
+      modernize-*,
+      performance-*,
+      readability-*
+    ]
+    Remove: [
+      modernize-use-trailing-return-type,
+      cppcoreguidelines-avoid-magic-numbers,
+      readability-magic-numbers
+    ]
+  UnusedIncludes: Strict
+
+Index:
+  Background: Build
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes

@@ -44,6 +44,51 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# format
+find_program(CLANG_FORMAT "clang-format")
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE ALL_SOURCE_FILES *.cpp *.hpp)
+    add_custom_target(
+        format
+        COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
+    )
+endif()
+
+# カバレッジオプションを追加（デフォルトではOFF）
+option(COVERAGE "Enable coverage reporting" OFF)
+
+if(COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    endif()
+else()
+    # カバレッジを無効にする場合は、--coverageフラグを確実に除去
+    string(REPLACE "--coverage" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "--coverage" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+endif()
+
+# カバレッジターゲット追加
+if(COVERAGE)
+    find_program(LCOV lcov REQUIRED)
+    find_program(GENHTML genhtml REQUIRED)
+    
+    add_custom_target(coverage
+        # ベースラインを取得
+        COMMAND ${LCOV} --directory . --zerocounters
+        # テスト実行
+        COMMAND ${CMAKE_CTEST_COMMAND}
+        # カバレッジ情報収集
+        COMMAND ${LCOV} --directory . --capture --output-file coverage.info
+        # システムヘッダを除外
+        COMMAND ${LCOV} --remove coverage.info '/usr/*' --output-file coverage.info
+        COMMAND ${LCOV} --remove coverage.info '*/tests/*' --output-file coverage.info
+        # HTMLレポート生成
+        COMMAND ${GENHTML} coverage.info --output-directory coverage_report
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+endif()
+
 # テストの設定
 include(GoogleTest)
 enable_testing()
@@ -56,6 +101,15 @@ function(add_test_with_path TEST_NAME TEST_PATH)
             ts_core
     )
     target_compile_definitions(${TEST_NAME} PRIVATE TEST=1)
+    
+    # カバレッジが有効な場合のみcoverageフラグを追加
+    if(COVERAGE)
+        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+            target_compile_options(${TEST_NAME} PRIVATE --coverage)
+            target_link_options(${TEST_NAME} PRIVATE --coverage)
+        endif()
+    endif()
+    
     gtest_discover_tests(${TEST_NAME})
 endfunction()
 
