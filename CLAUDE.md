@@ -116,8 +116,31 @@ tests/              # テストファイル（機能別にサブディレクト�
 - **policies.hpp**はplayersディレクトリに配置：DecisionPolicy（TestPolicy等）はPlayerから利用される構造のため
 - **unique_ptr使用時の注意**：`std::vector<std::unique_ptr<T>>`で`insert()`や範囲ベースコピーは禁止。`std::move()`と`emplace_back()`を使用する
 
+### パフォーマンス最適化ガイドライン
+- **constexpr活用**：Side enumを使った関数（getOpponentSide, getVpMultiplier等）はconstexpr化により配列アクセスにしてコンパイル時計算を可能にする
+- **ブランチ予測最適化**：関数内部の分岐では[[unlikely]]属性を稀なケース（エラー処理、早期リターン等）に使用する
+- **vectorの事前確保**：LegalMovesGenerator等でemplace_backループ前にreserve()を行い、メモリ再確保を削減する
+- **小さなメソッドのインライン化**：Country::addInfluence()等の3-5行程度で頻繁に呼ばれるメソッドはヘッダに移動してインライン化する
+
 ## 将来計画(claudeは読まなくて良い)
 - inline, template合理化
 - CI
 - テスト整理
 - WorldMapCountry定数括りだし
+- メモリアクセスパターンの最適化→キャッシュの関係から同じタイミングでアクセスされやすいデータは近くの方がいい。以下例。
+```cpp
+class SpaceTrack {
+  std::array<int, 2> spaceTrack_ = {0, 0};
+  std::array<int, 2> spaceTried_ = {0, 0};
+};
+```
+↓
+```cpp
+class SpaceTrack {
+  struct SideData {
+    int track = 0;
+    int tried = 0;
+  };
+  std::array<SideData, 2> data_;
+};
+```

@@ -16,9 +16,9 @@ bool ActionPlaceInfluenceCommand::apply(Board& board) const {
 }
 
 bool ActionRealigmentCommand::apply(Board& board) const {
-  // USSRかUSAならパス
+  // USSRかUSAならパス（まれなケース）
   if (targetCountry_ == CountryEnum::USSR ||
-      targetCountry_ == CountryEnum::USA) {
+      targetCountry_ == CountryEnum::USA) [[unlikely]] {
     return true;
   }
   auto& worldmap = board.getWorldMap();
@@ -54,7 +54,7 @@ bool ActionRealigmentCommand::apply(Board& board) const {
 
 bool ActionCoupCommand::apply(Board& board) const {
   if (targetCountry_ == CountryEnum::USSR ||
-      targetCountry_ == CountryEnum::USA) {
+      targetCountry_ == CountryEnum::USA) [[unlikely]] {
     return false;
   }
   auto& worldmap = board.getWorldMap();

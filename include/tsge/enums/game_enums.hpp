@@ -127,24 +127,12 @@ enum class Side : uint8_t {
   NEUTRAL,
 };
 
-inline Side getOpponentSide(Side side) {
-  switch (side) {
-    case Side::USSR:
-      return Side::USA;
-    case Side::USA:
-      return Side::USSR;
-    case Side::NEUTRAL:
-      return Side::NEUTRAL;
-  }
+constexpr Side getOpponentSide(Side side) noexcept {
+  constexpr Side opponents[] = {Side::USA, Side::USSR, Side::NEUTRAL};
+  return opponents[static_cast<std::size_t>(side)];
 }
 
-inline int getVpMultiplier(Side side) {
-  switch (side) {
-    case Side::USSR:
-      return 1;
-    case Side::USA:
-      return -1;
-    case Side::NEUTRAL:
-      return 0;
-  }
+constexpr int getVpMultiplier(Side side) noexcept {
+  constexpr int multipliers[] = {1, -1, 0};
+  return multipliers[static_cast<std::size_t>(side)];
 }

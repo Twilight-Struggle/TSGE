@@ -163,6 +163,7 @@ LegalMovesGenerator::ActionPlaceInfluenceLegalMoves(const Board& board,
         placeInfluenceDfs(0, 0, tmpWorldMap, placed, cache[key], totalOps,
                           placeableVec, side, bonus);
       }
+      results.reserve(results.size() + cache[key].size());
       for (const auto& pattern : cache[key])
         results.emplace_back(std::make_unique<ActionPlaceInfluenceMove>(
             cardEnum, side, pattern));
@@ -197,6 +198,7 @@ LegalMovesGenerator::ActionRealignmentLegalMoves(const Board& board,
     }
 
     // 各手札から対象国へのRealignmentMoveを生成
+    results.reserve(results.size() + hands.size());
     for (CardEnum cardEnum : hands) {
       results.emplace_back(
           std::make_unique<ActionRealigmentMove>(cardEnum, side, countryEnum));
@@ -214,6 +216,8 @@ LegalMovesGenerator::RealignmentRequestLegalMoves(
   const auto& worldMap = board.getWorldMap();
 
   std::vector<std::unique_ptr<Move>> results;
+  // 事前に容量を確保（最大で国数+1個のMOVEが生成される）
+  results.reserve(worldMap.getCountriesCount());
 
   // 相手側を取得
   Side opponentSide = getOpponentSide(side);
