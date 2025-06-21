@@ -24,7 +24,6 @@ cmake --build build
 cmake -B build -G Ninja -DPROD=ON
 cmake --build build
 
-
 # 全テストの実行
 ctest --test-dir build
 
@@ -32,6 +31,10 @@ ctest --test-dir build
 cmake -B build -G Ninja -DCOVERAGE=ON
 cmake --build build
 cmake --build build --target coverage
+
+# clang-tidyの実行
+## 単一ファイルをチェック(ファイル名は例)
+clang-tidy -p build src/core/game.cpp
 
 # 特定のテストの実行
 ./build/command_test
