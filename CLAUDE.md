@@ -24,8 +24,14 @@ cmake --build build
 cmake -B build -G Ninja -DPROD=ON
 cmake --build build
 
+
 # 全テストの実行
 ctest --test-dir build
+
+# coverage test
+cmake -B build -G Ninja -DCOVERAGE=ON
+cmake --build build
+cmake --build build --target coverage
 
 # 特定のテストの実行
 ./build/command_test

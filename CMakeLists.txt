@@ -54,39 +54,58 @@ if(CLANG_FORMAT)
     )
 endif()
 
-# カバレッジオプションを追加（デフォルトではOFF）
+# カバレッジ
 option(COVERAGE "Enable coverage reporting" OFF)
 
 if(COVERAGE)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
     endif()
 else()
     # カバレッジを無効にする場合は、--coverageフラグを確実に除去
-    string(REPLACE "--coverage" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REPLACE "--coverage" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    string(REPLACE "-fprofile-instr-generate" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "-fcoverage-mapping" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "-fprofile-instr-generate" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 endif()
 
 # カバレッジターゲット追加
 if(COVERAGE)
-    find_program(LCOV lcov REQUIRED)
-    find_program(GENHTML genhtml REQUIRED)
-    
-    add_custom_target(coverage
-        # ベースラインを取得
-        COMMAND ${LCOV} --directory . --zerocounters
-        # テスト実行
-        COMMAND ${CMAKE_CTEST_COMMAND}
-        # カバレッジ情報収集
-        COMMAND ${LCOV} --directory . --capture --output-file coverage.info
-        # システムヘッダを除外
-        COMMAND ${LCOV} --remove coverage.info '/usr/*' --output-file coverage.info
-        COMMAND ${LCOV} --remove coverage.info '*/tests/*' --output-file coverage.info
-        # HTMLレポート生成
-        COMMAND ${GENHTML} coverage.info --output-directory coverage_report
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        find_program(LLVM_COV llvm-cov REQUIRED)
+        find_program(LLVM_PROFDATA llvm-profdata REQUIRED)
+        
+        add_custom_target(coverage
+            COMMAND rm -rf default.profraw default.profdata
+            COMMAND LLVM_PROFILE_FILE=default.profraw ${CMAKE_CTEST_COMMAND}
+            COMMAND ${LLVM_PROFDATA} merge -sparse default.profraw -o default.profdata
+            
+            # テキストレポート
+            COMMAND ${LLVM_COV} report 
+                -instr-profile=default.profdata 
+                $<TARGET_FILE:command_test> 
+                $<TARGET_FILE:world_map_test> 
+                $<TARGET_FILE:trackers_test> 
+                $<TARGET_FILE:cards_test>
+                
+            # HTMLレポート（${CMAKE_SOURCE_DIR}を削除）
+            COMMAND ${LLVM_COV} show 
+                -instr-profile=default.profdata 
+                -format=html 
+                -output-dir=coverage_report
+                -show-line-counts-or-regions
+                -show-expansions
+                -object $<TARGET_FILE:command_test>
+                -object $<TARGET_FILE:world_map_test>
+                -object $<TARGET_FILE:trackers_test>
+                -object $<TARGET_FILE:cards_test>
+
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMENT "Generating coverage report with llvm-cov..."
+        )
+    else()
+        message(FATAL_ERROR "Coverage is only supported with Clang")
+    endif()
 endif()
 
 # テストの設定
@@ -101,15 +120,7 @@ function(add_test_with_path TEST_NAME TEST_PATH)
             ts_core
     )
     target_compile_definitions(${TEST_NAME} PRIVATE TEST=1)
-    
-    # カバレッジが有効な場合のみcoverageフラグを追加
-    if(COVERAGE)
-        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-            target_compile_options(${TEST_NAME} PRIVATE --coverage)
-            target_link_options(${TEST_NAME} PRIVATE --coverage)
-        endif()
-    endif()
-    
+        
     gtest_discover_tests(${TEST_NAME})
 endfunction()
 
