@@ -15,14 +15,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # GNU拡張を無効化
 
 add_library(ts_core
-    src/game.cpp
-    src/country.cpp
-    src/world_map.cpp
-    src/command.cpp
-    src/randomizer.cpp
-    src/trackers.cpp
-    src/cards.cpp
-    src/policies.cpp
+    src/core/game.cpp
+    src/core/phase_machine.cpp
+    src/actions/command.cpp
+    src/actions/move.cpp
+    src/actions/legal_moves_generator.cpp
+    src/game_state/country.cpp
+    src/game_state/world_map.cpp
+    src/game_state/cards.cpp
+    src/game_state/trackers.cpp
+    src/players/policies.cpp
+    src/utils/randomizer.cpp
 )
 
 # インクルードディレクトリの設定
@@ -46,8 +49,8 @@ FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 enable_testing()
 
-function(add_test TEST_NAME)
-    add_executable(${TEST_NAME} tests/${TEST_NAME}.cpp)
+function(add_test_with_path TEST_NAME TEST_PATH)
+    add_executable(${TEST_NAME} ${TEST_PATH})
     target_link_libraries(${TEST_NAME}
         PRIVATE
             GTest::gtest_main
@@ -57,7 +60,7 @@ function(add_test TEST_NAME)
     gtest_discover_tests(${TEST_NAME})
 endfunction()
 
-add_test(command_test)
-add_test(world_map_test)
-add_test(trackers_test)
-add_test(cards_test)
+add_test_with_path(command_test tests/actions/command_test.cpp)
+add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
+add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
+add_test_with_path(cards_test tests/game_state/cards_test.cpp)

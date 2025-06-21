@@ -77,6 +77,27 @@ ctest --test-dir build
 - **Player** (`player.hpp`): 合法手を受け取り、選択したMoveを返す
 - **Cards** (`cards.hpp`): カード定義と管理
 
+## フォルダ構成
+
+プロジェクトは以下の階層構造に整理されています：
+
+```
+include/tsge/
+├── core/          # コアゲームメカニクス（board, game, phase_machine）
+├── actions/       # アクションシステム（command, move, legal_moves_generator）
+├── game_state/    # ゲーム状態管理（country, world_map, cards, trackers）
+├── players/       # プレイヤー関連（player, policies）
+├── utils/         # ユーティリティ（randomizer）
+└── enums/         # 共通列挙型（game_enums）
+
+src/                # 実装ファイル（include/と同じ階層構造、tsge/は含まない）
+tests/              # テストファイル（機能別にサブディレクトリ分け）
+```
+
+### インクルードパス
+- ヘッダファイルは`#include "tsge/モジュール名/ファイル名.hpp"`の形式
+- 例：`#include "tsge/core/board.hpp"`、`#include "tsge/actions/command.hpp"`
+
 ## 開発ノート
 
 ### Testing
@@ -85,12 +106,17 @@ ctest --test-dir build
 - テスト固有コードに対する`#ifdef TEST`を使った条件コンパイル
 
 ### コード変更
+- 各コンポーネントの責任範囲を明確に定義し、疎結合を維持することが重要
 - Board状態の変更はCommandオブジェクトを通す必要がある
 - 新しいCommand/Moveタイプについては既存パターンに従う
 - BoardコンポーネントModifying時はMCTSコピー効率を維持
+- MCTSのコピー効率を最適化するためには、Boardのデータ構造を慎重に設計する必要がある
+
+### claudeが分かりづらいところ
+- **policies.hpp**はplayersディレクトリに配置：DecisionPolicy（TestPolicy等）はPlayerから利用される構造のため
+- **unique_ptr使用時の注意**：`std::vector<std::unique_ptr<T>>`で`insert()`や範囲ベースコピーは禁止。`std::move()`と`emplace_back()`を使用する
 
 ## 将来計画(claudeは読まなくて良い)
-- フォルダ構成の整理
 - inline, template合理化
 - CI
 - テスト整理
