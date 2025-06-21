@@ -35,5 +35,4 @@ build/
 .cache/
 .vscode/
 
-CLAUDE.md
 .claude/
