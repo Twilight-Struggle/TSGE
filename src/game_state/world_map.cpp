@@ -10,7 +10,8 @@
 #include "tsge/game_state/country.hpp"
 
 WorldMap::WorldMap()
-    : countries_{
+    : regionCountries_{},
+      countries_{
           Country{CountryEnum::USSR, 100, false,
                   std::vector<CountryEnum>{
                       CountryEnum::NORTH_KOREA, CountryEnum::AFGHANISTAN,
@@ -418,7 +419,7 @@ WorldMap::WorldMap()
                                Region::WEST_EUROPE}},
       } {
   for (size_t i = static_cast<size_t>(CountryEnum::USSR);
-       i <= static_cast<size_t>(CountryEnum::FINLAND); i++) {
+       i <= static_cast<size_t>(CountryEnum::FINLAND); ++i) {
     for (const auto& region : countries_[i].getRegions()) {
       regionCountries_[static_cast<size_t>(region)].insert(countries_[i]);
     }
@@ -461,16 +462,15 @@ WorldMap::WorldMap()
 };
 
 Country& WorldMap::getCountry(CountryEnum countryEnum) {
-  auto it = std::find_if(countries_.begin(), countries_.end(),
-                         [countryEnum](const Country& country) {
-                           return country.getId() == countryEnum;
-                         });
-  if (it != countries_.end()) {
-    return *it;
-  } else {
-    // This should never happen
-    throw std::runtime_error("Country not found");
+  auto iterator = std::find_if(countries_.begin(), countries_.end(),
+                               [countryEnum](const Country& country) {
+                                 return country.getId() == countryEnum;
+                               });
+  if (iterator != countries_.end()) {
+    return *iterator;
   }
+  // This should never happen
+  throw std::runtime_error("Country not found");
 }
 
 const Country& WorldMap::getCountry(CountryEnum countryEnum) const {
@@ -478,7 +478,7 @@ const Country& WorldMap::getCountry(CountryEnum countryEnum) const {
 }
 
 const std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
-  std::set<CountryEnum> placeableCountries;
+  std::set<CountryEnum> placeable_countries;
   for (const auto& country : countries_) {
     // USSRとUSAはここで除外
     if (country.getRegions().count(Region::SPECIAL) > 0) {
@@ -486,18 +486,18 @@ const std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
     }
     // 1つでも影響力があれば
     if (country.getInfluence(side) > 0) {
-      placeableCountries.insert(country.getId());
+      placeable_countries.insert(country.getId());
     }
     // 隣接国に影響力があれば
     for (const auto& adjacentCountry : country.getAdjacentCountries()) {
       if (countries_[static_cast<size_t>(adjacentCountry)].getInfluence(side) >
           0) {
-        placeableCountries.insert(country.getId());
+        placeable_countries.insert(country.getId());
         break;
       }
     }
   }
-  return placeableCountries;
+  return placeable_countries;
 }
 
 const std::set<Country>& WorldMap::countriesInRegion(Region region) const {

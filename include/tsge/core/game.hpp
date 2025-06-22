@@ -34,5 +34,5 @@ class Game {
   Board board_;
 
   std::array<Player<TestPolicy>, 2> players_;
-  void mayFail(bool success, const std::string& message);
+  static void mayFail(bool success, const std::string& message);
 };

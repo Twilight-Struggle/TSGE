@@ -121,6 +121,9 @@ tests/              # テストファイル（機能別にサブディレクト�
 - BoardコンポーネントModifying時はMCTSコピー効率を維持
 - MCTSのコピー効率を最適化するためには、Boardのデータ構造を慎重に設計する必要がある
 
+### clang-tidy関連
+- **警告の抑制**：設計上安全が保証されている配列アクセス等には`// NOLINTNEXTLINE(warning-name)`を使用
+
 ### claudeが分かりづらいところ
 - **policies.hpp**はplayersディレクトリに配置：DecisionPolicy（TestPolicy等）はPlayerから利用される構造のため
 - **unique_ptr使用時の注意**：`std::vector<std::unique_ptr<T>>`で`insert()`や範囲ベースコピーは禁止。`std::move()`と`emplace_back()`を使用する
@@ -131,9 +134,11 @@ tests/              # テストファイル（機能別にサブディレクト�
 - **vectorの事前確保**：LegalMovesGenerator等でemplace_backループ前にreserve()を行い、メモリ再確保を削減する
 - **小さなメソッドのインライン化**：Country::addInfluence()等の3-5行程度で頻繁に呼ばれるメソッドはヘッダに移動してインライン化する
 - **不要なチェックは削除**:実装の前提条件（例：realignment historyは必ず1つ以上の要素を持つ）を確認し、不要なチェックは削除
+- **配列アクセスの最適化**：Side列挙型（USSR=0, USA=1）による`std::array<T,2>`への配列アクセスは境界外アクセスがありえないため、`.at()`ではなく`[]`を使用。MCTSシミュレーションでのパフォーマンスを優先
 
 ## 将来計画(claudeは読まなくて良い)
-- CI
+- claudeの設定commit
+- gitflowとCI
 - テスト整理
 - WorldMapCountry定数括りだし
 - メモリアクセスパターンの最適化→キャッシュの関係から同じタイミングでアクセスされやすいデータは近くの方がいい。以下例。

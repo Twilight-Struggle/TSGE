@@ -12,9 +12,13 @@ class SpaceTrack {
   bool effectEnabled(Side side, int num) const;
   bool canSpaceChallenge(Side side) const;
   bool canSpace(Side side, int opeValue) const;
-  void spaceTried(Side side) { spaceTried_[static_cast<std::size_t>(side)]++; }
+  void spaceTried(Side side) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+    spaceTried_[static_cast<std::size_t>(side)]++;
+  }
   int getRollMax(Side side) const;
   int getSpaceTrackPosition(Side side) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return spaceTrack_[static_cast<std::size_t>(side)];
   }
   static std::array<int, 2> getSpaceVp(int position) {
@@ -45,6 +49,7 @@ class MilopsTrack {
  public:
   MilopsTrack() = default;
   int getMilops(Side side) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return milopsTrack_[static_cast<std::size_t>(side)];
   }
   bool resetMilopsTrack();
@@ -70,6 +75,7 @@ class ActionRoundTrack {
  public:
   ActionRoundTrack() = default;
   int getActionRound(Side side) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return actionRound_[static_cast<std::size_t>(side)];
   }
 

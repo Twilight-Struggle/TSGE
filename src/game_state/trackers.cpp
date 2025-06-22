@@ -5,40 +5,61 @@
 #include "tsge/enums/game_enums.hpp"
 
 bool SpaceTrack::advanceSpaceTrack(Side side, int num) {
-  spaceTrack_[static_cast<int>(side)] += num;
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  spaceTrack_[static_cast<size_t>(side)] += num;
   return true;
 }
 
 bool SpaceTrack::effectEnabled(Side side, int num) const {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   return spaceTrack_[static_cast<std::size_t>(side)] >= num &&
+         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
          spaceTrack_[static_cast<std::size_t>(getOpponentSide(side))] < num;
 }
 
 bool SpaceTrack::canSpaceChallenge(Side side) const {
-  if (spaceTrack_[static_cast<std::size_t>(side)] == 8) return false;
-  if (spaceTried_[static_cast<std::size_t>(side)] == 2)
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  if (spaceTrack_[static_cast<std::size_t>(side)] == 8) {
     return false;
-  else if (spaceTried_[static_cast<std::size_t>(side)] == 0)
+  }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  if (spaceTried_[static_cast<std::size_t>(side)] == 2) {
+    return false;
+  }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  if (spaceTried_[static_cast<std::size_t>(side)] == 0) {
     return true;
-  else
-    return effectEnabled(side, 2);
+  }
+  return effectEnabled(side, 2);
 }
 
 bool SpaceTrack::canSpace(Side side, int opeValue) const {
-  if (!canSpaceChallenge(side)) return false;
-  auto spaceIndex = spaceTrack_[static_cast<std::size_t>(side)];
-  if (spaceIndex == 7 && opeValue == 4)
-    return true;
-  else if (4 <= spaceIndex && spaceIndex <= 6 && opeValue >= 3)
-    return true;
-  else if (spaceIndex <= 3 && opeValue >= 2)
-    return true;
-  else
+  if (!canSpaceChallenge(side)) {
     return false;
+  }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  auto space_index = spaceTrack_[static_cast<std::size_t>(side)];
+  if (space_index == 7 && opeValue == 4) {
+    return true;
+  }
+  if (4 <= space_index && space_index <= 6 && opeValue >= 3) {
+    return true;
+  }
+  if (space_index <= 3 && opeValue >= 2) {
+    return true;
+  }
+  return false;
 }
 
 int SpaceTrack::getRollMax(Side side) const {
-  return rollMax_[spaceTrack_[static_cast<std::size_t>(side)]];
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  const int space_pos = spaceTrack_[static_cast<std::size_t>(side)];
+  // SpaceTrack position 8 has no rollMax (game ends), return 0
+  if (space_pos >= 8) {
+    return 0;
+  }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+  return rollMax_[space_pos];
 }
 
 bool DefconTrack::setDefcon(int defcon) {
@@ -47,25 +68,31 @@ bool DefconTrack::setDefcon(int defcon) {
 }
 
 bool DefconTrack::changeDefcon(int delta) {
-  int newDefcon = std::clamp(defcon_ + delta, 1, 5);
-  defcon_ = newDefcon;
+  int new_defcon = std::clamp(defcon_ + delta, 1, 5);
+  defcon_ = new_defcon;
   return true;
 }
 
 bool MilopsTrack::resetMilopsTrack() {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   milopsTrack_[static_cast<std::size_t>(Side::USSR)] = 0;
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   milopsTrack_[static_cast<std::size_t>(Side::USA)] = 0;
   return true;
 }
 
 bool MilopsTrack::advanceMilopsTrack(Side side, int num) {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   milopsTrack_[static_cast<std::size_t>(side)] +=
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       std::min(num, 5 - milopsTrack_[static_cast<std::size_t>(side)]);
   return true;
 }
 
 bool TurnTrack::nextTurn() {
-  if (turn_ >= 10) return false;
+  if (turn_ >= 10) {
+    return false;
+  }
   turn_++;
   return true;
 }

@@ -50,7 +50,7 @@ void Game::next() {
   }
 }
 
-void Game::mayFail(bool success, const std::string& message) {
+void Game::mayFail(bool success, const std::string& /*message*/) {
   if (!success) {
     throw std::runtime_error("ここは失敗する可能性があるのでlogを出す");
   }

@@ -32,11 +32,11 @@ bool ActionRealigmentCommand::apply(Board& board) const {
              country.getInfluence(Side::USSR)) {
     usa_dice += 1;
   }
-  std::vector<Country> adjacentCountries;
+  std::vector<Country> adjacent_countries;
   for (const auto& adjacentCountry : country.getAdjacentCountries()) {
-    adjacentCountries.push_back(worldmap.getCountry(adjacentCountry));
+    adjacent_countries.push_back(worldmap.getCountry(adjacentCountry));
   }
-  for (const auto& adjacentCountry : adjacentCountries) {
+  for (const auto& adjacentCountry : adjacent_countries) {
     if (adjacentCountry.getControlSide() == Side::USSR) {
       ussr_dice += 1;
     } else if (adjacentCountry.getControlSide() == Side::USA) {
@@ -58,47 +58,44 @@ bool ActionCoupCommand::apply(Board& board) const {
     return false;
   }
   auto& worldmap = board.getWorldMap();
-  auto targetCountry = worldmap.getCountry(targetCountry_);
-  if ((side_ == Side::USSR && targetCountry.getInfluence(Side::USA) == 0) ||
-      (side_ == Side::USA && targetCountry.getInfluence(Side::USSR) == 0)) {
+  auto& target_country = worldmap.getCountry(targetCountry_);
+  if ((side_ == Side::USSR && target_country.getInfluence(Side::USA) == 0) ||
+      (side_ == Side::USA && target_country.getInfluence(Side::USSR) == 0)) {
     return false;
-  } else {
-    auto coup_dice = Randomizer::getInstance().rollDice();
-    coup_dice += card_->getOps();
-    const auto defence_value = targetCountry.getStability() * 2;
-    coup_dice -= defence_value;
-    if (coup_dice < 0) {
-      coup_dice = 0;
-    }
-    bool success = (coup_dice == 0) ? false : true;
-    bool diff = targetCountry.getInfluence(getOpponentSide(side_)) - coup_dice;
-    if (diff > 0) {
-      targetCountry.removeInfluence(getOpponentSide(side_), coup_dice);
-    } else {
-      targetCountry.clearInfluence(getOpponentSide(side_));
-      targetCountry.addInfluence(side_, -diff);
-    }
-    return true;
   }
+  auto coup_dice = Randomizer::getInstance().rollDice();
+  coup_dice += card_->getOps();
+  const auto defence_value = target_country.getStability() * 2;
+  coup_dice = std::max(coup_dice - defence_value, 0);
+  bool success = coup_dice != 0;
+  int influence_diff =
+      target_country.getInfluence(getOpponentSide(side_)) - coup_dice;
+  if (influence_diff > 0) {
+    target_country.removeInfluence(getOpponentSide(side_), coup_dice);
+  } else {
+    target_country.clearInfluence(getOpponentSide(side_));
+    target_country.addInfluence(side_, -influence_diff);
+  }
+  return true;
 }
 
 bool ActionSpaceRaceCommand::apply(Board& board) const {
-  auto& spaceTrack = board.getSpaceTrack();
-  if (spaceTrack.canSpace(side_, card_->getOps())) {
+  auto& space_track = board.getSpaceTrack();
+  if (space_track.canSpace(side_, card_->getOps())) {
     auto roll = Randomizer::getInstance().rollDice();
-    if (roll <= spaceTrack.getRollMax(side_)) {
+    if (roll <= space_track.getRollMax(side_)) {
       // スペーストラックを進める
-      spaceTrack.advanceSpaceTrack(side_, 1);
+      space_track.advanceSpaceTrack(side_, 1);
 
       // 新しい位置を取得
-      int newPosition = spaceTrack.getSpaceTrackPosition(side_);
+      int new_position = space_track.getSpaceTrackPosition(side_);
 
       // VP計算
       for (const auto& i : {1, 3, 5, 7, 8}) {
-        if (newPosition == i) {
+        if (new_position == i) {
           auto vpData = SpaceTrack::getSpaceVp(i);
           int opponentPosition =
-              spaceTrack.getSpaceTrackPosition(getOpponentSide(side_));
+              space_track.getSpaceTrackPosition(getOpponentSide(side_));
           if (opponentPosition < i) {
             // 得点計算有利
             board.changeVp(vpData[0] * getVpMultiplier(side_));
@@ -111,27 +108,26 @@ bool ActionSpaceRaceCommand::apply(Board& board) const {
       }
       // TODO:8に到達した場合そのターンのARを増やす
     }
-    spaceTrack.spaceTried(side_);
+    space_track.spaceTried(side_);
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
 bool ChangeDefconCommand::apply(Board& board) const {
   auto& defcon = board.getDefconTrack();
-  int oldDefcon = defcon.getDefcon();
+  int old_defcon = defcon.getDefcon();
   defcon.changeDefcon(delta_);
-  int newDefcon = defcon.getDefcon();
+  int new_defcon = defcon.getDefcon();
 
   // Defcon 1でゲーム終了
-  if (newDefcon <= 1) {
+  if (new_defcon <= 1) {
     // DEFCON 1到達でUSA勝利（仮実装）
     board.pushState(StateType::USA_WIN_END);
   }
 
   // NORAD効果チェック（Defconが2に変更された場合）
-  if (oldDefcon != newDefcon && newDefcon == 2) {
+  if (old_defcon != new_defcon && new_defcon == 2) {
     // TODO: NORADの効果を適用
   }
 
@@ -142,10 +138,10 @@ bool ChangeVpCommand::apply(Board& board) const {
   board.changeVp(delta_ * getVpMultiplier(side_));
 
   // VP ±20でゲーム終了
-  int vp = board.getVp();
-  if (vp <= -20) {
+  int victory_points = board.getVp();
+  if (victory_points <= -20) {
     board.pushState(StateType::USA_WIN_END);
-  } else if (vp >= 20) {
+  } else if (victory_points >= 20) {
     board.pushState(StateType::USSR_WIN_END);
   }
 
