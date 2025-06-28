@@ -7,12 +7,33 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(TS)
 
-option(PROD "Enable production build (no TEST macros)" OFF)
+# ビルドタイプのデフォルト設定
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# C++20を使用する場合
+option(ENABLE_TESTING "Enable unit tests" ON)
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+option(ENABLE_SANITIZERS "Enable address and undefined behavior sanitizers" OFF)
+
+# C++20を使用する
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)  # GNU拡張を無効化
+
+# ビルドタイプ別の設定
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-g -O0 -fno-omit-frame-pointer)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-O3 -march=native)
+endif()
+
+# サニタイザー設定
+if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-fsanitize=address -fsanitize=undefined)
+    add_link_options(-fsanitize=address -fsanitize=undefined)
+endif()
 
 add_library(ts_core
     src/core/game.cpp
@@ -32,17 +53,11 @@ target_include_directories(ts_core
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-if (NOT PROD)
-    target_compile_definitions(ts_core PRIVATE TEST=1)
-endif()
 
-include(FetchContent)
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(googletest)
+# テスト有効時のみTESTマクロを定義
+if(ENABLE_TESTING)
+    target_compile_definitions(ts_core PUBLIC TEST=1)
+endif()
 
 # format
 find_program(CLANG_FORMAT "clang-format")
@@ -54,29 +69,22 @@ if(CLANG_FORMAT)
     )
 endif()
 
-# カバレッジ
-option(COVERAGE "Enable coverage reporting" OFF)
-
-if(COVERAGE)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate")
+# カバレッジ設定
+if(ENABLE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message(FATAL_ERROR "Coverage is only supported with Clang")
     endif()
-else()
-    # カバレッジを無効にする場合は、--coverageフラグを確実に除去
-    string(REPLACE "-fprofile-instr-generate" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REPLACE "-fcoverage-mapping" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REPLACE "-fprofile-instr-generate" "" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-endif()
 
-# カバレッジターゲット追加
-if(COVERAGE)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # カバレッジフラグの設定
+    target_compile_options(ts_core PRIVATE -fprofile-instr-generate -fcoverage-mapping)
+    target_link_options(ts_core PRIVATE -fprofile-instr-generate)
+    
+    if(ENABLE_TESTING)
         find_program(LLVM_COV llvm-cov REQUIRED)
         find_program(LLVM_PROFDATA llvm-profdata REQUIRED)
         
         add_custom_target(coverage
-            COMMAND rm -rf default.profraw default.profdata
+            COMMAND rm -rf default.profraw default.profdata coverage_report
             COMMAND LLVM_PROFILE_FILE=default.profraw ${CMAKE_CTEST_COMMAND}
             COMMAND ${LLVM_PROFDATA} merge -sparse default.profraw -o default.profdata
             
@@ -88,7 +96,7 @@ if(COVERAGE)
                 $<TARGET_FILE:trackers_test> 
                 $<TARGET_FILE:cards_test>
                 
-            # HTMLレポート（${CMAKE_SOURCE_DIR}を削除）
+            # HTMLレポート
             COMMAND ${LLVM_COV} show 
                 -instr-profile=default.profdata 
                 -format=html 
@@ -100,31 +108,55 @@ if(COVERAGE)
                 -object $<TARGET_FILE:trackers_test>
                 -object $<TARGET_FILE:cards_test>
 
+            # カバレッジサマリーを表示
+            COMMAND ${CMAKE_COMMAND} -E echo "Coverage report generated in: ${CMAKE_BINARY_DIR}/coverage_report/index.html"
+
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
+            DEPENDS command_test world_map_test trackers_test cards_test
         )
-    else()
-        message(FATAL_ERROR "Coverage is only supported with Clang")
     endif()
 endif()
 
+
 # テストの設定
-include(GoogleTest)
-enable_testing()
+if(ENABLE_TESTING)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.external/googletest/CMakeLists.txt")
+        add_subdirectory(.external/googletest)
+    else()
+        include(FetchContent)
+        # WSL2向けの設定
+        set(FETCHCONTENT_QUIET FALSE)
+        set(FETCHCONTENT_TIMEOUT 60)  # タイムアウトを延長
+        # HTTPSを使用（WSL2でより安定）
+        FetchContent_Declare(
+            googletest
+            URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+            URL_HASH SHA256=7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
+            DOWNLOAD_NO_PROGRESS FALSE  # 進捗を表示
+        )
+        FetchContent_MakeAvailable(googletest)
+    endif()
 
-function(add_test_with_path TEST_NAME TEST_PATH)
-    add_executable(${TEST_NAME} ${TEST_PATH})
-    target_link_libraries(${TEST_NAME}
-        PRIVATE
-            GTest::gtest_main
-            ts_core
-    )
-    target_compile_definitions(${TEST_NAME} PRIVATE TEST=1)
-        
-    gtest_discover_tests(${TEST_NAME})
-endfunction()
+    include(GoogleTest)
+    enable_testing()
 
-add_test_with_path(command_test tests/actions/command_test.cpp)
-add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
-add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
-add_test_with_path(cards_test tests/game_state/cards_test.cpp)
+    function(add_test_with_path TEST_NAME TEST_PATH)
+        add_executable(${TEST_NAME} ${TEST_PATH})
+        target_link_libraries(${TEST_NAME}
+            PRIVATE
+                GTest::gtest_main
+                ts_core
+        )
+        if(ENABLE_COVERAGE)
+            target_compile_options(${TEST_NAME} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
+            target_link_options(${TEST_NAME} PRIVATE -fprofile-instr-generate)
+        endif()
+        gtest_discover_tests(${TEST_NAME})
+    endfunction()
+
+    add_test_with_path(command_test tests/actions/command_test.cpp)
+    add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
+    add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
+    add_test_with_path(cards_test tests/game_state/cards_test.cpp)
+endif()
