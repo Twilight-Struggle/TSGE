@@ -16,6 +16,7 @@ class Card {
         side_{side},
         removedAfterEvent_{removedAfterEvent} {}
   virtual ~Card() = default;
+  [[nodiscard]]
   virtual std::vector<CommandPtr> event(Side side) const = 0;
 
   int getOps() const { return ops_; }

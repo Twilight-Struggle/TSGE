@@ -40,10 +40,10 @@ TEST_F(DuckAndCoverTest, DuckAndCoverTest) {
 
   // 最後のstateがChangeVpCommandであることを確認
   EXPECT_TRUE(std::holds_alternative<CommandPtr>(states.back()));
-  auto& lastCommand = std::get<CommandPtr>(states.back());
+  auto& last_command = std::get<CommandPtr>(states.back());
 
   // pushされたCommandを実行してVP変更を確認
-  EXPECT_TRUE(lastCommand->apply(board));
+  EXPECT_TRUE(last_command->apply(board));
   EXPECT_EQ(board.getVp(), -1);  // (5-4) * (-1) = -1 (USA側なので負)
 }
 
@@ -112,8 +112,8 @@ TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
   EXPECT_FALSE(states.empty());
 
   // pushされたCommandを実行してVP変更を確認
-  auto& vpCommand = std::get<CommandPtr>(states.back());
-  EXPECT_TRUE(vpCommand->apply(board));
+  auto& vp_command = std::get<CommandPtr>(states.back());
+  EXPECT_TRUE(vp_command->apply(board));
   EXPECT_EQ(board.getVp(), 3);  // (5-2) * 1 = 3 VP for USSR
 
   // statesをクリアして次のテスト準備
@@ -134,7 +134,7 @@ TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
 
   // VP変更確認
   EXPECT_FALSE(states.empty());
-  auto& vpCommand2 = std::get<CommandPtr>(states.back());
-  EXPECT_TRUE(vpCommand2->apply(board));
+  auto& vp_command2 = std::get<CommandPtr>(states.back());
+  EXPECT_TRUE(vp_command2->apply(board));
   EXPECT_EQ(board.getVp(), 3);  // 3 + (2-2) * (-1) = 3 (no change)
 }

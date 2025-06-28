@@ -124,7 +124,7 @@ void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
 std::vector<std::unique_ptr<Move>>
 LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
                                                     Side side) {
-  auto& hands = board.getPlayerHand(side);
+  const auto& hands = board.getPlayerHand(side);
   if (hands.empty()) {
     return {};
   }
@@ -154,22 +154,22 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
 
   std::vector<std::unique_ptr<Move>> results;
 
-  for (CardEnum cardEnum : hands) {
-    for (auto [totalOps, bonus] : computeOpsVariants(cardEnum, board, side)) {
+  for (CardEnum card_enum : hands) {
+    for (auto [totalOps, bonus] : computeOpsVariants(card_enum, board, side)) {
       Key key{totalOps, bonus};
 
-      if (!cache.count(key)) {
-        WorldMap tmpWorldMap(world_map);
+      if (!cache.contains(key)) {
+        WorldMap tmp_world_map(world_map);
         std::map<CountryEnum, int> placed;
         cache[key] = {};
 
-        placeInfluenceDfs(0, 0, tmpWorldMap, placed, cache[key], totalOps,
+        placeInfluenceDfs(0, 0, tmp_world_map, placed, cache[key], totalOps,
                           placeable_vec, side, bonus);
       }
       results.reserve(results.size() + cache[key].size());
       for (const auto& pattern : cache[key]) {
         results.emplace_back(std::make_unique<ActionPlaceInfluenceMove>(
-            cardEnum, side, pattern));
+            card_enum, side, pattern));
       }
     }
   }
@@ -179,7 +179,7 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
 std::vector<std::unique_ptr<Move>>
 LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
                                                  Side side) {
-  auto& hands = board.getPlayerHand(side);
+  const auto& hands = board.getPlayerHand(side);
   if (hands.empty()) {
     return {};
   }
@@ -205,9 +205,9 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
 
     // 各手札から対象国へのRealignmentMoveを生成
     results.reserve(results.size() + hands.size());
-    for (CardEnum cardEnum : hands) {
-      results.emplace_back(
-          std::make_unique<ActionRealigmentMove>(cardEnum, side, country_enum));
+    for (CardEnum card_enum : hands) {
+      results.emplace_back(std::make_unique<ActionRealigmentMove>(
+          card_enum, side, country_enum));
     }
   }
 

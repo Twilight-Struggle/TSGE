@@ -7,10 +7,10 @@
 #include "tsge/utils/randomizer.hpp"
 
 bool ActionPlaceInfluenceCommand::apply(Board& board) const {
-  for (const auto& targetCountry : targetCountries_) {
+  for (const auto& target_country : targetCountries_) {
     board.getWorldMap()
-        .getCountry(targetCountry.first)
-        .addInfluence(side_, targetCountry.second);
+        .getCountry(target_country.first)
+        .addInfluence(side_, target_country.second);
   }
   return true;
 }
@@ -33,13 +33,13 @@ bool ActionRealigmentCommand::apply(Board& board) const {
     usa_dice += 1;
   }
   std::vector<Country> adjacent_countries;
-  for (const auto& adjacentCountry : country.getAdjacentCountries()) {
-    adjacent_countries.push_back(worldmap.getCountry(adjacentCountry));
+  for (const auto& adjacent_country : country.getAdjacentCountries()) {
+    adjacent_countries.push_back(worldmap.getCountry(adjacent_country));
   }
-  for (const auto& adjacentCountry : adjacent_countries) {
-    if (adjacentCountry.getControlSide() == Side::USSR) {
+  for (const auto& adjacent_country : adjacent_countries) {
+    if (adjacent_country.getControlSide() == Side::USSR) {
       ussr_dice += 1;
-    } else if (adjacentCountry.getControlSide() == Side::USA) {
+    } else if (adjacent_country.getControlSide() == Side::USA) {
       usa_dice += 1;
     }
   }
@@ -93,15 +93,15 @@ bool ActionSpaceRaceCommand::apply(Board& board) const {
       // VP計算
       for (const auto& i : {1, 3, 5, 7, 8}) {
         if (new_position == i) {
-          auto vpData = SpaceTrack::getSpaceVp(i);
-          int opponentPosition =
+          auto vp_data = SpaceTrack::getSpaceVp(i);
+          int opponent_position =
               space_track.getSpaceTrackPosition(getOpponentSide(side_));
-          if (opponentPosition < i) {
+          if (opponent_position < i) {
             // 得点計算有利
-            board.changeVp(vpData[0] * getVpMultiplier(side_));
+            board.changeVp(vp_data[0] * getVpMultiplier(side_));
           } else {
             // 得点計算不利
-            board.changeVp(vpData[1] * getVpMultiplier(side_));
+            board.changeVp(vp_data[1] * getVpMultiplier(side_));
           }
           break;
         }

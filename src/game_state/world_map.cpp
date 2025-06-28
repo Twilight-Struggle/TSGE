@@ -462,10 +462,10 @@ WorldMap::WorldMap()
 };
 
 Country& WorldMap::getCountry(CountryEnum countryEnum) {
-  auto iterator = std::find_if(countries_.begin(), countries_.end(),
-                               [countryEnum](const Country& country) {
-                                 return country.getId() == countryEnum;
-                               });
+  auto* iterator = std::find_if(countries_.begin(), countries_.end(),
+                                [countryEnum](const Country& country) {
+                                  return country.getId() == countryEnum;
+                                });
   if (iterator != countries_.end()) {
     return *iterator;
   }
@@ -477,7 +477,7 @@ const Country& WorldMap::getCountry(CountryEnum countryEnum) const {
   return const_cast<WorldMap*>(this)->getCountry(countryEnum);
 }
 
-const std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
+std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
   std::set<CountryEnum> placeable_countries;
   for (const auto& country : countries_) {
     // USSRとUSAはここで除外
@@ -489,8 +489,8 @@ const std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
       placeable_countries.insert(country.getId());
     }
     // 隣接国に影響力があれば
-    for (const auto& adjacentCountry : country.getAdjacentCountries()) {
-      if (countries_[static_cast<size_t>(adjacentCountry)].getInfluence(side) >
+    for (const auto& adjacent_country : country.getAdjacentCountries()) {
+      if (countries_[static_cast<size_t>(adjacent_country)].getInfluence(side) >
           0) {
         placeable_countries.insert(country.getId());
         break;

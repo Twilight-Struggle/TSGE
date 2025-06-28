@@ -57,13 +57,13 @@ class Country {
             influence_[static_cast<int>(Side::USA)] >=
         stability_) {
       return Side::USSR;
-    } else if (influence_[static_cast<int>(Side::USA)] -
-                   influence_[static_cast<int>(Side::USSR)] >=
-               stability_) {
-      return Side::USA;
-    } else {
-      return Side::NEUTRAL;
     }
+    if (influence_[static_cast<int>(Side::USA)] -
+            influence_[static_cast<int>(Side::USSR)] >=
+        stability_) {
+      return Side::USA;
+    }
+    return Side::NEUTRAL;
   }
   bool operator<(const Country& other) const { return id_ < other.id_; }
 

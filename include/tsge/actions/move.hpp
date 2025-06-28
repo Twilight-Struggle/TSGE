@@ -24,6 +24,7 @@ class Move {
 
   CardEnum getCard() const { return card_; }
   Side getSide() const { return side_; }
+  [[nodiscard]]
   virtual std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const = 0;
 
@@ -38,6 +39,7 @@ class ActionPlaceInfluenceMove : public Move {
                            const std::map<CountryEnum, int>& targetCountries)
       : Move{card, side}, targetCountries_{targetCountries} {}
 
+  [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
   const std::map<CountryEnum, int>& getTargetCountries() const {
@@ -53,6 +55,7 @@ class ActionCoupMove : public Move {
   ActionCoupMove(CardEnum card, Side side, CountryEnum targetCountry)
       : Move{card, side}, targetCountry_{targetCountry} {}
 
+  [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
   CountryEnum getTargetCountry() const { return targetCountry_; }
@@ -65,6 +68,7 @@ class ActionSpaceRaceMove : public Move {
  public:
   ActionSpaceRaceMove(CardEnum card, Side side) : Move{card, side} {}
 
+  [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
 };
@@ -74,6 +78,7 @@ class ActionRealigmentMove : public Move {
   ActionRealigmentMove(CardEnum card, Side side, CountryEnum targetCountry)
       : Move{card, side}, targetCountry_{targetCountry} {}
 
+  [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
   CountryEnum getTargetCountry() const { return targetCountry_; }
@@ -95,6 +100,7 @@ class RealignmentRequestMove : public Move {
         remainingOps_{remainingOps},
         appliedAdditionalOps_{appliedAdditionalOps} {}
 
+  [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
   CountryEnum getTargetCountry() const { return targetCountry_; }
@@ -117,6 +123,7 @@ class ActionEventMove : public Move {
  public:
   ActionEventMove(CardEnum card, Side side) : Move{card, side} {}
 
+  [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
 };

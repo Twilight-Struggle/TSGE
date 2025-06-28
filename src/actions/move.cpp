@@ -97,10 +97,10 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(), history = updated_history,
-         ops = new_remaining_ops, appliedOps = appliedAdditionalOps_](
+         ops = new_remaining_ops, applied_ops = appliedAdditionalOps_](
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::realignmentRequestLegalMoves(
-              board, side, card_enum, history, ops, appliedOps);
+              board, side, card_enum, history, ops, applied_ops);
         }));
   } else {
     // すべてのOpsを使い切った場合、追加Opsの処理をチェック
@@ -109,10 +109,10 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(), history = updated_history,
-         appliedOps = appliedAdditionalOps_](
+         applied_ops = appliedAdditionalOps_](
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-              board, side, card_enum, history, appliedOps);
+              board, side, card_enum, history, applied_ops);
         }));
   }
 

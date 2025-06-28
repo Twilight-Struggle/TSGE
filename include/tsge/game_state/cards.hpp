@@ -7,6 +7,7 @@ class DuckAndCover : public Card {
   DuckAndCover()
       : Card(static_cast<int>(CardEnum::DuckAndCover), "DuckAndCover", 3,
              Side::USA, false) {}
+  [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
 
  private:
@@ -21,6 +22,7 @@ class Fidel : public Card {
  public:
   Fidel()
       : Card(static_cast<int>(CardEnum::Fidel), "Fidel", 3, Side::USSR, true) {}
+  [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
 };
 
@@ -29,6 +31,7 @@ class NuclearTestBan : public Card {
   NuclearTestBan()
       : Card(static_cast<int>(CardEnum::NuclearTestBan), "NuclearTestBan", 4,
              Side::NEUTRAL, false) {}
+  [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
 
  private:

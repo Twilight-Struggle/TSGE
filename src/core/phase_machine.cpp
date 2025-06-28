@@ -1,6 +1,7 @@
 #include "tsge/core/phase_machine.hpp"
 
 #include <cstddef>
+#include <ranges>
 #include <variant>
 
 #include "tsge/actions/command.hpp"
@@ -21,46 +22,47 @@ PhaseMachine::step(Board& board,
   if (answer) {
     // Requestが残っている場合pop
     if (!states.empty() && std::holds_alternative<CommandPtr>(states.back())) {
-      auto& cmdPtr = std::get<CommandPtr>(states.back());
-      if (dynamic_cast<RequestCommand*>(cmdPtr.get())) {
+      auto& cmd_ptr = std::get<CommandPtr>(states.back());
+      if (dynamic_cast<RequestCommand*>(cmd_ptr.get()) != nullptr) {
         states.pop_back();
       }
     }
-    auto& cardpool = board.getCardpool();
+    const auto& cardpool = board.getCardpool();
     auto cmds = answer.value()->toCommand(
         cardpool[static_cast<size_t>(answer.value()->getCard())]);
     // 逆順にスタックに積む
-    for (auto it = cmds.rbegin(); it != cmds.rend(); ++it)
-      states.emplace_back(std::move(*it));
+    for (auto& cmd : std::ranges::reverse_view(cmds)) {
+      states.emplace_back(std::move(cmd));
+    }
 
     answer.reset();
   }
 
   while (!states.empty()) {
-    auto& topState = states.back();
+    auto& top_state = states.back();
     // ----- スタック最上段が CommandPtr の場合 --------------------
-    if (auto* cmdPtr = std::get_if<CommandPtr>(&topState)) {
+    if (auto* cmd_ptr = std::get_if<CommandPtr>(&top_state)) {
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
-      if (auto* req = dynamic_cast<RequestCommand*>(cmdPtr->get())) {
+      if (auto* req = dynamic_cast<RequestCommand*>(cmd_ptr->get())) {
         // TODO:
         // req->legalMoves(board)={}の可能性があるのでこの場合はPhaseを進める処理が必要
         return {req->legalMoves(board), req->getSide(), std::nullopt};
       }
-      (*cmdPtr)->apply(board);
+      (*cmd_ptr)->apply(board);
       // board.history.push_back(*cmdPtr);  // undo ログ
       states.pop_back();
       continue;
 
     } else {
       // ----- スタック最上段が StateType (フェーズ) -------------------
-      auto stateType = std::get<StateType>(topState);
+      auto state_type = std::get<StateType>(top_state);
       states.pop_back();
 
-      switch (stateType) {
+      switch (state_type) {
         case StateType::AR_USSR:
         case StateType::AR_USA: {
-          Side side = stateType == StateType::AR_USSR ? Side::USSR : Side::USA;
+          Side side = state_type == StateType::AR_USSR ? Side::USSR : Side::USA;
           states.emplace_back(StateType::AR_COMPLETE);
           // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要

@@ -13,14 +13,7 @@
 class Board {
  public:
   Board(const std::array<std::unique_ptr<Card>, 111>& cardpool)
-      : cardpool_{cardpool},
-        worldMap_{},
-        spaceTrack_{},
-        defconTrack_{},
-        milopsTrack_{},
-        turnTrack_{},
-        actionRoundTrack_{},
-        playerHands_{} {
+      : cardpool_{cardpool} {
     for (auto& hand : playerHands_) {
       hand.reserve(9);
     }
