@@ -1,0 +1,1 @@
+![CI](https://github.com/Twilight-Struggle/TSGE/workflows/CI/badge.svg)
