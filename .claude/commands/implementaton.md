@@ -1,0 +1,11 @@
+# 実装コマンド
+
+# 目的
+実装計画からコードを実装する。
+
+## 手順
+1. タスクファイルを読む: `.claude/work/tasks/task_$ARGUMENTS.md`
+2. 既存のスクラッチパッドがあれば読む: `.claude/work/scratchpads/scratchpad_$ARGUMENTS.md`
+3. もしタスクファイル `task_$ARGUMENTS.md` に追記(#追記1、#追記2)等あればその考えを取り入れる。
+4. もし `scratchpad_$ARGUMENTS.md` に「人間：...」コメントがあったらその考えを取り入れる。
+5. それらの計画に沿ってコードを実装。
