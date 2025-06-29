@@ -1,3 +1,6 @@
+codecov:
+  require_ci_to_pass: yes
+  
 coverage:
   precision: 2
   round: down
@@ -8,6 +11,11 @@ coverage:
       default:
         target: 80%
         threshold: 1%
+        # 各種カバレッジメトリクスの表示
+        if_not_found: success
+        if_ci_failed: error
+        informational: false
+        only_pulls: false
         
     patch:
       default:
@@ -23,9 +31,20 @@ parsers:
       macro: no
 
 comment:
-  layout: "reach,diff,flags,files,footer"
+  layout: "reach,diff,flags,tree,components,footer"
   behavior: default
   require_changes: no
+  show_carryforward_flags: true
+  # 各種カバレッジメトリクスの表示
+  show_critical_paths: true
+  after_n_builds: 1
+
+# カバレッジ表示設定
+coverage_range: 70..100
+
+# レポート設定
+github_checks:
+  annotations: true
 
 # 除外パターン
 ignore:

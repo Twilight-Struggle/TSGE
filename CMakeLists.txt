@@ -76,7 +76,7 @@ if(ENABLE_COVERAGE)
     endif()
 
     # カバレッジフラグの設定
-    target_compile_options(ts_core PRIVATE -fprofile-instr-generate -fcoverage-mapping)
+    target_compile_options(ts_core PRIVATE -fprofile-instr-generate -fcoverage-mapping -mllvm -enable-name-compression=false)
     target_link_options(ts_core PRIVATE -fprofile-instr-generate)
     
     if(ENABLE_TESTING)
