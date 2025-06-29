@@ -97,16 +97,9 @@ jobs:
           -object ./build/cards_test \
           > coverage.lcov
 
-        # カバレッジサマリーを表示
-        llvm-cov report \
-          -instr-profile=default.profdata \
-          -object ./build/command_test \
-          -object ./build/world_map_test \
-          -object ./build/trackers_test \
-          -object ./build/cards_test
-          
-        # ソースファイルのパスを調整(Codecovが認識しやすいように)
-        sed -i 's|SF:${{ github.workspace }}/|SF:|g' coverage.lcov
+        # lcovファイルの内容を確認（デバッグ用）
+        echo "=== LCOV file first 100 lines ==="
+        head -n 100 coverage.lcov || true
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5

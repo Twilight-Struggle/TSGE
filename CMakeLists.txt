@@ -76,8 +76,14 @@ if(ENABLE_COVERAGE)
     endif()
 
     # カバレッジフラグの設定
-    target_compile_options(ts_core PRIVATE -fprofile-instr-generate -fcoverage-mapping -mllvm -enable-name-compression=false)
-    target_link_options(ts_core PRIVATE -fprofile-instr-generate)
+    target_compile_options(ts_core PRIVATE 
+        -fprofile-instr-generate
+        -fcoverage-mapping
+        -mllvm -enable-name-compression=false
+        -fprofile-arcs  # 追加：関数カバレッジ用
+        -ftest-coverage # 追加：テストカバレッジ用
+    )
+    target_link_options(ts_core PRIVATE -fprofile-instr-generate -fprofile-arcs)
     
     if(ENABLE_TESTING)
         find_program(LLVM_COV llvm-cov REQUIRED)

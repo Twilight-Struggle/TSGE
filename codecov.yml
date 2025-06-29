@@ -16,6 +16,8 @@ coverage:
         if_ci_failed: error
         informational: false
         only_pulls: false
+        flags:
+          - unittests
         
     patch:
       default:
@@ -23,11 +25,11 @@ coverage:
         threshold: 1%
 
 parsers:
-  gcov:
+  lcov:
     branch_detection:
       conditional: yes
       loop: yes
-      method: no
+      method: yes
       macro: no
 
 comment:
@@ -59,3 +61,4 @@ flags:
       - src/
       - include/
     carryforward: true
+    coverage_type: lcov
