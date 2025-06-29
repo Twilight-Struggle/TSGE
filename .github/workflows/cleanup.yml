@@ -1,0 +1,30 @@
+name: Cleanup old workflow runs
+
+on:
+  schedule:
+    # 毎日午前3時（UTC）に実行
+    - cron: '0 3 * * *'
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read  # リポジトリ内容の読み取りに必要
+      
+    steps:
+    - name: Delete old workflow runs
+      uses: Mattraks/delete-workflow-runs@v2
+      with:
+        token: ${{ github.token }}
+        repository: ${{ github.repository }}
+        retain_days: 7  # 7日より古い実行結果を削除
+        keep_minimum_runs: 3  # 各ワークフローで最低3件は保持
+        
+    - name: Remove old artifacts
+      uses: c-hive/gha-remove-artifacts@v1
+      with:
+        age: '7 days'  # 7日より古いアーティファクトを削除
+        skip-tags: true  # タグに関連するアーティファクトは保持
+        skip-recent: 3  # 最新3件のアーティファクトは保持
