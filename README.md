@@ -1,1 +1,2 @@
 ![CI](https://github.com/Twilight-Struggle/TSGE/workflows/CI/badge.svg)
+[![codecov](https://codecov.io/gh/Twilight-Struggle/TSGE/branch/main/graph/badge.svg)](https://codecov.io/gh/Twilight-Struggle/TSGE)

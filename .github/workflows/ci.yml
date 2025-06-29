@@ -70,15 +70,45 @@ jobs:
           
     - name: Build
       run: cmake --build build
-      
-    - name: Generate coverage report
-      run: cmake --build build --target coverage
-      
-    - name: Upload coverage reports
-      uses: actions/upload-artifact@v4
+
+    - name: Run tests and generate coverage
+      run: |
+        # プロファイルファイルのパスを絶対パスで指定
+        export LLVM_PROFILE_FILE=$PWD/default-%p.profraw
+        
+        # テストを実行
+        ctest --test-dir build --output-on-failure
+        
+        # プロファイルファイルを確認
+        echo "Profile files:"
+        ls -la *.profraw || echo "No .profraw files found in current directory"
+        ls -la build/*.profraw || echo "No .profraw files found in build directory"
+        
+        # プロファイルデータをマージ（複数のプロファイルファイルに対応）
+        llvm-profdata merge -sparse default-*.profraw -o default.profdata
+        
+        # lcov形式のカバレッジレポートを生成
+        llvm-cov export \
+          -format=lcov \
+          -instr-profile=default.profdata \
+          -object ./build/command_test \
+          -object ./build/world_map_test \
+          -object ./build/trackers_test \
+          -object ./build/cards_test \
+          > coverage.lcov
+          
+        # ソースファイルのパスを調整（必要に応じて）
+        # sed -i 's|SF:|SF:./|g' coverage.lcov
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
       with:
-        name: coverage-report
-        path: build/coverage_report/
+        file: ./coverage.lcov
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
         
   clang-format:
     runs-on: ubuntu-latest

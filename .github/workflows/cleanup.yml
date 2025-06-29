@@ -26,5 +26,3 @@ jobs:
       uses: c-hive/gha-remove-artifacts@v1
       with:
         age: '7 days'  # 7日より古いアーティファクトを削除
-        skip-tags: true  # タグに関連するアーティファクトは保持
-        skip-recent: 3  # 最新3件のアーティファクトは保持
