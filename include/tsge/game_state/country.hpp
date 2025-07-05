@@ -8,18 +8,21 @@
 
 class Country {
  public:
+  // NOLINTNEXTLINE(readability-identifier-length)
   Country(CountryEnum id, const tsge::CountryStaticData& staticData)
       : id_{id}, staticData_{staticData}, influence_({0, 0}) {}
 
   bool addInfluence(Side side, int num) {
-    if (num < 0) [[unlikely]]
+    if (num < 0) [[unlikely]] {
       return false;
+    }
     influence_[static_cast<int>(side)] += num;
     return true;
   }
   bool removeInfluence(Side side, int num) {
-    if (num < 0) [[unlikely]]
+    if (num < 0) [[unlikely]] {
       return false;
+    }
     influence_[static_cast<int>(side)] -= num;
     if (influence_[static_cast<int>(side)] < 0) {
       influence_[static_cast<int>(side)] = 0;
@@ -46,7 +49,9 @@ class Country {
   }
   bool hasRegion(Region region) const {
     for (size_t i = 0; i < staticData_.regionsCount; ++i) {
-      if (staticData_.regions[i] == region) return true;
+      if (staticData_.regions[i] == region) {
+        return true;
+      }
     }
     return false;
   }

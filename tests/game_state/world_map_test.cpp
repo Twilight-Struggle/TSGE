@@ -12,7 +12,7 @@ class WorldMapTest : public ::testing::Test {
 };
 
 TEST_F(WorldMapTest, CountryIndexTest) {
-  for (size_t i = static_cast<size_t>(CountryEnum::USSR);
+  for (auto i = static_cast<size_t>(CountryEnum::USSR);
        i <= static_cast<size_t>(CountryEnum::FINLAND); i++) {
     EXPECT_EQ(worldMap.getCountry(static_cast<CountryEnum>(i)).getId(),
               static_cast<CountryEnum>(i));

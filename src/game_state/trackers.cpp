@@ -5,28 +5,22 @@
 #include "tsge/enums/game_enums.hpp"
 
 bool SpaceTrack::advanceSpaceTrack(Side side, int num) {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   spaceTrack_[static_cast<size_t>(side)] += num;
   return true;
 }
 
 bool SpaceTrack::effectEnabled(Side side, int num) const {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   return spaceTrack_[static_cast<std::size_t>(side)] >= num &&
-         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
          spaceTrack_[static_cast<std::size_t>(getOpponentSide(side))] < num;
 }
 
 bool SpaceTrack::canSpaceChallenge(Side side) const {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   if (spaceTrack_[static_cast<std::size_t>(side)] == 8) {
     return false;
   }
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   if (spaceTried_[static_cast<std::size_t>(side)] == 2) {
     return false;
   }
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   if (spaceTried_[static_cast<std::size_t>(side)] == 0) {
     return true;
   }
@@ -37,7 +31,6 @@ bool SpaceTrack::canSpace(Side side, int opeValue) const {
   if (!canSpaceChallenge(side)) {
     return false;
   }
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   auto space_index = spaceTrack_[static_cast<std::size_t>(side)];
   if (space_index == 7 && opeValue == 4) {
     return true;
@@ -52,14 +45,12 @@ bool SpaceTrack::canSpace(Side side, int opeValue) const {
 }
 
 int SpaceTrack::getRollMax(Side side) const {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   const int space_pos = spaceTrack_[static_cast<std::size_t>(side)];
   // SpaceTrack position 8 has no rollMax (game ends), return 0
   if (space_pos >= 8) {
     return 0;
   }
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-  return rollMax_[space_pos];
+  return ROLL_MAX[space_pos];
 }
 
 bool DefconTrack::setDefcon(int defcon) {
@@ -74,17 +65,13 @@ bool DefconTrack::changeDefcon(int delta) {
 }
 
 bool MilopsTrack::resetMilopsTrack() {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   milopsTrack_[static_cast<std::size_t>(Side::USSR)] = 0;
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   milopsTrack_[static_cast<std::size_t>(Side::USA)] = 0;
   return true;
 }
 
 bool MilopsTrack::advanceMilopsTrack(Side side, int num) {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
   milopsTrack_[static_cast<std::size_t>(side)] +=
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
       std::min(num, 5 - milopsTrack_[static_cast<std::size_t>(side)]);
   return true;
 }

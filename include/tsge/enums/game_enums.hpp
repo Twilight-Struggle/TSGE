@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 enum class CountryEnum : uint8_t {
@@ -128,11 +129,12 @@ enum class Side : uint8_t {
 };
 
 constexpr Side getOpponentSide(Side side) noexcept {
-  constexpr Side opponents[] = {Side::USA, Side::USSR, Side::NEUTRAL};
-  return opponents[static_cast<std::size_t>(side)];
+  constexpr std::array<Side, 3> OPPONENTS = {Side::USA, Side::USSR,
+                                             Side::NEUTRAL};
+  return OPPONENTS[static_cast<std::size_t>(side)];
 }
 
 constexpr int getVpMultiplier(Side side) noexcept {
-  constexpr int multipliers[] = {1, -1, 0};
-  return multipliers[static_cast<std::size_t>(side)];
+  constexpr std::array<int, 3> MULTIPLIERS = {1, -1, 0};
+  return MULTIPLIERS[static_cast<std::size_t>(side)];
 }

@@ -91,6 +91,7 @@ bool ActionSpaceRaceCommand::apply(Board& board) const {
       int new_position = space_track.getSpaceTrackPosition(side_);
 
       // VP計算
+      // NOLINTNEXTLINE(readability-identifier-length)
       for (const auto& i : {1, 3, 5, 7, 8}) {
         if (new_position == i) {
           auto vp_data = SpaceTrack::getSpaceVp(i);

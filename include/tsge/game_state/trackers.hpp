@@ -12,26 +12,22 @@ class SpaceTrack {
   bool effectEnabled(Side side, int num) const;
   bool canSpaceChallenge(Side side) const;
   bool canSpace(Side side, int opeValue) const;
-  void spaceTried(Side side) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-    spaceTried_[static_cast<std::size_t>(side)]++;
-  }
+  void spaceTried(Side side) { spaceTried_[static_cast<std::size_t>(side)]++; }
   int getRollMax(Side side) const;
   int getSpaceTrackPosition(Side side) const {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return spaceTrack_[static_cast<std::size_t>(side)];
   }
   static std::array<int, 2> getSpaceVp(int position) {
-    return position > 0 && position <= 8 ? spaceVps_[position - 1]
+    return position > 0 && position <= 8 ? SPACE_VPS[position - 1]
                                          : std::array<int, 2>{0, 0};
   }
 
  private:
   std::array<int, 2> spaceTrack_ = {0, 0};
   std::array<int, 2> spaceTried_ = {0, 0};
-  static constexpr std::array<std::array<int, 2>, 8> spaceVps_ = {
+  static constexpr std::array<std::array<int, 2>, 8> SPACE_VPS = {
       {{2, 1}, {0, 0}, {2, 0}, {0, 0}, {3, 1}, {0, 0}, {4, 2}, {2, 0}}};
-  static constexpr std::array<int, 8> rollMax_ = {3, 4, 3, 4, 3, 4, 3, 2};
+  static constexpr std::array<int, 8> ROLL_MAX = {3, 4, 3, 4, 3, 4, 3, 2};
 };
 
 class DefconTrack {
@@ -49,7 +45,6 @@ class MilopsTrack {
  public:
   MilopsTrack() = default;
   int getMilops(Side side) const {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return milopsTrack_[static_cast<std::size_t>(side)];
   }
   bool resetMilopsTrack();
@@ -75,7 +70,6 @@ class ActionRoundTrack {
  public:
   ActionRoundTrack() = default;
   int getActionRound(Side side) const {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return actionRound_[static_cast<std::size_t>(side)];
   }
 

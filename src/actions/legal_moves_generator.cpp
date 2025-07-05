@@ -1,5 +1,6 @@
 #include "tsge/actions/legal_moves_generator.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <map>
 #include <utility>
@@ -27,15 +28,12 @@ struct CountryExtractor<std::pair<const CountryEnum, V>> {
 template <Region region, typename Container>
 static inline bool isAllInRegion(const Container& countries,
                                  const Board& board) {
-  for (const auto& elem : countries) {
+  return std::ranges::all_of(countries, [&](const auto& elem) {
     const auto country =
         CountryExtractor<std::decay_t<decltype(elem)>>::extract(elem);
     const auto& country_obj = board.getWorldMap().getCountry(country);
-    if (!country_obj.hasRegion(region)) {
-      return false;
-    }
-  }
-  return true;
+    return country_obj.hasRegion(region);
+  });
 }
 
 struct BonusCondition {
@@ -48,11 +46,13 @@ static std::vector<std::pair<int, const BonusCondition*>> computeOpsVariants(
   const int base_ops =
       board.getCardpool()[static_cast<size_t>(cardId)]->getOps();
 
+  // NOLINTNEXTLINE(readability-identifier-naming)
   static const BonusCondition asia_only{
       /* すべての国がアジア地域か？ */
       [&board](const std::map<CountryEnum, int>& placed) {
         return isAllInRegion<Region::ASIA>(placed, board);
       }};
+  // NOLINTNEXTLINE(readability-identifier-naming)
   static const BonusCondition se_asia_only{
       [&board](const std::map<CountryEnum, int>& placed) {
         return isAllInRegion<Region::SOUTH_EAST_ASIA>(placed, board);
@@ -87,6 +87,7 @@ inline int costToAddOneInfluence(const WorldMap& worldMap,
   return opponent_controls ? 2 : 1;
 }
 
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
                        std::map<CountryEnum, int>& placed,
                        std::vector<std::map<CountryEnum, int>>& out,

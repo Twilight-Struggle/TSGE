@@ -1,8 +1,5 @@
 #include "tsge/game_state/world_map.hpp"
 
-#include <algorithm>
-#include <stdexcept>
-
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/country.hpp"
 #include "tsge/game_state/world_map_constants.hpp"
@@ -200,6 +197,7 @@ Country& WorldMap::getCountry(CountryEnum countryEnum) {
 }
 
 const Country& WorldMap::getCountry(CountryEnum countryEnum) const {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
   return const_cast<WorldMap*>(this)->getCountry(countryEnum);
 }
 

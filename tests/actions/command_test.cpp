@@ -30,26 +30,26 @@ class CommandTest : public ::testing::Test {
 
 TEST_F(CommandTest, PlaceTest) {
   // 単一国への影響力配置テスト
-  auto& northKorea = board.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
-  EXPECT_EQ(northKorea.getInfluence(Side::USA), 0);  // 初期状態確認
+  auto& north_korea = board.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
+  EXPECT_EQ(north_korea.getInfluence(Side::USA), 0);  // 初期状態確認
 
   ActionPlaceInfluenceCommand action_single_country(
       Side::USA, board.getCardpool()[0], {{CountryEnum::NORTH_KOREA, 2}});
   action_single_country.apply(board);
-  EXPECT_EQ(northKorea.getInfluence(Side::USA),
+  EXPECT_EQ(north_korea.getInfluence(Side::USA),
             2);  // 影響力が正しく配置されたか確認
 
   // 複数国への同時配置テスト
-  auto& southKorea = board.getWorldMap().getCountry(CountryEnum::SOUTH_KOREA);
+  auto& south_korea = board.getWorldMap().getCountry(CountryEnum::SOUTH_KOREA);
   auto& japan = board.getWorldMap().getCountry(CountryEnum::JAPAN);
-  EXPECT_EQ(southKorea.getInfluence(Side::USSR), 0);  // 初期状態確認
+  EXPECT_EQ(south_korea.getInfluence(Side::USSR), 0);  // 初期状態確認
   EXPECT_EQ(japan.getInfluence(Side::USSR), 0);
 
   ActionPlaceInfluenceCommand action_multiple_countries(
       Side::USSR, board.getCardpool()[0],
       {{CountryEnum::SOUTH_KOREA, 3}, {CountryEnum::JAPAN, 2}});
   action_multiple_countries.apply(board);
-  EXPECT_EQ(southKorea.getInfluence(Side::USSR),
+  EXPECT_EQ(south_korea.getInfluence(Side::USSR),
             3);  // 両国に正しく配置されたか確認
   EXPECT_EQ(japan.getInfluence(Side::USSR), 2);
 
@@ -97,23 +97,23 @@ TEST_F(CommandTest, ChangeDefconCommandTest) {
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);
 
   // Defcon変更テスト
-  ChangeDefconCommand changeDefcon(-2);
-  EXPECT_TRUE(changeDefcon.apply(board));
+  ChangeDefconCommand change_defcon(-2);
+  EXPECT_TRUE(change_defcon.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 3);
 
   // NORAD効果トリガーテスト（Defconを2に変更）
   board.getDefconTrack().setDefcon(3);
-  ChangeDefconCommand triggerNorad(-1);
-  EXPECT_TRUE(triggerNorad.apply(board));
+  ChangeDefconCommand trigger_norad(-1);
+  EXPECT_TRUE(trigger_norad.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 2);
 
   // 範囲制限テスト（changeDefconはclampする）
-  ChangeDefconCommand exceedMax(10);
-  EXPECT_TRUE(exceedMax.apply(board));
+  ChangeDefconCommand exceed_max(10);
+  EXPECT_TRUE(exceed_max.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 5);  // 5でクランプされる
 
-  ChangeDefconCommand exceedMin(-10);
-  EXPECT_TRUE(exceedMin.apply(board));
+  ChangeDefconCommand exceed_min(-10);
+  EXPECT_TRUE(exceed_min.apply(board));
   EXPECT_EQ(board.getDefconTrack().getDefcon(), 1);  // 1でクランプされる
 }
 
@@ -122,18 +122,18 @@ TEST_F(CommandTest, ChangeVPCommandTest) {
   EXPECT_EQ(board.getVp(), 0);
 
   // VP変更テスト（USSR側に+5VP）
-  ChangeVpCommand changeVP(Side::USSR, 5);
-  EXPECT_TRUE(changeVP.apply(board));
+  ChangeVpCommand change_vp(Side::USSR, 5);
+  EXPECT_TRUE(change_vp.apply(board));
   EXPECT_EQ(board.getVp(), 5);
 
   // 負のVP変更テスト（USA側に+3VP、実際は-3VP）
-  ChangeVpCommand changeVPNegative(Side::USA, 3);
-  EXPECT_TRUE(changeVPNegative.apply(board));
+  ChangeVpCommand change_vp_negative(Side::USA, 3);
+  EXPECT_TRUE(change_vp_negative.apply(board));
   EXPECT_EQ(board.getVp(), 2);  // 5 + (-3) = 2
 
   // 大きなVP変更テスト（ゲーム終了条件チェック）
-  ChangeVpCommand largeVP(Side::USSR, 25);
-  EXPECT_TRUE(largeVP.apply(board));
+  ChangeVpCommand large_vp(Side::USSR, 25);
+  EXPECT_TRUE(large_vp.apply(board));
   EXPECT_EQ(board.getVp(), 27);  // ゲーム終了条件に達してGAME_ENDがpushされる
 
   // stateにUSSR_WIN_ENDが積まれていることを確認
@@ -150,8 +150,8 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   EXPECT_TRUE(states.empty());
 
   // DEFCON 1でゲーム終了トリガー
-  ChangeDefconCommand endByDefcon(-4);  // 5 → 1
-  EXPECT_TRUE(endByDefcon.apply(board));
+  ChangeDefconCommand end_by_defcon(-4);  // 5 → 1
+  EXPECT_TRUE(end_by_defcon.apply(board));
 
   // 終了StateTypeがstackにpushされることを確認（DEFCON 1で相手の勝利）
   EXPECT_FALSE(states.empty());
@@ -163,8 +163,8 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   states.clear();
 
   // VP 20でゲーム終了トリガー
-  ChangeVpCommand endByVP(Side::USSR, 20);
-  EXPECT_TRUE(endByVP.apply(board));
+  ChangeVpCommand end_by_vp(Side::USSR, 20);
+  EXPECT_TRUE(end_by_vp.apply(board));
 
   // 終了StateTypeがstackにpushされることを確認（VP 20でUSSR勝利）
   EXPECT_FALSE(states.empty());

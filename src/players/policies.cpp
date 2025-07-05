@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 TestPolicy::TestPolicy(std::vector<std::unique_ptr<Move>>&& moves)
-    : moves_{std::move(moves)}, currentMoveIndex_(0) {}
+    : moves_{std::move(moves)} {}
 
 std::unique_ptr<Move> TestPolicy::decideMove(
     const Board& /*board*/,

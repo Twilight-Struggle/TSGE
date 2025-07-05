@@ -14,8 +14,8 @@ class Game {
 #ifdef TEST
   Game()
       : Game(Player<TestPolicy>{}, Player<TestPolicy>{}, defaultCardPool()) {}
-  Game(Player<TestPolicy>&& p1, Player<TestPolicy>&& p2)
-      : Game(std::move(p1), std::move(p2), defaultCardPool()) {}
+  Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2)
+      : Game(std::move(player1), std::move(player2), defaultCardPool()) {}
 #endif
   Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
        const std::array<std::unique_ptr<Card>, 111>& cardpool);

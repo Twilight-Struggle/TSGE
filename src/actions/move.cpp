@@ -129,6 +129,7 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
 
   // Execute the event
   auto event_commands = card->event(player_side);
+  commands.reserve(event_commands.size() + 1);
   for (auto& cmd : event_commands) {
     commands.emplace_back(std::move(cmd));
   }
