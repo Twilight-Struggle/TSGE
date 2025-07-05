@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <set>
 
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/country.hpp"

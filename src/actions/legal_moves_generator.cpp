@@ -31,7 +31,7 @@ static inline bool isAllInRegion(const Container& countries,
     const auto country =
         CountryExtractor<std::decay_t<decltype(elem)>>::extract(elem);
     const auto& country_obj = board.getWorldMap().getCountry(country);
-    if (!country_obj.getRegions().contains(region)) {
+    if (!country_obj.hasRegion(region)) {
       return false;
     }
   }
@@ -303,7 +303,7 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       if (country.getInfluence(opponent_side) == 0) {
         continue;
       }
-      if (!country.getRegions().contains(Region::ASIA)) {
+      if (!country.hasRegion(Region::ASIA)) {
         continue;
       }
 
@@ -327,7 +327,7 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       if (country.getInfluence(opponent_side) == 0) {
         continue;
       }
-      if (!country.getRegions().contains(Region::SOUTH_EAST_ASIA)) {
+      if (!country.hasRegion(Region::SOUTH_EAST_ASIA)) {
         continue;
       }
 
