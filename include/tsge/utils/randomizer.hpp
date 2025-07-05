@@ -6,8 +6,10 @@
 class Randomizer {
  private:
   Randomizer();
-  Randomizer(const Randomizer&);
-  Randomizer& operator=(const Randomizer&);
+  Randomizer(const Randomizer&) = delete;
+  Randomizer& operator=(const Randomizer&) = delete;
+  Randomizer(Randomizer&&) = delete;
+  Randomizer& operator=(Randomizer&&) = delete;
   ~Randomizer() {}
 
   std::mt19937_64 rng;

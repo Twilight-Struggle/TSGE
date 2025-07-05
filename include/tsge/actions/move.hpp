@@ -21,6 +21,10 @@ class Move {
  public:
   Move(CardEnum card, Side side) : card_{card}, side_{side} {}
   virtual ~Move() = default;
+  Move(const Move&) = delete;
+  Move& operator=(const Move&) = delete;
+  Move(Move&&) = delete;
+  Move& operator=(Move&&) = delete;
 
   CardEnum getCard() const { return card_; }
   Side getSide() const { return side_; }

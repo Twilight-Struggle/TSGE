@@ -16,6 +16,11 @@ class Card {
         side_{side},
         removedAfterEvent_{removedAfterEvent} {}
   virtual ~Card() = default;
+  Card(const Card&) = delete;
+  Card& operator=(const Card&) = delete;
+  Card(Card&&) = delete;
+  Card& operator=(Card&&) = delete;
+
   [[nodiscard]]
   virtual std::vector<CommandPtr> event(Side side) const = 0;
 

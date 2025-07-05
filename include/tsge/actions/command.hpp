@@ -15,6 +15,11 @@ class Command {
  public:
   Command(Side side) : side_{side} {};
   virtual ~Command() = default;
+  Command(const Command&) = delete;
+  Command& operator=(const Command&) = delete;
+  Command(Command&&) = delete;
+  Command& operator=(Command&&) = delete;
+
   virtual bool apply(Board& board) const = 0;
   // MCTSで必要
   // virtual bool undo(Board& board) const = 0;

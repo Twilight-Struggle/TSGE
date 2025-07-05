@@ -9,6 +9,10 @@ class WorldMap {
  public:
   WorldMap();
   ~WorldMap() = default;
+  WorldMap(const WorldMap&) = delete;
+  WorldMap& operator=(const WorldMap&) = delete;
+  WorldMap(WorldMap&&) = delete;
+  WorldMap& operator=(WorldMap&&) = delete;
 
   Country& getCountry(CountryEnum countryEnum);
   const Country& getCountry(CountryEnum countryEnum) const;
