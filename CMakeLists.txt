@@ -44,7 +44,6 @@ add_library(ts_core
     src/game_state/world_map.cpp
     src/game_state/world_map_constants.cpp
     src/game_state/cards.cpp
-    src/game_state/trackers.cpp
     src/players/policies.cpp
     src/utils/randomizer.cpp
 )

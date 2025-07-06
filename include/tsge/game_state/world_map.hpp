@@ -14,9 +14,16 @@ class WorldMap {
   WorldMap(WorldMap&&) = default;
   WorldMap& operator=(WorldMap&&) = delete;
 
-  Country& getCountry(CountryEnum countryEnum);
-  const Country& getCountry(CountryEnum countryEnum) const;
-  const std::set<Country>& countriesInRegion(Region region) const;
+  Country& getCountry(CountryEnum countryEnum) {
+    return countries_[static_cast<size_t>(countryEnum)];
+  }
+  const Country& getCountry(CountryEnum countryEnum) const {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+    return const_cast<WorldMap*>(this)->getCountry(countryEnum);
+  }
+  const std::set<Country>& countriesInRegion(Region region) const {
+    return regionCountries_[static_cast<size_t>(region)];
+  }
   std::set<CountryEnum> placeableCountries(Side side) const;
   const size_t getCountriesCount() const { return countries_.size(); }
   const size_t getRegionsCount() const { return regionCountries_.size(); }

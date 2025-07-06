@@ -192,15 +192,6 @@ WorldMap::WorldMap()
   }
 }
 
-Country& WorldMap::getCountry(CountryEnum countryEnum) {
-  return countries_[static_cast<size_t>(countryEnum)];
-}
-
-const Country& WorldMap::getCountry(CountryEnum countryEnum) const {
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
-  return const_cast<WorldMap*>(this)->getCountry(countryEnum);
-}
-
 std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
   std::set<CountryEnum> placeable_countries;
   for (const auto& country : countries_) {
@@ -222,8 +213,4 @@ std::set<CountryEnum> WorldMap::placeableCountries(Side side) const {
     }
   }
   return placeable_countries;
-}
-
-const std::set<Country>& WorldMap::countriesInRegion(Region region) const {
-  return regionCountries_[static_cast<size_t>(region)];
 }
