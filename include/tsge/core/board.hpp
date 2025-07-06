@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "tsge/actions/command.hpp"
+#include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
-#include "tsge/game_state/cards_enum.hpp"
 #include "tsge/game_state/trackers.hpp"
 #include "tsge/game_state/world_map.hpp"
 

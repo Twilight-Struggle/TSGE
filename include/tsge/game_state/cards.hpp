@@ -1,6 +1,6 @@
 #pragma once
+#include "tsge/enums/cards_enum.hpp"
 #include "tsge/game_state/card.hpp"
-#include "tsge/game_state/cards_enum.hpp"
 
 class DuckAndCover : public Card {
  public:

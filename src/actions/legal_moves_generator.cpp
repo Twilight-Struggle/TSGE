@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "tsge/actions/move.hpp"
+#include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
-#include "tsge/game_state/cards_enum.hpp"
 #include "tsge/game_state/world_map.hpp"
 
 // CountryEnum抽出用のヘルパー
