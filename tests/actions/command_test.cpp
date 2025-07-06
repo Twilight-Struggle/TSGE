@@ -75,6 +75,14 @@ TEST_F(CommandTest, RealigmentTest) {
   EXPECT_TRUE(action_can_realigment_usa.apply(board));
 }
 
+TEST_F(CommandTest, RealignmentWithUSAControlledAdjacentCountryTest) {
+  // JAPANに対するRealignmentで、隣接するUSAがUSA支配状態であることを利用
+  // USAはstability=100でUSA支配状態のため、usa_dice += 1が実行される
+  ActionRealigmentCommand action_realigment_japan(
+      Side::USSR, board.getCardpool()[0], CountryEnum::JAPAN);
+  EXPECT_TRUE(action_realigment_japan.apply(board));
+}
+
 TEST_F(CommandTest, CoupTest) {
   // 相手が置いてない国にはクーデターできない
   ActionCoupCommand action_cant_coup_ussr(Side::USSR, board.getCardpool()[0],
@@ -141,6 +149,22 @@ TEST_F(CommandTest, ChangeVPCommandTest) {
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
   EXPECT_EQ(std::get<StateType>(states.back()), StateType::USSR_WIN_END);
+}
+
+TEST_F(CommandTest, ChangeVpCommandUSAWinTest) {
+  // 初期状態チェック
+  EXPECT_EQ(board.getVp(), 0);
+
+  // VP <= -20でUSA勝利テスト
+  ChangeVpCommand usa_win_vp(Side::USA, 21);
+  EXPECT_TRUE(usa_win_vp.apply(board));
+  EXPECT_EQ(board.getVp(), -21);  // VP=-21でUSA勝利条件に達する
+
+  // stateにUSA_WIN_ENDが積まれていることを確認
+  auto& states = board.getStates();
+  EXPECT_FALSE(states.empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USA_WIN_END);
 }
 
 TEST_F(CommandTest, GameEndTriggerTest) {

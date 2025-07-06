@@ -36,11 +36,8 @@ cmake --build build --target coverage
 ## 単一ファイルをチェック(ファイル名は例)
 clang-tidy -p build src/core/game.cpp
 
-# 特定のテストの実行
-./build/command_test
-./build/world_map_test
-./build/trackers_test
-./build/cards_test
+# テスト失敗時の詳細を見る
+ctest --test-dir build --rerun-failed --output-on-failure
 ```
 
 ## アーキテクチャ概要
@@ -139,8 +136,10 @@ tests/              # テストファイル（機能別にサブディレクト�
 - **std::spanの活用**：`std::vector`の代わりに`std::span`を使用し、軽量なビューとして配列の一部を参照する。メモリコピーを避けつつ範囲安全性を確保
 - **constexprデータ構造**：ゲーム定数（国家データ、初期設定等）は`constexpr`配列として定義し、コンパイル時計算とメモリ効率を両立させる
 
-## 将来計画(claudeは読まなくて良い)
-- テスト整理
+## 将来計画(AIは読まなくて良い)
+- 不必要なboolのvoid化
+- CIA created
+- テスト全整備
 - メモリアクセスパターンの最適化→キャッシュの関係から同じタイミングでアクセスされやすいデータは近くの方がいい。以下例。
 ```cpp
 class SpaceTrack {
