@@ -9,6 +9,7 @@ class Board;
 
 class Card {
  public:
+  // NOLINTNEXTLINE(readability-identifier-length)
   Card(int id, std::string&& name, int ops, Side side, bool removedAfterEvent)
       : id_{id},
         name_{std::move(name)},

@@ -20,6 +20,7 @@ class TrackTest : public ::testing::Test {
   DefconTrack defconTrack;
   MilopsTrack milopsTrack;
   TurnTrack turnTrack;
+  ActionRoundTrack actionRoundTrack;
 };
 
 TEST_F(TrackTest, SpaceTrackTest) {
@@ -66,6 +67,24 @@ TEST_F(TrackTest, DefconTrackTest) {
   EXPECT_EQ(defconTrack.getDefcon(), 3);
 }
 
+TEST_F(TrackTest, DefconTrackClampTest) {
+  defconTrack.setDefcon(1);
+  EXPECT_TRUE(defconTrack.changeDefcon(-1));
+  EXPECT_EQ(defconTrack.getDefcon(), 1);
+
+  defconTrack.setDefcon(5);
+  EXPECT_TRUE(defconTrack.changeDefcon(1));
+  EXPECT_EQ(defconTrack.getDefcon(), 5);
+
+  defconTrack.setDefcon(3);
+  EXPECT_TRUE(defconTrack.changeDefcon(-10));
+  EXPECT_EQ(defconTrack.getDefcon(), 1);
+
+  defconTrack.setDefcon(2);
+  EXPECT_TRUE(defconTrack.changeDefcon(10));
+  EXPECT_EQ(defconTrack.getDefcon(), 5);
+}
+
 TEST_F(TrackTest, MilopsTrackTest) {
   EXPECT_TRUE(milopsTrack.advanceMilopsTrack(Side::USSR, 2));
   EXPECT_EQ(milopsTrack.getMilops(Side::USSR), 2);
@@ -92,4 +111,72 @@ TEST_F(TrackTest, TurnTrackTest) {
   EXPECT_TRUE(turnTrack.nextTurn());
   EXPECT_TRUE(turnTrack.nextTurn());
   EXPECT_FALSE(turnTrack.nextTurn());
+}
+
+TEST_F(TrackTest, SpaceTrackGetRollMaxTest) {
+  EXPECT_EQ(spaceTrack.getRollMax(Side::USSR), 3);
+  spaceTrack.advanceSpaceTrack(Side::USSR, 1);
+  EXPECT_EQ(spaceTrack.getRollMax(Side::USSR), 4);
+  spaceTrack.advanceSpaceTrack(Side::USSR, 1);
+  EXPECT_EQ(spaceTrack.getRollMax(Side::USSR), 3);
+  spaceTrack.advanceSpaceTrack(Side::USSR, 6);
+  EXPECT_EQ(spaceTrack.getRollMax(Side::USSR), 0);
+}
+
+TEST_F(TrackTest, SpaceTrackEffectEnabledTest) {
+  EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 1));
+  spaceTrack.advanceSpaceTrack(Side::USSR, 1);
+  EXPECT_TRUE(spaceTrack.effectEnabled(Side::USSR, 1));
+  EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 2));
+  spaceTrack.advanceSpaceTrack(Side::USA, 1);
+  EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 1));
+  spaceTrack.advanceSpaceTrack(Side::USSR, 1);
+  EXPECT_TRUE(spaceTrack.effectEnabled(Side::USSR, 2));
+}
+
+TEST_F(TrackTest, SpaceTrackGetSpaceVpTest) {
+  auto vp0 = SpaceTrack::getSpaceVp(0);
+  EXPECT_EQ(vp0[0], 0);
+  EXPECT_EQ(vp0[1], 0);
+
+  auto vp1 = SpaceTrack::getSpaceVp(1);
+  EXPECT_EQ(vp1[0], 2);
+  EXPECT_EQ(vp1[1], 1);
+
+  auto vp2 = SpaceTrack::getSpaceVp(2);
+  EXPECT_EQ(vp2[0], 0);
+  EXPECT_EQ(vp2[1], 0);
+
+  auto vp3 = SpaceTrack::getSpaceVp(3);
+  EXPECT_EQ(vp3[0], 2);
+  EXPECT_EQ(vp3[1], 0);
+
+  auto vp4 = SpaceTrack::getSpaceVp(4);
+  EXPECT_EQ(vp4[0], 0);
+  EXPECT_EQ(vp4[1], 0);
+
+  auto vp5 = SpaceTrack::getSpaceVp(5);
+  EXPECT_EQ(vp5[0], 3);
+  EXPECT_EQ(vp5[1], 1);
+
+  auto vp6 = SpaceTrack::getSpaceVp(6);
+  EXPECT_EQ(vp6[0], 0);
+  EXPECT_EQ(vp6[1], 0);
+
+  auto vp7 = SpaceTrack::getSpaceVp(7);
+  EXPECT_EQ(vp7[0], 4);
+  EXPECT_EQ(vp7[1], 2);
+
+  auto vp8 = SpaceTrack::getSpaceVp(8);
+  EXPECT_EQ(vp8[0], 2);
+  EXPECT_EQ(vp8[1], 0);
+
+  auto vp9 = SpaceTrack::getSpaceVp(9);
+  EXPECT_EQ(vp9[0], 0);
+  EXPECT_EQ(vp9[1], 0);
+}
+
+TEST_F(TrackTest, ActionRoundTrackTest) {
+  EXPECT_EQ(actionRoundTrack.getActionRound(Side::USSR), 0);
+  EXPECT_EQ(actionRoundTrack.getActionRound(Side::USA), 0);
 }

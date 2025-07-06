@@ -89,6 +89,42 @@ TEST_F(WorldMapTest, RegionIncludeExactlyTest) {
   EXPECT_TRUE(special.contains(worldMap.getCountry(CountryEnum::USA)));
 }
 
+TEST_F(WorldMapTest, PlaceableCountriesTest) {
+  auto placeable_ussr = worldMap.placeableCountries(Side::USSR);
+  EXPECT_FALSE(placeable_ussr.empty());
+
+  EXPECT_FALSE(placeable_ussr.contains(CountryEnum::USSR));
+  EXPECT_FALSE(placeable_ussr.contains(CountryEnum::USA));
+
+  EXPECT_TRUE(placeable_ussr.contains(CountryEnum::EAST_GERMANY));
+  EXPECT_TRUE(placeable_ussr.contains(CountryEnum::POLAND));
+
+  auto placeable_usa = worldMap.placeableCountries(Side::USA);
+  EXPECT_FALSE(placeable_usa.empty());
+
+  EXPECT_FALSE(placeable_usa.contains(CountryEnum::USSR));
+  EXPECT_FALSE(placeable_usa.contains(CountryEnum::USA));
+
+  EXPECT_TRUE(placeable_usa.contains(CountryEnum::CANADA));
+  EXPECT_TRUE(placeable_usa.contains(CountryEnum::JAPAN));
+
+  worldMap.getCountry(CountryEnum::JAPAN).addInfluence(Side::USSR, 1);
+  auto placeable_after_japan = worldMap.placeableCountries(Side::USSR);
+  EXPECT_TRUE(placeable_after_japan.contains(CountryEnum::JAPAN));
+  EXPECT_TRUE(placeable_after_japan.contains(CountryEnum::SOUTH_KOREA));
+}
+
+TEST_F(WorldMapTest, ConstGetCountryTest) {
+  const WorldMap& const_world_map = worldMap;
+  const Country& country = const_world_map.getCountry(CountryEnum::JAPAN);
+  EXPECT_EQ(country.getId(), CountryEnum::JAPAN);
+}
+
+TEST_F(WorldMapTest, CountsTest) {
+  EXPECT_EQ(worldMap.getCountriesCount(), 86);
+  EXPECT_EQ(worldMap.getRegionsCount(), 10);
+}
+
 // TEST_F(WorldMapTest, PlaceInfuenceTest) {
 //   PlaceInfluence action({{CountryEnum::NORTH_KOREA, 1}});
 //   action.execute(board, Side::USSR);

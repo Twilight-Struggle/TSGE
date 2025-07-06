@@ -47,7 +47,7 @@ bool SpaceTrack::canSpace(Side side, int opeValue) const {
 int SpaceTrack::getRollMax(Side side) const {
   const int space_pos = spaceTrack_[static_cast<std::size_t>(side)];
   // SpaceTrack position 8 has no rollMax (game ends), return 0
-  if (space_pos >= 8) {
+  if (space_pos >= 8) [[unlikely]] {
     return 0;
   }
   return ROLL_MAX[space_pos];

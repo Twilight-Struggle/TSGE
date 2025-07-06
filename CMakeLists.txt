@@ -100,6 +100,7 @@ if(ENABLE_COVERAGE)
                 -instr-profile=default.profdata 
                 $<TARGET_FILE:command_test> 
                 $<TARGET_FILE:world_map_test> 
+                $<TARGET_FILE:country_test>
                 $<TARGET_FILE:trackers_test> 
                 $<TARGET_FILE:cards_test>
                 
@@ -112,6 +113,7 @@ if(ENABLE_COVERAGE)
                 -show-expansions
                 -object $<TARGET_FILE:command_test>
                 -object $<TARGET_FILE:world_map_test>
+                -object $<TARGET_FILE:country_test>
                 -object $<TARGET_FILE:trackers_test>
                 -object $<TARGET_FILE:cards_test>
 
@@ -120,7 +122,7 @@ if(ENABLE_COVERAGE)
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS command_test world_map_test trackers_test cards_test
+            DEPENDS command_test world_map_test country_test trackers_test cards_test
         )
     endif()
 endif()
@@ -170,6 +172,7 @@ if(ENABLE_TESTING)
 
     add_test_with_path(command_test tests/actions/command_test.cpp)
     add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
+    add_test_with_path(country_test tests/game_state/country_test.cpp)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
     add_test_with_path(cards_test tests/game_state/cards_test.cpp)
 endif()
