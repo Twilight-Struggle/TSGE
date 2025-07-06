@@ -21,7 +21,7 @@ cmake -B build -G Ninja
 cmake --build build
 
 # 本番版のビルド（テストマクロなし）
-cmake -B build -G Ninja -DPROD=ON
+cmake -B build -G Ninja -DENABLE_TESTING=OFF
 cmake --build build
 
 # 全テストの実行

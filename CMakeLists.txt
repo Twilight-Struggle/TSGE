@@ -91,9 +91,9 @@ if(ENABLE_COVERAGE)
         find_program(LLVM_PROFDATA llvm-profdata REQUIRED)
         
         add_custom_target(coverage
-            COMMAND rm -rf default.profraw default.profdata coverage_report
-            COMMAND LLVM_PROFILE_FILE=default.profraw ${CMAKE_CTEST_COMMAND}
-            COMMAND ${LLVM_PROFDATA} merge -sparse default.profraw -o default.profdata
+            COMMAND rm -rf *.profraw default.profdata coverage_report
+            COMMAND ${CMAKE_COMMAND} -E env LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/test_%p.profraw ${CMAKE_CTEST_COMMAND} --test-dir ${CMAKE_BINARY_DIR}
+            COMMAND ${LLVM_PROFDATA} merge -sparse *.profraw -o default.profdata
             
             # テキストレポート
             COMMAND ${LLVM_COV} report 
@@ -160,6 +160,12 @@ if(ENABLE_TESTING)
             target_link_options(${TEST_NAME} PRIVATE -fprofile-instr-generate)
         endif()
         gtest_discover_tests(${TEST_NAME})
+        if(ENABLE_COVERAGE)
+            # テスト実行時のプロファイルファイル出力先を設定
+            gtest_discover_tests(${TEST_NAME}
+                PROPERTIES ENVIRONMENT "LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/${TEST_NAME}_%p.profraw"
+            )
+        endif()
     endfunction()
 
     add_test_with_path(command_test tests/actions/command_test.cpp)
