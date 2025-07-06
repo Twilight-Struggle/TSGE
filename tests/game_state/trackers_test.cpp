@@ -53,6 +53,27 @@ TEST_F(TrackTest, SpaceTrackCanSpaceTest) {
   EXPECT_FALSE(spaceTrack.canSpace(Side::USSR, 4));
 }
 
+TEST_F(TrackTest, SpaceTrackCanSpaceEdgeCasesTest) {
+  // space_index == 3の境界でopeValue < 2の場合
+  spaceTrack.advanceSpaceTrack(Side::USA, 3);
+  EXPECT_FALSE(spaceTrack.canSpace(Side::USA, 1));
+
+  // space_index == 4の境界でopeValue < 3の場合
+  spaceTrack.advanceSpaceTrack(Side::USA, 1);
+  EXPECT_EQ(spaceTrack.getSpaceTrackPosition(Side::USA), 4);
+  EXPECT_FALSE(spaceTrack.canSpace(Side::USA, 2));
+
+  // space_index == 6の境界でopeValue < 3の場合
+  spaceTrack.advanceSpaceTrack(Side::USA, 2);
+  EXPECT_EQ(spaceTrack.getSpaceTrackPosition(Side::USA), 6);
+  EXPECT_FALSE(spaceTrack.canSpace(Side::USA, 2));
+
+  // space_index == 7でopeValue < 4の場合
+  spaceTrack.advanceSpaceTrack(Side::USA, 1);
+  EXPECT_EQ(spaceTrack.getSpaceTrackPosition(Side::USA), 7);
+  EXPECT_FALSE(spaceTrack.canSpace(Side::USA, 3));
+}
+
 TEST_F(TrackTest, DefconTrackTest) {
   EXPECT_TRUE(defconTrack.setDefcon(4));
   EXPECT_EQ(defconTrack.getDefcon(), 4);
@@ -132,6 +153,10 @@ TEST_F(TrackTest, SpaceTrackEffectEnabledTest) {
   EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 1));
   spaceTrack.advanceSpaceTrack(Side::USSR, 1);
   EXPECT_TRUE(spaceTrack.effectEnabled(Side::USSR, 2));
+
+  // 相手側の宇宙進歩度が高い場合のテスト
+  spaceTrack.advanceSpaceTrack(Side::USA, 2);
+  EXPECT_FALSE(spaceTrack.effectEnabled(Side::USSR, 2));
 }
 
 TEST_F(TrackTest, SpaceTrackGetSpaceVpTest) {
