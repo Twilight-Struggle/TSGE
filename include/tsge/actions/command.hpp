@@ -20,7 +20,7 @@ class Command {
   Command(Command&&) = default;
   Command& operator=(Command&&) = delete;
 
-  virtual bool apply(Board& board) const = 0;
+  virtual void apply(Board& board) const = 0;
   // MCTSで必要
   // virtual bool undo(Board& board) const = 0;
 
@@ -36,7 +36,7 @@ class ActionPlaceInfluenceCommand : public Command {
                               const std::map<CountryEnum, int>& targetCountries)
       : Command{side}, card_{card}, targetCountries_{targetCountries} {};
 
-  bool apply(Board& board) const override;
+  void apply(Board& board) const override;
 
  private:
   const std::unique_ptr<Card>& card_;
@@ -49,7 +49,7 @@ class ActionRealigmentCommand : public Command {
                           CountryEnum targetCountry)
       : Command{side}, card_{card}, targetCountry_{targetCountry} {};
 
-  bool apply(Board& board) const override;
+  void apply(Board& board) const override;
 
  private:
   const std::unique_ptr<Card>& card_;
@@ -62,7 +62,7 @@ class ActionCoupCommand : public Command {
                     CountryEnum targetCountry)
       : Command{side}, card_{card}, targetCountry_{targetCountry} {};
 
-  bool apply(Board& board) const override;
+  void apply(Board& board) const override;
 
  private:
   const std::unique_ptr<Card>& card_;
@@ -74,7 +74,7 @@ class ActionSpaceRaceCommand : public Command {
   ActionSpaceRaceCommand(Side side, const std::unique_ptr<Card>& card)
       : Command{side}, card_{card} {};
 
-  bool apply(Board& board) const override;
+  void apply(Board& board) const override;
 
  private:
   const std::unique_ptr<Card>& card_;
@@ -85,7 +85,7 @@ class ChangeDefconCommand : public Command {
   explicit ChangeDefconCommand(int delta)
       : Command(Side::NEUTRAL), delta_{delta} {}
 
-  bool apply(Board& board) const override;
+  void apply(Board& board) const override;
 
  private:
   const int delta_;
@@ -96,7 +96,7 @@ class ChangeVpCommand : public Command {
   explicit ChangeVpCommand(Side side, int delta)
       : Command{side}, delta_{delta} {}
 
-  bool apply(Board& board) const override;
+  void apply(Board& board) const override;
 
  private:
   const int delta_;
@@ -112,6 +112,10 @@ class RequestCommand : public Command {
   std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;
   // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
-  bool apply(Board&) const override { return true; }
-  Side getSide() const { return side_; }
+  void apply(Board&) const override;
+
+  [[nodiscard]]
+  Side getSide() const {
+    return side_;
+  }
 };

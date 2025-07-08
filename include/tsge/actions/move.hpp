@@ -26,8 +26,14 @@ class Move {
   Move(Move&&) = delete;
   Move& operator=(Move&&) = delete;
 
-  CardEnum getCard() const { return card_; }
-  Side getSide() const { return side_; }
+  [[nodiscard]]
+  CardEnum getCard() const {
+    return card_;
+  }
+  [[nodiscard]]
+  Side getSide() const {
+    return side_;
+  }
   [[nodiscard]]
   virtual std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const = 0;
@@ -46,9 +52,6 @@ class ActionPlaceInfluenceMove : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
-  const std::map<CountryEnum, int>& getTargetCountries() const {
-    return targetCountries_;
-  }
 
  private:
   const std::map<CountryEnum, int> targetCountries_;
@@ -62,7 +65,6 @@ class ActionCoupMove : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
-  CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
   const CountryEnum targetCountry_;
@@ -85,7 +87,6 @@ class ActionRealigmentMove : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
-  CountryEnum getTargetCountry() const { return targetCountry_; }
 
  private:
   const CountryEnum targetCountry_;
@@ -107,14 +108,6 @@ class RealignmentRequestMove : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
-  CountryEnum getTargetCountry() const { return targetCountry_; }
-  const std::vector<CountryEnum>& getRealignmentHistory() const {
-    return realignmentHistory_;
-  }
-  int getRemainingOps() const { return remainingOps_; }
-  AdditionalOpsType getAppliedAdditionalOps() const {
-    return appliedAdditionalOps_;
-  }
 
  private:
   const CountryEnum targetCountry_;

@@ -12,41 +12,48 @@ class Country {
   Country(CountryEnum id, const tsge::CountryStaticData& staticData)
       : id_{id}, staticData_{staticData}, influence_({0, 0}) {}
 
-  bool addInfluence(Side side, int num) {
+  void addInfluence(Side side, int num) {
     if (num < 0) [[unlikely]] {
-      return false;
+    } else {
+      influence_[static_cast<int>(side)] += num;
     }
-    influence_[static_cast<int>(side)] += num;
-    return true;
   }
-  bool removeInfluence(Side side, int num) {
+  void removeInfluence(Side side, int num) {
     if (num < 0) [[unlikely]] {
-      return false;
+    } else {
+      influence_[static_cast<int>(side)] -= num;
+      if (influence_[static_cast<int>(side)] < 0) {
+        influence_[static_cast<int>(side)] = 0;
+      }
     }
-    influence_[static_cast<int>(side)] -= num;
-    if (influence_[static_cast<int>(side)] < 0) {
-      influence_[static_cast<int>(side)] = 0;
-    }
-    return true;
   }
-  bool clearInfluence(Side side) {
-    influence_[static_cast<int>(side)] = 0;
-    return true;
-  }
+  void clearInfluence(Side side) { influence_[static_cast<int>(side)] = 0; }
+  [[nodiscard]]
   int getInfluence(Side side) const {
     return influence_[static_cast<int>(side)];
   }
-  int getStability() const { return staticData_.stability; }
-  bool isBattleground() const { return staticData_.isBattleground; }
-  CountryEnum getId() const { return id_; }
+  [[nodiscard]]
+  int getStability() const {
+    return staticData_.stability;
+  }
+  [[nodiscard]]
+  bool isBattleground() const {
+    return staticData_.isBattleground;
+  }
+  [[nodiscard]]
+  CountryEnum getId() const {
+    return id_;
+  }
+  [[nodiscard]]
   std::span<const Region> getRegions() const {
-    return std::span<const Region>(staticData_.regions.data(),
-                                   staticData_.regionsCount);
+    return {staticData_.regions.data(), staticData_.regionsCount};
   }
+  [[nodiscard]]
   std::span<const CountryEnum> getAdjacentCountries() const {
-    return std::span<const CountryEnum>(staticData_.adjacentCountries.data(),
-                                        staticData_.adjacentCountriesCount);
+    return {staticData_.adjacentCountries.data(),
+            staticData_.adjacentCountriesCount};
   }
+  [[nodiscard]]
   bool hasRegion(Region region) const {
     for (size_t i = 0; i < staticData_.regionsCount; ++i) {
       if (staticData_.regions[i] == region) {
@@ -55,6 +62,7 @@ class Country {
     }
     return false;
   }
+  [[nodiscard]]
   Side getControlSide() const {
     if (influence_[static_cast<int>(Side::USSR)] -
             influence_[static_cast<int>(Side::USA)] >=

@@ -14,7 +14,7 @@ class DuckAndCover : public Card {
   class DefconBasedVpChangeCommand : public Command {
    public:
     explicit DefconBasedVpChangeCommand(Side side) : Command(side) {}
-    bool apply(Board& board) const override;
+    void apply(Board& board) const override;
   };
 };
 
@@ -38,6 +38,6 @@ class NuclearTestBan : public Card {
   class DefconBasedVpChangeCommand : public Command {
    public:
     explicit DefconBasedVpChangeCommand(Side side) : Command(side) {}
-    bool apply(Board& board) const override;
+    void apply(Board& board) const override;
   };
 };

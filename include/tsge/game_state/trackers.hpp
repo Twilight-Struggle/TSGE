@@ -9,14 +9,15 @@ class Board;
 class SpaceTrack {
  public:
   SpaceTrack() = default;
-  bool advanceSpaceTrack(Side side, int num) {
+  void advanceSpaceTrack(Side side, int num) {
     spaceTrack_[static_cast<size_t>(side)] += num;
-    return true;
   }
+  [[nodiscard]]
   bool effectEnabled(Side side, int num) const {
     return spaceTrack_[static_cast<std::size_t>(side)] >= num &&
            spaceTrack_[static_cast<std::size_t>(getOpponentSide(side))] < num;
   }
+  [[nodiscard]]
   bool canSpaceChallenge(Side side) const {
     if (spaceTrack_[static_cast<std::size_t>(side)] == 8) [[unlikely]] {
       return false;
@@ -29,6 +30,7 @@ class SpaceTrack {
     }
     return effectEnabled(side, 2);
   }
+  [[nodiscard]]
   bool canSpace(Side side, int opeValue) const {
     if (!canSpaceChallenge(side)) {
       return false;
@@ -46,6 +48,7 @@ class SpaceTrack {
     return false;
   }
   void spaceTried(Side side) { spaceTried_[static_cast<std::size_t>(side)]++; }
+  [[nodiscard]]
   int getRollMax(Side side) const {
     const int space_pos = spaceTrack_[static_cast<std::size_t>(side)];
     // SpaceTrack position 8 has no rollMax (game ends), return 0
@@ -54,6 +57,7 @@ class SpaceTrack {
     }
     return ROLL_MAX[space_pos];
   }
+  [[nodiscard]]
   int getSpaceTrackPosition(Side side) const {
     return spaceTrack_[static_cast<std::size_t>(side)];
   }
@@ -73,16 +77,15 @@ class SpaceTrack {
 class DefconTrack {
  public:
   DefconTrack() = default;
-  bool setDefcon(int defcon) {
-    defcon_ = defcon;
-    return true;
-  }
-  bool changeDefcon(int delta) {
+  void setDefcon(int defcon) { defcon_ = defcon; }
+  void changeDefcon(int delta) {
     int new_defcon = std::clamp(defcon_ + delta, 1, 5);
     defcon_ = new_defcon;
-    return true;
   }
-  int getDefcon() const { return defcon_; }
+  [[nodiscard]]
+  int getDefcon() const {
+    return defcon_;
+  }
 
  private:
   int defcon_ = 5;
@@ -91,18 +94,17 @@ class DefconTrack {
 class MilopsTrack {
  public:
   MilopsTrack() = default;
+  [[nodiscard]]
   int getMilops(Side side) const {
     return milopsTrack_[static_cast<std::size_t>(side)];
   }
-  bool resetMilopsTrack() {
+  void resetMilopsTrack() {
     milopsTrack_[static_cast<std::size_t>(Side::USSR)] = 0;
     milopsTrack_[static_cast<std::size_t>(Side::USA)] = 0;
-    return true;
   }
-  bool advanceMilopsTrack(Side side, int num) {
+  void advanceMilopsTrack(Side side, int num) {
     milopsTrack_[static_cast<std::size_t>(side)] +=
         std::min(num, 5 - milopsTrack_[static_cast<std::size_t>(side)]);
-    return true;
   }
 
  private:
@@ -112,15 +114,20 @@ class MilopsTrack {
 class TurnTrack {
  public:
   TurnTrack() = default;
-  int getTurn() const { return turn_; }
-  bool nextTurn() {
-    if (turn_ >= 10) {
-      return false;
-    }
-    turn_++;
-    return true;
+  [[nodiscard]]
+  int getTurn() const {
+    return turn_;
   }
-  int getDealedCards() const { return dealedCards_[turn_ - 1]; }
+  void nextTurn() {
+    if (turn_ >= 10) [[unlikely]] {
+    } else {
+      turn_++;
+    }
+  }
+  [[nodiscard]]
+  int getDealedCards() const {
+    return dealedCards_[turn_ - 1];
+  }
 
  private:
   int turn_ = 1;
@@ -130,6 +137,7 @@ class TurnTrack {
 class ActionRoundTrack {
  public:
   ActionRoundTrack() = default;
+  [[nodiscard]]
   int getActionRound(Side side) const {
     return actionRound_[static_cast<std::size_t>(side)];
   }

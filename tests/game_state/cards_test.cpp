@@ -43,7 +43,7 @@ TEST_F(DuckAndCoverTest, DuckAndCoverTest) {
   auto& last_command = std::get<CommandPtr>(states.back());
 
   // pushされたCommandを実行してVP変更を確認
-  EXPECT_TRUE(last_command->apply(board));
+  last_command->apply(board);
   EXPECT_EQ(board.getVp(), -1);  // (5-4) * (-1) = -1 (USA側なので負)
 }
 
@@ -61,9 +61,7 @@ class FidelTest : public ::testing::Test {
 };
 
 TEST_F(FidelTest, FidelTest) {
-  EXPECT_TRUE(board.getWorldMap()
-                  .getCountry(CountryEnum::CUBA)
-                  .addInfluence(Side::USA, 1));
+  board.getWorldMap().getCountry(CountryEnum::CUBA).addInfluence(Side::USA, 1);
   auto commands = sut.event(Side::USSR);
   // Fidel is commented out for now as per task requirements
   EXPECT_TRUE(commands.empty());
@@ -113,14 +111,14 @@ TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
 
   // pushされたCommandを実行してVP変更を確認
   auto& vp_command = std::get<CommandPtr>(states.back());
-  EXPECT_TRUE(vp_command->apply(board));
+  vp_command->apply(board);
   EXPECT_EQ(board.getVp(), 3);  // (5-2) * 1 = 3 VP for USSR
 
   // statesをクリアして次のテスト準備
   states.clear();
 
   // Set DEFCON to 2 for next test
-  EXPECT_TRUE(board.getDefconTrack().setDefcon(2));
+  board.getDefconTrack().setDefcon(2);
 
   // Test USA playing Nuclear Test Ban from DEFCON 2
   auto commands2 = sut.event(Side::USA);
@@ -135,6 +133,6 @@ TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
   // VP変更確認
   EXPECT_FALSE(states.empty());
   auto& vp_command2 = std::get<CommandPtr>(states.back());
-  EXPECT_TRUE(vp_command2->apply(board));
+  vp_command2->apply(board);
   EXPECT_EQ(board.getVp(), 3);  // 3 + (2-2) * (-1) = 3 (no change)
 }

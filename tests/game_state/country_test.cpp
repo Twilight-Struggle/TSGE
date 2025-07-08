@@ -15,15 +15,15 @@ class CountryTest : public ::testing::Test {
 };
 
 TEST_F(CountryTest, AddInfluenceTest) {
-  EXPECT_TRUE(japan.addInfluence(Side::USSR, 3));
+  japan.addInfluence(Side::USSR, 3);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);
   EXPECT_EQ(japan.getInfluence(Side::USA), 0);
 
-  EXPECT_TRUE(japan.addInfluence(Side::USA, 2));
+  japan.addInfluence(Side::USA, 2);
   EXPECT_EQ(japan.getInfluence(Side::USA), 2);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);
 
-  EXPECT_FALSE(japan.addInfluence(Side::USSR, -1));
+  japan.addInfluence(Side::USSR, -1);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);
 }
 
@@ -31,13 +31,13 @@ TEST_F(CountryTest, RemoveInfluenceTest) {
   japan.addInfluence(Side::USSR, 5);
   japan.addInfluence(Side::USA, 3);
 
-  EXPECT_TRUE(japan.removeInfluence(Side::USSR, 2));
+  japan.removeInfluence(Side::USSR, 2);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);
 
-  EXPECT_TRUE(japan.removeInfluence(Side::USA, 5));
+  japan.removeInfluence(Side::USA, 5);
   EXPECT_EQ(japan.getInfluence(Side::USA), 0);
 
-  EXPECT_FALSE(japan.removeInfluence(Side::USSR, -1));
+  japan.removeInfluence(Side::USSR, -1);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);
 }
 
@@ -45,11 +45,11 @@ TEST_F(CountryTest, ClearInfluenceTest) {
   japan.addInfluence(Side::USSR, 3);
   japan.addInfluence(Side::USA, 2);
 
-  EXPECT_TRUE(japan.clearInfluence(Side::USSR));
+  japan.clearInfluence(Side::USSR);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 0);
   EXPECT_EQ(japan.getInfluence(Side::USA), 2);
 
-  EXPECT_TRUE(japan.clearInfluence(Side::USA));
+  japan.clearInfluence(Side::USA);
   EXPECT_EQ(japan.getInfluence(Side::USA), 0);
 }
 

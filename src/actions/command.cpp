@@ -6,20 +6,19 @@
 #include "tsge/game_state/country.hpp"
 #include "tsge/utils/randomizer.hpp"
 
-bool ActionPlaceInfluenceCommand::apply(Board& board) const {
+void ActionPlaceInfluenceCommand::apply(Board& board) const {
   for (const auto& target_country : targetCountries_) {
     board.getWorldMap()
         .getCountry(target_country.first)
         .addInfluence(side_, target_country.second);
   }
-  return true;
 }
 
-bool ActionRealigmentCommand::apply(Board& board) const {
+void ActionRealigmentCommand::apply(Board& board) const {
   // USSRかUSAならパス（まれなケース）
   if (targetCountry_ == CountryEnum::USSR || targetCountry_ == CountryEnum::USA)
       [[unlikely]] {
-    return true;
+    return;
   }
   auto& worldmap = board.getWorldMap();
   auto country = worldmap.getCountry(targetCountry_);
@@ -49,19 +48,18 @@ bool ActionRealigmentCommand::apply(Board& board) const {
   } else if (difference < 0) {
     country.removeInfluence(Side::USSR, -difference);
   }
-  return true;
 }
 
-bool ActionCoupCommand::apply(Board& board) const {
+void ActionCoupCommand::apply(Board& board) const {
   if (targetCountry_ == CountryEnum::USSR || targetCountry_ == CountryEnum::USA)
       [[unlikely]] {
-    return false;
+    return;
   }
   auto& worldmap = board.getWorldMap();
   auto& target_country = worldmap.getCountry(targetCountry_);
   if ((side_ == Side::USSR && target_country.getInfluence(Side::USA) == 0) ||
       (side_ == Side::USA && target_country.getInfluence(Side::USSR) == 0)) {
-    return false;
+    return;
   }
   auto coup_dice = Randomizer::getInstance().rollDice();
   coup_dice += card_->getOps();
@@ -76,10 +74,9 @@ bool ActionCoupCommand::apply(Board& board) const {
     target_country.clearInfluence(getOpponentSide(side_));
     target_country.addInfluence(side_, -influence_diff);
   }
-  return true;
 }
 
-bool ActionSpaceRaceCommand::apply(Board& board) const {
+void ActionSpaceRaceCommand::apply(Board& board) const {
   auto& space_track = board.getSpaceTrack();
   if (space_track.canSpace(side_, card_->getOps())) {
     auto roll = Randomizer::getInstance().rollDice();
@@ -110,12 +107,10 @@ bool ActionSpaceRaceCommand::apply(Board& board) const {
       // TODO:8に到達した場合そのターンのARを増やす
     }
     space_track.spaceTried(side_);
-    return true;
   }
-  return false;
 }
 
-bool ChangeDefconCommand::apply(Board& board) const {
+void ChangeDefconCommand::apply(Board& board) const {
   auto& defcon = board.getDefconTrack();
   int old_defcon = defcon.getDefcon();
   defcon.changeDefcon(delta_);
@@ -131,11 +126,9 @@ bool ChangeDefconCommand::apply(Board& board) const {
   if (old_defcon != new_defcon && new_defcon == 2) {
     // TODO: NORADの効果を適用
   }
-
-  return true;
 }
 
-bool ChangeVpCommand::apply(Board& board) const {
+void ChangeVpCommand::apply(Board& board) const {
   board.changeVp(delta_ * getVpMultiplier(side_));
 
   // VP ±20でゲーム終了
@@ -145,6 +138,4 @@ bool ChangeVpCommand::apply(Board& board) const {
   } else if (victory_points >= 20) {
     board.pushState(StateType::USSR_WIN_END);
   }
-
-  return true;
 }

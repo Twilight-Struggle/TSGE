@@ -18,6 +18,7 @@ class Board {
       hand.reserve(9);
     }
   }
+  [[nodiscard]]
   const std::array<std::unique_ptr<Card>, 111>& getCardpool() const {
     return cardpool_;
   }
@@ -33,11 +34,18 @@ class Board {
   std::vector<CardEnum>& getPlayerHand(Side side) {
     return playerHands_[static_cast<size_t>(side)];
   }
-  const WorldMap& getWorldMap() const { return worldMap_; }
+  [[nodiscard]]
+  const WorldMap& getWorldMap() const {
+    return worldMap_;
+  }
+  [[nodiscard]]
   const std::vector<CardEnum>& getPlayerHand(Side side) const {
     return playerHands_[static_cast<size_t>(side)];
   }
-  int getVp() const { return vp_; }
+  [[nodiscard]]
+  int getVp() const {
+    return vp_;
+  }
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {
     states_.emplace_back(std::move(state));

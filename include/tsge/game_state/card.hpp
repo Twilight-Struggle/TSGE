@@ -24,9 +24,14 @@ class Card {
 
   [[nodiscard]]
   virtual std::vector<CommandPtr> event(Side side) const = 0;
-
-  int getOps() const { return ops_; }
-  Side getSide() const { return side_; }
+  [[nodiscard]]
+  int getOps() const {
+    return ops_;
+  }
+  [[nodiscard]]
+  Side getSide() const {
+    return side_;
+  }
 
  protected:
   int id_;
