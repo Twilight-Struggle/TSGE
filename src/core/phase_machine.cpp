@@ -64,6 +64,7 @@ PhaseMachine::step(Board& board,
         case StateType::AR_USSR:
         case StateType::AR_USA: {
           Side side = state_type == StateType::AR_USSR ? Side::USSR : Side::USA;
+          board.setCurrentArPlayer(side);  // 現在のARプレイヤーを記録
           states.emplace_back(StateType::AR_COMPLETE);
           // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要

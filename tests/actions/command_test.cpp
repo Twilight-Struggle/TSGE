@@ -173,15 +173,15 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   // 初期状態：statesが空
   EXPECT_TRUE(states.empty());
 
-  // DEFCON 1でゲーム終了トリガー
+  // DEFCON 1でゲーム終了トリガー（NEUTRALの場合はelse節でUSSR勝利）
   ChangeDefconCommand end_by_defcon(-4);  // 5 → 1
   end_by_defcon.apply(board);
 
-  // 終了StateTypeがstackにpushされることを確認（DEFCON 1で相手の勝利）
+  // 終了StateTypeがstackにpushされることを確認（NEUTRALの場合USSR勝利）
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
-  // DEFCON 1到達で相手の勝利（ここではUSA勝利）
-  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USA_WIN_END);
+  // getCurrentArPlayer()がNEUTRALなのでelse節が実行されUSSR勝利
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USSR_WIN_END);
 
   // statesをリセット
   states.clear();
@@ -194,4 +194,51 @@ TEST_F(CommandTest, GameEndTriggerTest) {
   EXPECT_FALSE(states.empty());
   EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
   EXPECT_EQ(std::get<StateType>(states.back()), StateType::USSR_WIN_END);
+}
+
+TEST_F(CommandTest, DefconOneWithArPlayerTest) {
+  auto& states = board.getStates();
+
+  // USSR ARで DEFCON 1 に到達した場合
+  board.setCurrentArPlayer(Side::USSR);
+  board.getDefconTrack().setDefcon(2);  // 開始時DEFCON 2
+
+  ChangeDefconCommand ussr_triggers_defcon_one(-1);
+  ussr_triggers_defcon_one.apply(board);
+
+  // USSR敗北 = USA勝利
+  EXPECT_FALSE(states.empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USA_WIN_END);
+
+  // statesをリセット
+  states.clear();
+  board.getDefconTrack().setDefcon(2);  // DEFCON 2にリセット
+
+  // USA ARで DEFCON 1 に到達した場合
+  board.setCurrentArPlayer(Side::USA);
+
+  ChangeDefconCommand usa_triggers_defcon_one(-1);
+  usa_triggers_defcon_one.apply(board);
+
+  // USA敗北 = USSR勝利
+  EXPECT_FALSE(states.empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(states.back()));
+  EXPECT_EQ(std::get<StateType>(states.back()), StateType::USSR_WIN_END);
+}
+
+TEST_F(CommandTest, BoardArPlayerManagementTest) {
+  // 初期状態はNEUTRAL
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::NEUTRAL);
+
+  // ARプレイヤーの設定
+  board.setCurrentArPlayer(Side::USSR);
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
+
+  board.setCurrentArPlayer(Side::USA);
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::USA);
+
+  // NEUTRALに戻す
+  board.setCurrentArPlayer(Side::NEUTRAL);
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::NEUTRAL);
 }

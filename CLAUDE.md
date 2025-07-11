@@ -46,7 +46,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
 ### Core Components
 
 1. **Board** (`board.hpp`): 中央ゲーム状態コンテナ
-   - 全ゲーム状態を保持： cards, world map, tracks, player hands, victory points
+   - 全ゲーム状態を保持： cards, world map, tracks, player hands, victory points, current AR player
    - MCTSコピー性能のために最適化
    - Commandオブジェクトを通してのみ変更可能
 
@@ -136,8 +136,6 @@ tests/              # テストファイル（機能別にサブディレクト�
 - **constexprデータ構造**：ゲーム定数（国家データ、初期設定等）は`constexpr`配列として定義し、コンパイル時計算とメモリ効率を両立させる
 
 ## 将来計画(AIは読まなくて良い)
-- 不必要なboolのvoid化
-- CIA created
 - テスト全整備
 - メモリアクセスパターンの最適化→キャッシュの関係から同じタイミングでアクセスされやすいデータは近くの方がいい。以下例。
 ```cpp

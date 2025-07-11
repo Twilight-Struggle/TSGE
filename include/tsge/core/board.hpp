@@ -46,11 +46,16 @@ class Board {
   int getVp() const {
     return vp_;
   }
+  [[nodiscard]]
+  Side getCurrentArPlayer() const {
+    return currentArPlayer_;
+  }
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {
     states_.emplace_back(std::move(state));
   }
   void changeVp(int delta) { vp_ += delta; }
+  void setCurrentArPlayer(Side side) { currentArPlayer_ = side; }
 
  private:
   const std::array<std::unique_ptr<Card>, 111>& cardpool_;
@@ -63,4 +68,5 @@ class Board {
   ActionRoundTrack actionRoundTrack_;
   std::array<std::vector<CardEnum>, 2> playerHands_;
   int vp_ = 0;
+  Side currentArPlayer_ = Side::NEUTRAL;
 };

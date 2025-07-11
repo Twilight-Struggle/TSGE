@@ -170,6 +170,7 @@ if(ENABLE_TESTING)
     endfunction()
 
     add_test_with_path(command_test tests/actions/command_test.cpp)
+    add_test_with_path(phase_machine_test tests/core/phase_machine_test.cpp)
     add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
     add_test_with_path(country_test tests/game_state/country_test.cpp)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)

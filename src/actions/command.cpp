@@ -118,8 +118,13 @@ void ChangeDefconCommand::apply(Board& board) const {
 
   // Defcon 1でゲーム終了
   if (new_defcon <= 1) {
-    // DEFCON 1到達でUSA勝利（仮実装）
-    board.pushState(StateType::USA_WIN_END);
+    // DEFCON 1到達で現在のARプレイヤーが敗北
+    Side ar_player = board.getCurrentArPlayer();
+    if (ar_player == Side::USSR) {
+      board.pushState(StateType::USA_WIN_END);
+    } else {
+      board.pushState(StateType::USSR_WIN_END);
+    }
   }
 
   // NORAD効果チェック（Defconが2に変更された場合）
