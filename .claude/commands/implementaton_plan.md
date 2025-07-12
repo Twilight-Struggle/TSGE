@@ -29,4 +29,5 @@
 ## 出力
 すべての計画内容は `.claude/work/scratchpads/scratchpad_$ARGUMENTS.md` に書き込む必要がある。
 また `scratchpad_$ARGUMENTS.md` への書き込みコードはUTF-8とし、文字化けが発生しないよう注意すること。
+文字化けしてないか確認するために、書き終わったあと読み込んで確認すること
 計画がレビューされ承認されるまでコードを書かないこと。
