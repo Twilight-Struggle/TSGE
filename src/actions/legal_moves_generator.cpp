@@ -132,7 +132,7 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
 
   const auto& world_map = board.getWorldMap();
   auto placeable = world_map.placeableCountries(side);
-  if (placeable.empty()) {
+  if (placeable.empty()) [[unlikely]] {
     return {};
   }
 
