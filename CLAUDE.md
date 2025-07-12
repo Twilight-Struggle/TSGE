@@ -81,6 +81,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
 - **Trackers** (`trackers.hpp`): 各種ゲームトラック（宇宙、DEFCON等）
 - **Player** (`player.hpp`): 合法手を受け取り、選択したMoveを返す
 - **Cards** (`cards.hpp`): カード定義と管理
+- **world_map_constants** (`world_map_constants.hpp/cpp`): ゲーム固定値初期値等。固定値はcppの5~800行目、初期値はcppの802~819行目
 
 ## フォルダ構成
 
