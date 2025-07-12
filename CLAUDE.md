@@ -100,6 +100,9 @@ src/                # 実装ファイル（include/と同じ階層構造、tsge/
 tests/              # テストファイル（機能別にサブディレクトリ分け）
 ```
 
+フォルダ配下のCLAUDE.mdは必要になったときにだけ読むとトークンを節約できます。
+積極的に節約しましょう。
+
 ### インクルードパス
 - ヘッダファイルは`#include "tsge/モジュール名/ファイル名.hpp"`の形式
 - 例：`#include "tsge/core/board.hpp"`、`#include "tsge/actions/command.hpp"`
