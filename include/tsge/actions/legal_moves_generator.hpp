@@ -6,10 +6,8 @@
 
 class LegalMovesGenerator {
  public:
-  static std::vector<std::unique_ptr<Move>> ArLegalMoves(const Board& board,
+  static std::vector<std::unique_ptr<Move>> arLegalMoves(const Board& board,
                                                          Side side);
-  static std::vector<std::unique_ptr<Move>> actionRealignmentLegalMoves(
-      const Board& board, Side side);
   static std::vector<std::unique_ptr<Move>> realignmentRequestLegalMoves(
       const Board& board, Side side, CardEnum cardEnum,
       const std::vector<CountryEnum>& history, int remainingOps,
@@ -22,10 +20,12 @@ class LegalMovesGenerator {
  private:
   static std::vector<std::unique_ptr<Move>> actionPlaceInfluenceLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> ActionCoupLegalMoves(
+  static std::vector<std::unique_ptr<Move>> actionRealignmentLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> ActionEventLegalMoves(
+  static std::vector<std::unique_ptr<Move>> actionCoupLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> ActionSpaceRaceLegalMoves(
+  static std::vector<std::unique_ptr<Move>> actionEventLegalMoves(
+      const Board& board, Side side);
+  static std::vector<std::unique_ptr<Move>> actionSpaceRaceLegalMoves(
       const Board& board, Side side);
 };
