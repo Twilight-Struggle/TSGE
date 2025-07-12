@@ -59,8 +59,8 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
 
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
-        [side = getSide(), card_enum = getCard(), history = initial_history,
-         ops = remaining_ops](
+        [side = getSide(), card_enum = getCard(),
+         history = std::move(initial_history), ops = remaining_ops](
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, AdditionalOpsType::NONE);
@@ -81,6 +81,10 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
 
 std::vector<CommandPtr> RealignmentRequestMove::toCommand(
     const std::unique_ptr<Card>& card) const {
+  if (targetCountry_ == CountryEnum::USSR) {
+    // USSRはパスとして扱う
+    return {};
+  }
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_unique<ActionRealigmentCommand>(
       getSide(), card, targetCountry_));
@@ -96,8 +100,9 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
     // まだOpsが残っている場合は、次のRequestを生成
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
-        [side = getSide(), card_enum = getCard(), history = updated_history,
-         ops = new_remaining_ops, applied_ops = appliedAdditionalOps_](
+        [side = getSide(), card_enum = getCard(),
+         history = std::move(updated_history), ops = new_remaining_ops,
+         applied_ops = appliedAdditionalOps_](
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, applied_ops);
@@ -108,7 +113,8 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
     // 実際の判定はLegalMovesGeneratorで行う
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
-        [side = getSide(), card_enum = getCard(), history = updated_history,
+        [side = getSide(), card_enum = getCard(),
+         history = std::move(updated_history),
          applied_ops = appliedAdditionalOps_](
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
