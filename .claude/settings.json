@@ -1,0 +1,25 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Read(./src/**)",
+      "Edit(./src/**)",
+      "Read(./include/**)",
+      "Edit(./include/**)",
+      "Bash(cmake:*)",
+      "Bash(ctest:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(ls:*)",
+      "Bash(./build/*_test)",
+      "Bash(clang-tidy -p build:*)",
+      "Read(.claude/work/scratchpads/scratchpad_1.md)",
+      "Edit(.claude/work/scratchpads/scratchpad_1.md)",
+      "Bash(tree:*)"
+    ],
+    "deny": [
+      "Read(./src/world_map_constants.cp)",
+      "Edit(./src/world_map_constants.cp)"
+    ]
+  }
+}

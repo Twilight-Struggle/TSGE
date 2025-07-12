@@ -112,7 +112,7 @@ class RequestCommand : public Command {
   std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;
   // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
-  void apply(Board&) const override;
+  void apply(Board& board) const override;
 
   [[nodiscard]]
   Side getSide() const {

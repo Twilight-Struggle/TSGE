@@ -68,7 +68,7 @@ PhaseMachine::step(Board& board,
           states.emplace_back(StateType::AR_COMPLETE);
           // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
-          return {LegalMovesGenerator::ArLegalMoves(board, side), side,
+          return {LegalMovesGenerator::arLegalMoves(board, side), side,
                   std::nullopt};  // 合法手を返して停止
         }
 

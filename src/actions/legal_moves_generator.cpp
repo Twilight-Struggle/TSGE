@@ -36,6 +36,22 @@ static inline bool isAllInRegion(const Container& countries,
   });
 }
 
+// DEFCON制限により特定の国がRealignmentできないかを判定
+static inline bool isRegionRestrictedByDefcon(const Country& country,
+                                              int defcon) {
+  if (defcon <= 4 && country.hasRegion(Region::EUROPE)) {
+    return true;  // ヨーロッパ制限
+  }
+  if (defcon <= 3 && country.hasRegion(Region::ASIA)) {
+    return true;  // アジア制限
+  }
+  if (defcon <= 2 && country.hasRegion(Region::MIDDLE_EAST)) {
+    return true;  // 中東制限
+  }
+
+  return false;  // 制限なし
+}
+
 struct BonusCondition {
   /// 全配置がこの条件(例えば全部アジアにおいてる)を満たしていれば true
   std::function<bool(const std::map<CountryEnum, int>&)> isSatisfied;
@@ -188,6 +204,9 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
   const auto& world_map = board.getWorldMap();
   std::vector<std::unique_ptr<Move>> results;
 
+  // DEFCON値を取得
+  int defcon = board.getDefconTrack().getDefcon();
+
   // 相手側を取得
   Side opponent_side = getOpponentSide(side);
 
@@ -204,9 +223,18 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
       continue;
     }
 
+    // DEFCON制限チェック
+    if (isRegionRestrictedByDefcon(country, defcon)) {
+      continue;
+    }
+
     // 各手札から対象国へのRealignmentMoveを生成
     results.reserve(results.size() + hands.size());
     for (CardEnum card_enum : hands) {
+      const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+      if (card->getOps() == 0) {
+        continue;  // Opsが0のカードは除外
+      }
       results.emplace_back(std::make_unique<ActionRealigmentMove>(
           card_enum, side, country_enum));
     }
@@ -226,6 +254,9 @@ LegalMovesGenerator::realignmentRequestLegalMoves(
   // 事前に容量を確保（最大で国数+1個のMOVEが生成される）
   results.reserve(world_map.getCountriesCount());
 
+  // DEFCON値を取得
+  int defcon = board.getDefconTrack().getDefcon();
+
   // 相手側を取得
   Side opponent_side = getOpponentSide(side);
 
@@ -242,14 +273,21 @@ LegalMovesGenerator::realignmentRequestLegalMoves(
       continue;
     }
 
+    // DEFCON制限チェック
+    if (isRegionRestrictedByDefcon(country, defcon)) {
+      continue;
+    }
+
     results.emplace_back(std::make_unique<RealignmentRequestMove>(
         cardEnum, side, country_enum, history, remainingOps,
         appliedAdditionalOps));
   }
   // RealignRequestMoveではUSSR=パスも選択可能
-  results.emplace_back(std::make_unique<RealignmentRequestMove>(
-      cardEnum, side, CountryEnum::USSR, history, remainingOps,
-      appliedAdditionalOps));
+  if (!results.empty()) {
+    results.emplace_back(std::make_unique<RealignmentRequestMove>(
+        cardEnum, side, CountryEnum::USSR, history, remainingOps,
+        appliedAdditionalOps));
+  }
 
   return results;
 }
@@ -262,6 +300,9 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
   std::vector<std::unique_ptr<Move>> results;
   const auto& world_map = board.getWorldMap();
   Side opponent_side = getOpponentSide(side);
+
+  // DEFCON値を取得
+  int defcon = board.getDefconTrack().getDefcon();
 
   // 中国カードの追加Opsチェック
   bool china_card_bonus = false;
@@ -308,6 +349,11 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
         continue;
       }
 
+      // DEFCON制限チェック
+      if (isRegionRestrictedByDefcon(country, defcon)) {
+        continue;
+      }
+
       results.emplace_back(std::make_unique<RealignmentRequestMove>(
           cardEnum, side, country_enum, history, 1, new_applied_ops));
     }
@@ -332,9 +378,19 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
         continue;
       }
 
+      // DEFCON制限チェック
+      if (isRegionRestrictedByDefcon(country, defcon)) {
+        continue;
+      }
+
       results.emplace_back(std::make_unique<RealignmentRequestMove>(
           cardEnum, side, country_enum, history, 1, new_applied_ops));
     }
+  }
+
+  if (!results.empty()) {
+    results.emplace_back(std::make_unique<RealignmentRequestMove>(
+        cardEnum, side, CountryEnum::USSR, history, 1, appliedAdditionalOps));
   }
 
   return results;

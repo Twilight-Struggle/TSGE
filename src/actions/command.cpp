@@ -144,3 +144,5 @@ void ChangeVpCommand::apply(Board& board) const {
     board.pushState(StateType::USSR_WIN_END);
   }
 }
+
+void RequestCommand::apply(Board& board) const {}

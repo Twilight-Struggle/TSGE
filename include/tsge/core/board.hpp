@@ -39,6 +39,10 @@ class Board {
     return worldMap_;
   }
   [[nodiscard]]
+  const DefconTrack& getDefconTrack() const {
+    return defconTrack_;
+  }
+  [[nodiscard]]
   const std::vector<CardEnum>& getPlayerHand(Side side) const {
     return playerHands_[static_cast<size_t>(side)];
   }
@@ -56,6 +60,13 @@ class Board {
   }
   void changeVp(int delta) { vp_ += delta; }
   void setCurrentArPlayer(Side side) { currentArPlayer_ = side; }
+
+#ifdef TEST
+  void addCardToHand(Side side, CardEnum card) {
+    playerHands_[static_cast<size_t>(side)].push_back(card);
+  }
+  void clearHand(Side side) { playerHands_[static_cast<size_t>(side)].clear(); }
+#endif
 
  private:
   const std::array<std::unique_ptr<Card>, 111>& cardpool_;

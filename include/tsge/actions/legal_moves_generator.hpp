@@ -16,8 +16,6 @@ class LegalMovesGenerator {
       const Board& board, Side side, CardEnum cardEnum,
       const std::vector<CountryEnum>& history,
       AdditionalOpsType appliedAdditionalOps);
-
- private:
   static std::vector<std::unique_ptr<Move>> actionPlaceInfluenceLegalMoves(
       const Board& board, Side side);
   static std::vector<std::unique_ptr<Move>> actionRealignmentLegalMoves(
