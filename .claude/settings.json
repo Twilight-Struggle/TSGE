@@ -11,10 +11,11 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(ls:*)",
-      "Bash(./build/*_test)",
+      "Bash(./build/*_test:*)",
       "Bash(clang-tidy -p build:*)",
       "Read(.claude/work/scratchpads/scratchpad_1.md)",
       "Edit(.claude/work/scratchpads/scratchpad_1.md)",
+      "Bash(find:*)",
       "Bash(tree:*)"
     ],
     "deny": [

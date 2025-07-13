@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <iostream>
+
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
@@ -49,6 +51,12 @@ class TestHelper {
       auto country_enum = static_cast<CountryEnum>(i);
       board.getWorldMap().getCountry(country_enum).clearInfluence(opponent);
     }
+  }
+
+  static void clearSuperPowerInfluence(Board& board, Side side) {
+    auto country_enum =
+        side == Side::USSR ? CountryEnum::USSR : CountryEnum::USA;
+    board.getWorldMap().getCountry(country_enum).clearInfluence(side);
   }
 
   static void setupBoardWithInfluence(Board& board) {
@@ -398,4 +406,305 @@ TEST_F(ActionRealignmentLegalMovesTest, OpsValueDoesNotAffectMoveCount) {
   // 両方とも相手影響力がある国数と同じ数のMoveを生成
   EXPECT_EQ(moves2ops.size(), 4);
   EXPECT_EQ(moves4ops.size(), 4);
+}
+
+// actionPlaceInfluenceLegalMovesのテスト
+class ActionPlaceInfluenceLegalMovesTest : public ::testing::Test {
+ protected:
+  ActionPlaceInfluenceLegalMovesTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, SimpleCase2OpsOneCountry) {
+  // シンプルなケース：1国のみ配置可能、2 Ops
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  TestHelper::clearSuperPowerInfluence(board, Side::USSR);
+  TestHelper::clearSuperPowerInfluence(board, Side::USA);
+
+  // USSRに東ドイツに影響力1を配置（東ドイツのみ配置可能）
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 1);
+
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Fidel});  // 2 Ops
+
+  auto moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  // 2 Opsで東ドイツに配置可能なパターン：
+  // 全ての配置可能国が1 Opsコストのため、多数のパターンが生成される
+  EXPECT_EQ(moves.size(), 15);
+
+  // 全てのMoveがActionPlaceInfluenceMoveであることを確認
+  for (const auto& move : moves) {
+    EXPECT_NE(dynamic_cast<ActionPlaceInfluenceMove*>(move.get()), nullptr);
+  }
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, EmptyHand) {
+  // 手札なしテスト
+  TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, NoPlaceableCountries) {
+  // 配置可能国なしテスト（非現実的だが境界値テスト）
+  // 全ての国から両方のプレイヤーの影響力を削除
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  TestHelper::clearSuperPowerInfluence(board, Side::USSR);
+  TestHelper::clearSuperPowerInfluence(board, Side::USA);
+
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Fidel});
+
+  auto moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, MixedCostCountries) {
+  // 異なるコストの国が混在するケース
+  // まず状態をリセット
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  TestHelper::clearSuperPowerInfluence(board, Side::USSR);
+  TestHelper::clearSuperPowerInfluence(board, Side::USA);
+
+  // USSR影響力を配置
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 1);
+  // USA支配国を作成（コスト2）
+  board.getWorldMap()
+      .getCountry(CountryEnum::WEST_GERMANY)
+      .addInfluence(Side::USA, 4);
+
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::DuckAndCover});  // 3 Ops
+
+  auto moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  // 3 Opsで可能な配置パターンが生成される
+  // 西ドイツ（2 Opsコスト）と他の国（1 Opsコスト）の組み合わせ
+  EXPECT_EQ(moves.size(), 25);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, MultipleCardsWithSameOps) {
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  TestHelper::clearSuperPowerInfluence(board, Side::USSR);
+  TestHelper::clearSuperPowerInfluence(board, Side::USA);
+
+  // USSR影響力を配置
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 1);
+
+  // 同じOps値のカードが複数ある場合
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Fidel, CardEnum::Fidel});  // 両方2 Ops
+
+  auto moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  // 同じOps値のカード2枚分のMoveが生成される
+  auto placeable = board.getWorldMap().placeableCountries(Side::USSR);
+  // 2 Opsの配置パターン数を2倍
+  auto single_card_moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  board.clearHand(Side::USSR);
+  board.addCardToHand(Side::USSR, CardEnum::Fidel);
+  auto one_card_moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  EXPECT_EQ(moves.size(), one_card_moves.size() * 2);
+
+  // 同じ配置パターンが複数カード分存在することを確認
+  std::map<CardEnum, int> card_count;
+  for (const auto& move : moves) {
+    card_count[move->getCard()]++;
+  }
+  EXPECT_EQ(card_count[CardEnum::Fidel], card_count[CardEnum::Fidel]);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, ScoringCardNoMoves) {
+  // スコアカード（Ops0）では配置不可
+  // 状態をクリアして制御された環境でテスト
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  TestHelper::clearSuperPowerInfluence(board, Side::USSR);
+  TestHelper::clearSuperPowerInfluence(board, Side::USA);
+
+  // USSRに影響力を配置して配置可能国を作る
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 1);
+
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Dummy});  // Ops0
+
+  auto moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  // CLAUDE.mdの仕様：Ops0では合法手なし（実装でOps0カードは除外される）
+  EXPECT_EQ(moves.size(), 0);
+}
+
+// actionCoupLegalMovesのテスト
+class ActionCoupLegalMovesTest : public ::testing::Test {
+ protected:
+  ActionCoupLegalMovesTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(ActionCoupLegalMovesTest, BasicCaseDefcon5) {
+  // 基本ケース（DEFCON 5）：全ての相手影響力がある国が対象
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::DuckAndCover});  // 3 Ops
+  board.getDefconTrack().setDefcon(5);
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // 相手影響力がある国数分のMoveが生成される
+  // setupBoardWithInfluenceで日本、西ドイツ、イラン、アンゴラにUSA影響力設定
+  EXPECT_EQ(moves.size(), 4);
+
+  // 全てのMoveがActionCoupMoveであることを確認
+  for (const auto& move : moves) {
+    EXPECT_NE(dynamic_cast<ActionCoupMove*>(move.get()), nullptr);
+  }
+}
+
+TEST_F(ActionCoupLegalMovesTest, Defcon4RestrictionEurope) {
+  // DEFCON 4：ヨーロッパ制限
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+  board.getDefconTrack().setDefcon(4);
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // 西ドイツ（ヨーロッパ）が除外される
+  // 日本、イラン、アンゴラの3か国のみ
+  EXPECT_EQ(moves.size(), 3);
+}
+
+TEST_F(ActionCoupLegalMovesTest, Defcon3RestrictionEuropeAsia) {
+  // DEFCON 3：ヨーロッパ、アジア制限
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+  board.getDefconTrack().setDefcon(3);
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // 西ドイツ（ヨーロッパ）と日本（アジア）が除外される
+  // イラン、アンゴラの2か国のみ
+  EXPECT_EQ(moves.size(), 2);
+}
+
+TEST_F(ActionCoupLegalMovesTest, Defcon2RestrictionEuropeAsiaMiddleEast) {
+  // DEFCON 2：ヨーロッパ、アジア、中東制限
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+  board.getDefconTrack().setDefcon(2);
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // 西ドイツ（ヨーロッパ）、日本（アジア）、イラン（中東）が除外される
+  // アンゴラ（アフリカ）の1か国のみ
+  EXPECT_EQ(moves.size(), 1);
+}
+
+TEST_F(ActionCoupLegalMovesTest, EmptyHand) {
+  // 手札なしテスト
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionCoupLegalMovesTest, NoOpponentInfluence) {
+  // 相手影響力なしテスト
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionCoupLegalMovesTest, ScoringCardOpsZero) {
+  // スコアカード（Ops0）のみの手札
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Dummy});  // Ops0
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // CLAUDE.mdの仕様：Ops0では合法手なし
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionCoupLegalMovesTest, AllExcludedByDefcon) {
+  // DEFCON制限で全て除外されるケース
+  TestHelper::setupBoardWithInfluence(board);
+
+  // ヨーロッパ、アジア、中東にのみUSA影響力を配置
+  board.getWorldMap().getCountry(CountryEnum::ANGOLA).clearInfluence(Side::USA);
+
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+  board.getDefconTrack().setDefcon(2);  // ヨーロッパ、アジア、中東制限
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // 全ての国がDEFCON制限により除外される
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionCoupLegalMovesTest, MultipleCards) {
+  // 複数カードテスト
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(
+      board, Side::USSR,
+      {CardEnum::DuckAndCover, CardEnum::Fidel, CardEnum::NuclearTestBan});
+  board.getDefconTrack().setDefcon(5);
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // 3枚のカード × 4か国 = 12個のMove
+  EXPECT_EQ(moves.size(), 12);
+}
+
+TEST_F(ActionCoupLegalMovesTest, MixedOpsValues) {
+  // Ops値が異なる複数カード
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Fidel,           // 2 Ops
+                              CardEnum::DuckAndCover,    // 3 Ops
+                              CardEnum::NuclearTestBan,  // 4 Ops
+                              CardEnum::Dummy});         // 0 Ops
+  board.getDefconTrack().setDefcon(5);
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  // Ops0のカード以外の3枚 × 4か国 = 12個のMove
+  EXPECT_EQ(moves.size(), 12);
+
+  // Dummyカード（Ops0）のMoveが含まれていないことを確認
+  bool has_dummy_move = false;
+  for (const auto& move : moves) {
+    if (move->getCard() == CardEnum::Dummy) {
+      has_dummy_move = true;
+      break;
+    }
+  }
+  EXPECT_FALSE(has_dummy_move);
 }

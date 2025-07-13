@@ -172,6 +172,12 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
   std::vector<std::unique_ptr<Move>> results;
 
   for (CardEnum card_enum : hands) {
+    // Ops 0のカードは除外（スコアカード相当）
+    const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+    if (card->getOps() == 0) {
+      continue;
+    }
+
     for (auto [totalOps, bonus] : computeOpsVariants(card_enum, board, side)) {
       Key key{totalOps, bonus};
 
@@ -391,6 +397,55 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
   if (!results.empty()) {
     results.emplace_back(std::make_unique<RealignmentRequestMove>(
         cardEnum, side, CountryEnum::USSR, history, 1, appliedAdditionalOps));
+  }
+
+  return results;
+}
+
+std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
+    const Board& board, Side side) {
+  const auto& hands = board.getPlayerHand(side);
+  if (hands.empty()) {
+    return {};
+  }
+
+  const auto& world_map = board.getWorldMap();
+  std::vector<std::unique_ptr<Move>> results;
+
+  // DEFCON値を取得
+  int defcon = board.getDefconTrack().getDefcon();
+
+  // 相手側を取得
+  Side opponent_side = getOpponentSide(side);
+
+  // 全ての国を調べて、相手の影響力がある国を対象とする
+  // USA/USSRを除く84か国（インデックス2から85まで）
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+
+    const auto& country = world_map.getCountry(country_enum);
+
+    // 相手の影響力が0の国は対象外
+    if (country.getInfluence(opponent_side) == 0) {
+      continue;
+    }
+
+    // DEFCON制限チェック
+    if (isRegionRestrictedByDefcon(country, defcon)) {
+      continue;
+    }
+
+    // 各手札から対象国へのCoupMoveを生成
+    results.reserve(results.size() + hands.size());
+    for (CardEnum card_enum : hands) {
+      const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+      if (card->getOps() == 0) {
+        continue;  // Opsが0のカードは除外
+      }
+      results.emplace_back(
+          std::make_unique<ActionCoupMove>(card_enum, side, country_enum));
+    }
   }
 
   return results;
