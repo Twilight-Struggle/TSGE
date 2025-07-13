@@ -450,3 +450,56 @@ std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
 
   return results;
 }
+
+std::vector<std::unique_ptr<Move>>
+LegalMovesGenerator::actionSpaceRaceLegalMoves(const Board& board, Side side) {
+  const auto& hands = board.getPlayerHand(side);
+  if (hands.empty()) {
+    return {};
+  }
+
+  std::vector<std::unique_ptr<Move>> results;
+  results.reserve(hands.size());
+
+  for (CardEnum card_enum : hands) {
+    const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+
+    // スコアリングカード除外（Ops=0）
+    if (card->getOps() == 0) {
+      continue;
+    }
+
+    // 中国カードも使用可能（除外しない）
+
+    // canSpaceチェック（試行回数・位置8チェック込み）
+    if (const_cast<Board&>(board).getSpaceTrack().canSpace(side,
+                                                           card->getOps())) {
+      results.emplace_back(
+          std::make_unique<ActionSpaceRaceMove>(card_enum, side));
+    }
+  }
+
+  return results;
+}
+
+std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
+    const Board& board, Side side) {
+  const auto& hands = board.getPlayerHand(side);
+  if (hands.empty()) {
+    return {};
+  }
+
+  std::vector<std::unique_ptr<Move>> results;
+  results.reserve(hands.size());
+
+  for (CardEnum card_enum : hands) {
+    const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+
+    // canEventチェック（中国カードは自動的にfalseで除外される）
+    if (card->canEvent(const_cast<Board&>(board))) {
+      results.emplace_back(std::make_unique<ActionEventMove>(card_enum, side));
+    }
+  }
+
+  return results;
+}

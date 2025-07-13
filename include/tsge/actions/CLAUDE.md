@@ -661,10 +661,10 @@ DEFCON: 3
  - 自分側のイベントカード
  - 相手側のイベントカード（イベント発動を防げる）
  - 中立イベントカード
+ - 中国カード
 
 - **使用不可**：
  - スコアカード
- - 中国カード
 
 ### 処理仕様
 
@@ -737,7 +737,7 @@ side: USSR
 
 SpaceRaceMove(Duck and Cover)
 SpaceRaceMove(Defectors)
-（1 OpsとScoringは除外）
+（1 OpsとScoringは除外、中国カードは使用可能）
 
 例2：中期段階（位置4-6、必要3 Ops）
 入力：

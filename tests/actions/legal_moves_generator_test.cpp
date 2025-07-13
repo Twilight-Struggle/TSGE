@@ -2,8 +2,6 @@
 
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
@@ -832,7 +830,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, AllCardsInsufficientOps) {
 }
 
 TEST_F(ActionSpaceRaceLegalMovesTest, SpecialCardsOnly) {
-  // エッジケース：特殊カードのみの手札（スコアリング+中国カード）
+  // エッジケース：スコアリングカードのみの手札
+  // 注意：中国カードは宇宙開発で使用可能
   TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
   TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
   TestHelper::addCardsToHand(board, Side::USSR,
