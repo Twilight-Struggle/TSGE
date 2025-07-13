@@ -19,6 +19,10 @@ std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   return commands;
 }
 
+bool DuckAndCover::canEvent(Board& board) const {
+  return true;
+}
+
 std::vector<CommandPtr> Fidel::event(Side side) const {
   // auto& cuba = board.getWorldMap().getCountry(CountryEnum::CUBA);
   // cuba.clearInfluence(Side::USA);
@@ -33,10 +37,18 @@ std::vector<CommandPtr> Fidel::event(Side side) const {
   return commands;
 }
 
+bool Fidel::canEvent(Board& board) const {
+  return true;
+}
+
 void NuclearTestBan::DefconBasedVpChangeCommand::apply(Board& board) const {
   int current_defcon = board.getDefconTrack().getDefcon();
   int vp_change = (current_defcon - 2);
   board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_change));
+}
+
+bool NuclearTestBan::canEvent(Board& board) const {
+  return true;
 }
 
 std::vector<CommandPtr> NuclearTestBan::event(Side side) const {
