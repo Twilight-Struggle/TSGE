@@ -469,11 +469,8 @@ LegalMovesGenerator::actionSpaceRaceLegalMoves(const Board& board, Side side) {
       continue;
     }
 
-    // 中国カードも使用可能（除外しない）
-
     // canSpaceチェック（試行回数・位置8チェック込み）
-    if (const_cast<Board&>(board).getSpaceTrack().canSpace(side,
-                                                           card->getOps())) {
+    if (board.getSpaceTrack().canSpace(side, card->getOps())) {
       results.emplace_back(
           std::make_unique<ActionSpaceRaceMove>(card_enum, side));
     }
@@ -496,7 +493,7 @@ std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
     const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
 
     // canEventチェック（中国カードは自動的にfalseで除外される）
-    if (card->canEvent(const_cast<Board&>(board))) {
+    if (card->canEvent(board)) {
       results.emplace_back(std::make_unique<ActionEventMove>(card_enum, side));
     }
   }

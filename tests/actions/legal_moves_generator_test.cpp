@@ -22,7 +22,7 @@ class DummyCard : public Card {
   }
 
   [[nodiscard]]
-  bool canEvent(Board& board) const override {
+  bool canEvent(const Board& board) const override {
     // テスト用：常にイベント実行可能とする
     return true;
   }

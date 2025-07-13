@@ -25,7 +25,7 @@ class Card {
   [[nodiscard]]
   virtual std::vector<CommandPtr> event(Side side) const = 0;
   [[nodiscard]]
-  virtual bool canEvent(Board& board) const = 0;
+  virtual bool canEvent(const Board& board) const = 0;
   [[nodiscard]]
   int getOps() const {
     return ops_;

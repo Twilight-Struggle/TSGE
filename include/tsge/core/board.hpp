@@ -39,6 +39,10 @@ class Board {
     return worldMap_;
   }
   [[nodiscard]]
+  const SpaceTrack& getSpaceTrack() const {
+    return spaceTrack_;
+  }
+  [[nodiscard]]
   const DefconTrack& getDefconTrack() const {
     return defconTrack_;
   }

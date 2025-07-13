@@ -19,7 +19,7 @@ std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   return commands;
 }
 
-bool DuckAndCover::canEvent(Board& board) const {
+bool DuckAndCover::canEvent(const Board& board) const {
   return true;
 }
 
@@ -37,7 +37,7 @@ std::vector<CommandPtr> Fidel::event(Side side) const {
   return commands;
 }
 
-bool Fidel::canEvent(Board& board) const {
+bool Fidel::canEvent(const Board& board) const {
   return true;
 }
 
@@ -47,7 +47,7 @@ void NuclearTestBan::DefconBasedVpChangeCommand::apply(Board& board) const {
   board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_change));
 }
 
-bool NuclearTestBan::canEvent(Board& board) const {
+bool NuclearTestBan::canEvent(const Board& board) const {
   return true;
 }
 

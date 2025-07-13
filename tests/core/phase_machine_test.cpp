@@ -11,7 +11,10 @@ class DummyCard : public Card {
   std::vector<CommandPtr> event(Side side) const override {
     return {};
   }
-  bool canEvent(Board& board) const override { return true; }
+  [[nodiscard]]
+  bool canEvent(const Board& board) const override {
+    return true;
+  }
 };
 
 class PhaseMachineTest : public ::testing::Test {

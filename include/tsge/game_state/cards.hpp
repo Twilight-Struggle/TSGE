@@ -10,7 +10,7 @@ class DuckAndCover final : public Card {
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
   [[nodiscard]]
-  bool canEvent(Board& board) const override;
+  bool canEvent(const Board& board) const override;
 
  private:
   class DefconBasedVpChangeCommand : public Command {
@@ -27,7 +27,7 @@ class Fidel final : public Card {
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
   [[nodiscard]]
-  bool canEvent(Board& board) const override;
+  bool canEvent(const Board& board) const override;
 };
 
 class NuclearTestBan final : public Card {
@@ -38,7 +38,7 @@ class NuclearTestBan final : public Card {
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
   [[nodiscard]]
-  bool canEvent(Board& board) const override;
+  bool canEvent(const Board& board) const override;
 
  private:
   class DefconBasedVpChangeCommand : public Command {
