@@ -43,7 +43,7 @@ class Move {
   const Side side_;
 };
 
-class ActionPlaceInfluenceMove : public Move {
+class ActionPlaceInfluenceMove final : public Move {
  public:
   ActionPlaceInfluenceMove(CardEnum card, Side side,
                            const std::map<CountryEnum, int>& targetCountries)
@@ -57,7 +57,7 @@ class ActionPlaceInfluenceMove : public Move {
   const std::map<CountryEnum, int> targetCountries_;
 };
 
-class ActionCoupMove : public Move {
+class ActionCoupMove final : public Move {
  public:
   ActionCoupMove(CardEnum card, Side side, CountryEnum targetCountry)
       : Move{card, side}, targetCountry_{targetCountry} {}
@@ -70,7 +70,7 @@ class ActionCoupMove : public Move {
   const CountryEnum targetCountry_;
 };
 
-class ActionSpaceRaceMove : public Move {
+class ActionSpaceRaceMove final : public Move {
  public:
   ActionSpaceRaceMove(CardEnum card, Side side) : Move{card, side} {}
 
@@ -79,7 +79,7 @@ class ActionSpaceRaceMove : public Move {
       const std::unique_ptr<Card>& card) const override;
 };
 
-class ActionRealigmentMove : public Move {
+class ActionRealigmentMove final : public Move {
  public:
   ActionRealigmentMove(CardEnum card, Side side, CountryEnum targetCountry)
       : Move{card, side}, targetCountry_{targetCountry} {}
@@ -93,7 +93,7 @@ class ActionRealigmentMove : public Move {
 };
 
 // Request内部で使用される、追加のRequestを生成しないRealignmentMove
-class RealignmentRequestMove : public Move {
+class RealignmentRequestMove final : public Move {
  public:
   RealignmentRequestMove(
       CardEnum card, Side side, CountryEnum targetCountry,
@@ -116,7 +116,7 @@ class RealignmentRequestMove : public Move {
   const AdditionalOpsType appliedAdditionalOps_;
 };
 
-class ActionEventMove : public Move {
+class ActionEventMove final : public Move {
  public:
   ActionEventMove(CardEnum card, Side side) : Move{card, side} {}
 

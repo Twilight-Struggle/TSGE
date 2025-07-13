@@ -2,7 +2,7 @@
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/game_state/card.hpp"
 
-class DuckAndCover : public Card {
+class DuckAndCover final : public Card {
  public:
   DuckAndCover()
       : Card(static_cast<int>(CardEnum::DuckAndCover), "DuckAndCover", 3,
@@ -20,7 +20,7 @@ class DuckAndCover : public Card {
   };
 };
 
-class Fidel : public Card {
+class Fidel final : public Card {
  public:
   Fidel()
       : Card(static_cast<int>(CardEnum::Fidel), "Fidel", 3, Side::USSR, true) {}
@@ -30,7 +30,7 @@ class Fidel : public Card {
   bool canEvent(Board& board) const override;
 };
 
-class NuclearTestBan : public Card {
+class NuclearTestBan final : public Card {
  public:
   NuclearTestBan()
       : Card(static_cast<int>(CardEnum::NuclearTestBan), "NuclearTestBan", 4,

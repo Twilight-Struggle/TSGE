@@ -30,7 +30,7 @@ class Command {
 
 using CommandPtr = std::unique_ptr<Command>;
 
-class ActionPlaceInfluenceCommand : public Command {
+class ActionPlaceInfluenceCommand final : public Command {
  public:
   ActionPlaceInfluenceCommand(Side side, const std::unique_ptr<Card>& card,
                               const std::map<CountryEnum, int>& targetCountries)
@@ -43,7 +43,7 @@ class ActionPlaceInfluenceCommand : public Command {
   const std::map<CountryEnum, int> targetCountries_;
 };
 
-class ActionRealigmentCommand : public Command {
+class ActionRealigmentCommand final : public Command {
  public:
   ActionRealigmentCommand(Side side, const std::unique_ptr<Card>& card,
                           CountryEnum targetCountry)
@@ -56,7 +56,7 @@ class ActionRealigmentCommand : public Command {
   const CountryEnum targetCountry_;
 };
 
-class ActionCoupCommand : public Command {
+class ActionCoupCommand final : public Command {
  public:
   ActionCoupCommand(Side side, const std::unique_ptr<Card>& card,
                     CountryEnum targetCountry)
@@ -69,7 +69,7 @@ class ActionCoupCommand : public Command {
   const CountryEnum targetCountry_;
 };
 
-class ActionSpaceRaceCommand : public Command {
+class ActionSpaceRaceCommand final : public Command {
  public:
   ActionSpaceRaceCommand(Side side, const std::unique_ptr<Card>& card)
       : Command{side}, card_{card} {};
@@ -80,7 +80,7 @@ class ActionSpaceRaceCommand : public Command {
   const std::unique_ptr<Card>& card_;
 };
 
-class ChangeDefconCommand : public Command {
+class ChangeDefconCommand final : public Command {
  public:
   explicit ChangeDefconCommand(int delta)
       : Command(Side::NEUTRAL), delta_{delta} {}
@@ -91,7 +91,7 @@ class ChangeDefconCommand : public Command {
   const int delta_;
 };
 
-class ChangeVpCommand : public Command {
+class ChangeVpCommand final : public Command {
  public:
   explicit ChangeVpCommand(Side side, int delta)
       : Command{side}, delta_{delta} {}
@@ -102,7 +102,7 @@ class ChangeVpCommand : public Command {
   const int delta_;
 };
 
-class RequestCommand : public Command {
+class RequestCommand final : public Command {
  public:
   RequestCommand(Side side,
                  std::function<std::vector<std::unique_ptr<Move>>(const Board&)>
