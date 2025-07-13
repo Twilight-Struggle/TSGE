@@ -12,12 +12,21 @@
 // テスト用DummyCardクラス
 class DummyCard : public Card {
  public:
-  DummyCard(int ops) : Card(0, "DummyCard", ops, Side::NEUTRAL, false) {}
+  DummyCard(int ops)
+      : Card(static_cast<int>(CardEnum::Dummy), "DummyCard", ops, Side::NEUTRAL,
+             false) {}
+  DummyCard(int ops, Side side) : Card(0, "DummyCard", ops, side, false) {}
 
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
     // 空実装
     return {};
+  }
+
+  [[nodiscard]]
+  bool canEvent(Board& board) const override {
+    // テスト用：常にイベント実行可能とする
+    return true;
   }
 };
 
@@ -88,6 +97,22 @@ class TestHelper {
     board.clearHand(side);
     for (CardEnum card : cards) {
       board.addCardToHand(side, card);
+    }
+  }
+
+  static void setSpaceTrackPosition(Board& board, Side side, int position) {
+    // SpaceTrackの位置を設定するため、advanceSpaceTrackを使用
+    int current_position = board.getSpaceTrack().getSpaceTrackPosition(side);
+    if (position > current_position) {
+      board.getSpaceTrack().advanceSpaceTrack(side,
+                                              position - current_position);
+    }
+  }
+
+  static void setSpaceTrackTried(Board& board, Side side, int tried) {
+    // SpaceTrackの試行回数を設定するため、spaceTriedを使用
+    for (int i = 0; i < tried; ++i) {
+      board.getSpaceTrack().spaceTried(side);
     }
   }
 };
@@ -707,4 +732,222 @@ TEST_F(ActionCoupLegalMovesTest, MixedOpsValues) {
     }
   }
   EXPECT_FALSE(has_dummy_move);
+}
+
+// actionSpaceRaceLegalMovesのテスト
+class ActionSpaceRaceLegalMovesTest : public ::testing::Test {
+ protected:
+  ActionSpaceRaceLegalMovesTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(ActionSpaceRaceLegalMovesTest, BasicCaseInitialStage) {
+  // 基本ケース：初期段階（位置1、必要2 Ops、試行未使用）
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::DuckAndCover, CardEnum::Fidel,
+                              CardEnum::NuclearTestBan});  // 3, 2, 4 Ops
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // 2 Ops以上のカードのみ使用可能：DuckAndCover(3), NuclearTestBan(4)
+  // Fidel(2)も使用可能
+  EXPECT_EQ(moves.size(), 3);
+
+  // 全てのMoveがActionSpaceRaceMoveであることを確認
+  for (const auto& move : moves) {
+    EXPECT_NE(dynamic_cast<ActionSpaceRaceMove*>(move.get()), nullptr);
+  }
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, RequiredOpsChanges) {
+  // 必要Ops値の変化確認（位置により要求値変化）
+  TestHelper::setSpaceTrackPosition(board, Side::USSR,
+                                    5);  // 中期段階（3 Ops必要）
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Fidel, CardEnum::DuckAndCover,
+                              CardEnum::NuclearTestBan});  // 2, 3, 4 Ops
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // 3 Ops以上のカードのみ使用可能：DuckAndCover(3), NuclearTestBan(4)
+  // Fidel(2)は不足
+  EXPECT_EQ(moves.size(), 2);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, EmptyHand) {
+  // エッジケース：手札なし
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, TrialLimitReached) {
+  // エッジケース：試行回数制限到達
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 1);  // 上限到達
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // 試行回数制限により実行不可
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, SpaceRaceCompleted) {
+  // エッジケース：宇宙開発完了済み（位置8）
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 8);  // 完了
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // 完了済みのため実行不可
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, AllCardsInsufficientOps) {
+  // エッジケース：全カードがOps不足
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 5);  // 3 Ops必要
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Fidel});  // 2 Ops
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // 全カードがOps不足
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, SpecialCardsOnly) {
+  // エッジケース：特殊カードのみの手札（スコアリング+中国カード）
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Dummy});  // スコアリングカード（Ops0）
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // スコアリングカードは使用不可
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, MultipleSameOpsCards) {
+  // 特殊ケース：複数の同Opsカード
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(
+      board, Side::USSR,
+      {CardEnum::DuckAndCover, CardEnum::DuckAndCover, CardEnum::DuckAndCover});
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  // 同じOps値のカード3枚から独立したMoveが生成される
+  EXPECT_EQ(moves.size(), 3);
+}
+
+// actionEventLegalMovesのテスト
+class ActionEventLegalMovesTest : public ::testing::Test {
+ protected:
+  ActionEventLegalMovesTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(ActionEventLegalMovesTest, MixedHandStandard) {
+  // 基本ケース：混在する手札（自分、相手、中立イベント）
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::DuckAndCover,      // 3 Ops, 中立
+                              CardEnum::Fidel,             // 2 Ops, 中立
+                              CardEnum::NuclearTestBan});  // 4 Ops, 中立
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+
+  // 全てのイベントカードが実行可能
+  EXPECT_EQ(moves.size(), 3);
+
+  // 全てのMoveがActionEventMoveであることを確認
+  for (const auto& move : moves) {
+    EXPECT_NE(dynamic_cast<ActionEventMove*>(move.get()), nullptr);
+  }
+}
+
+TEST_F(ActionEventLegalMovesTest, ScoringCardMandatory) {
+  // 基本ケース：スコアリングカード必須の確認
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Dummy,  // 0 Ops, スコアリングカード
+                              CardEnum::DuckAndCover});  // 3 Ops, 通常イベント
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+
+  // スコアリングカードも含まれる
+  EXPECT_EQ(moves.size(), 2);
+
+  // スコアリングカードのMoveが含まれていることを確認
+  bool has_scoring_move = false;
+  for (const auto& move : moves) {
+    if (move->getCard() == CardEnum::Dummy) {
+      has_scoring_move = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(has_scoring_move);
+}
+
+TEST_F(ActionEventLegalMovesTest, EmptyHand) {
+  // エッジケース：手札なし
+  TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionEventLegalMovesTest, AllScoringCards) {
+  // エッジケース：全てスコアリングカード
+  TestHelper::addCardsToHand(
+      board, Side::USSR,
+      {CardEnum::Dummy, CardEnum::Dummy});  // 両方スコアリングカード
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+
+  // スコアリングカード2枚分のEventMove
+  EXPECT_EQ(moves.size(), 2);
+}
+
+TEST_F(ActionEventLegalMovesTest, MixedCardTypes) {
+  // 特殊ケース：異なる種類のカードが混在
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Dummy,  // スコアリングカード
+                              CardEnum::DuckAndCover,  // 通常イベント
+                              CardEnum::Fidel});       // 通常イベント
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+
+  // 全てのカードがイベントとして実行可能
+  EXPECT_EQ(moves.size(), 3);
+
+  // カードの種類を確認
+  std::map<CardEnum, int> card_count;
+  for (const auto& move : moves) {
+    card_count[move->getCard()]++;
+  }
+
+  EXPECT_EQ(card_count[CardEnum::Dummy], 1);
+  EXPECT_EQ(card_count[CardEnum::DuckAndCover], 1);
+  EXPECT_EQ(card_count[CardEnum::Fidel], 1);
 }
