@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "tsge/actions/command.hpp"
+#include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
 
 class Board;
@@ -10,7 +11,8 @@ class Board;
 class Card {
  public:
   // NOLINTNEXTLINE(readability-identifier-length)
-  Card(int id, std::string&& name, int ops, Side side, bool removedAfterEvent)
+  Card(CardEnum id, std::string&& name, int ops, Side side,
+       bool removedAfterEvent)
       : id_{id},
         name_{std::move(name)},
         ops_{ops},
@@ -36,7 +38,7 @@ class Card {
   }
 
  protected:
-  int id_;
+  CardEnum id_;
   std::string name_;
   int ops_;
   Side side_;

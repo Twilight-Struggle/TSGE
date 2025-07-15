@@ -6,7 +6,7 @@
 // Dummy card class for testing
 class DummyCard : public Card {
  public:
-  DummyCard() : Card(0, "Dummy", 3, Side::NEUTRAL, false) {}
+  DummyCard() : Card(CardEnum::Dummy, "Dummy", 3, Side::NEUTRAL, false) {}
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
     return {};

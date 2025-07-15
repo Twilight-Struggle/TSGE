@@ -11,9 +11,9 @@
 class DummyCard : public Card {
  public:
   DummyCard(int ops)
-      : Card(static_cast<int>(CardEnum::Dummy), "DummyCard", ops, Side::NEUTRAL,
-             false) {}
-  DummyCard(int ops, Side side) : Card(0, "DummyCard", ops, side, false) {}
+      : Card(CardEnum::Dummy, "DummyCard", ops, Side::NEUTRAL, false) {}
+  DummyCard(int ops, Side side)
+      : Card(CardEnum::Dummy, "DummyCard", ops, side, false) {}
 
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
