@@ -74,7 +74,7 @@ jobs:
     - name: Run tests and generate coverage
       run: |
         # プロファイルファイルのパスを絶対パスで指定
-        export LLVM_PROFILE_FILE=$PWD/default-%p.profraw
+        export LLVM_PROFILE_FILE=$PWD/build/test_%p.profraw
         
         # テストを実行
         ctest --test-dir build --output-on-failure
@@ -85,14 +85,17 @@ jobs:
         ls -la build/*.profraw || echo "No .profraw files found in build directory"
         
         # プロファイルデータをマージ（複数のプロファイルファイルに対応）
-        llvm-profdata merge -sparse default-*.profraw -o default.profdata
+        llvm-profdata merge -sparse build/*.profraw -o default.profdata
         
         # lcov形式のカバレッジレポートを生成
         llvm-cov export \
           -format=lcov \
           -instr-profile=default.profdata \
           -object ./build/command_test \
+          -object ./build/legal_moves_generator_test \
+          -object ./build/phase_machine_test \
           -object ./build/world_map_test \
+          -object ./build/country_test \
           -object ./build/trackers_test \
           -object ./build/cards_test \
           > coverage.lcov
