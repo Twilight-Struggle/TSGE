@@ -7,18 +7,23 @@
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
+void addEventAfterAction(std::vector<CommandPtr>& commands,
+                         const std::unique_ptr<Card>& card, Side arPlayerSide) {
+  if (getOpponentSide(arPlayerSide) == card->getSide()) {
+    // Opponent's event is triggered after the action
+    auto event_commands = card->event(arPlayerSide);
+    for (auto& cmd : event_commands) {
+      commands.emplace_back(std::move(cmd));
+    }
+  }
+}
+
 std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_unique<ActionPlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
-  if (getOpponentSide(getSide()) == card->getSide()) {
-    // Opponent's event is triggered after the action
-    auto event_commands = card->event(getSide());
-    for (auto& cmd : event_commands) {
-      commands.emplace_back(std::move(cmd));
-    }
-  }
+  addEventAfterAction(commands, card, getSide());
   return commands;
 }
 
@@ -27,13 +32,7 @@ std::vector<CommandPtr> ActionCoupMove::toCommand(
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_unique<ActionCoupCommand>(getSide(), card, targetCountry_));
-  if (getOpponentSide(getSide()) == card->getSide()) {
-    // Opponent's event is triggered after the action
-    auto event_commands = card->event(getSide());
-    for (auto& cmd : event_commands) {
-      commands.emplace_back(std::move(cmd));
-    }
-  }
+  addEventAfterAction(commands, card, getSide());
   return commands;
 }
 
@@ -67,14 +66,7 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
         }));
   }
 
-  // Check if opponent's event should be triggered
-  if (getOpponentSide(getSide()) == card->getSide()) {
-    // Opponent's event is triggered after all realignment actions
-    auto event_commands = card->event(getSide());
-    for (auto& cmd : event_commands) {
-      commands.emplace_back(std::move(cmd));
-    }
-  }
+  addEventAfterAction(commands, card, getSide());
 
   return commands;
 }
