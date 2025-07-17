@@ -50,12 +50,11 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
   commands.emplace_back(std::make_unique<ActionRealigmentCommand>(
       getSide(), card, targetCountry_));
 
+  // 最初の実行履歴を作成
+  std::vector<CountryEnum> initial_history = {targetCountry_};
   // カードのOps数に応じてRequestコマンドを追加（最初の1回分は既に実行されるため-1）
   const int remaining_ops = card->getOps() - 1;
   if (remaining_ops > 0) {
-    // 最初の実行履歴を作成
-    std::vector<CountryEnum> initial_history = {targetCountry_};
-
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
@@ -63,6 +62,17 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
             const Board& board) -> std::vector<std::unique_ptr<Move>> {
           return LegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, AdditionalOpsType::NONE);
+        }));
+  } else {
+    // すべてのOpsを使い切った場合、追加Opsの処理
+    // 実際の判定はLegalMovesGeneratorで行う
+    commands.emplace_back(std::make_unique<RequestCommand>(
+        getSide(),
+        [side = getSide(), card_enum = getCard(),
+         history = std::move(initial_history)](
+            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+          return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+              board, side, card_enum, history, AdditionalOpsType::NONE);
         }));
   }
 
@@ -100,8 +110,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
               board, side, card_enum, history, ops, applied_ops);
         }));
   } else {
-    // すべてのOpsを使い切った場合、追加Opsの処理をチェック
-    // 追加Opsの可能性がある場合は常にRequestを生成
+    // すべてのOpsを使い切った場合、追加Opsの処理
     // 実際の判定はLegalMovesGeneratorで行う
     commands.emplace_back(std::make_unique<RequestCommand>(
         getSide(),
