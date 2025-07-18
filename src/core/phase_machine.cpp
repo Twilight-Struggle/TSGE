@@ -54,7 +54,7 @@ PhaseMachine::step(Board& board,
       states.pop_back();
       continue;
 
-      // NOLINTNEXTLINE(readability-else-after-return
+      // NOLINTNEXTLINE(readability-else-after-return)
     } else {
       // ----- スタック最上段が StateType (フェーズ) -------------------
       auto state_type = std::get<StateType>(top_state);
