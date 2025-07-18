@@ -93,6 +93,7 @@ jobs:
           -instr-profile=default.profdata \
           -object ./build/command_test \
           -object ./build/legal_moves_generator_test \
+          -object ./build/move_test \
           -object ./build/phase_machine_test \
           -object ./build/world_map_test \
           -object ./build/country_test \

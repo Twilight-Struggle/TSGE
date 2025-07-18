@@ -99,6 +99,7 @@ if(ENABLE_COVERAGE)
                 -instr-profile=default.profdata 
                 $<TARGET_FILE:command_test> 
                 $<TARGET_FILE:legal_moves_generator_test>
+                $<TARGET_FILE:move_test>
                 $<TARGET_FILE:phase_machine_test>
                 $<TARGET_FILE:world_map_test> 
                 $<TARGET_FILE:country_test>
@@ -114,6 +115,7 @@ if(ENABLE_COVERAGE)
                 -show-expansions
                 -object $<TARGET_FILE:command_test>
                 -object $<TARGET_FILE:legal_moves_generator_test>
+                -object $<TARGET_FILE:move_test>
                 -object $<TARGET_FILE:phase_machine_test>
                 -object $<TARGET_FILE:world_map_test>
                 -object $<TARGET_FILE:country_test>
@@ -125,7 +127,7 @@ if(ENABLE_COVERAGE)
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS command_test legal_moves_generator_test phase_machine_test world_map_test country_test trackers_test cards_test
+            DEPENDS command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test
         )
     endif()
 endif()
@@ -175,6 +177,7 @@ if(ENABLE_TESTING)
 
     add_test_with_path(command_test tests/actions/command_test.cpp)
     add_test_with_path(legal_moves_generator_test tests/actions/legal_moves_generator_test.cpp)
+    add_test_with_path(move_test tests/actions/move_test.cpp)
     add_test_with_path(phase_machine_test tests/core/phase_machine_test.cpp)
     add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
     add_test_with_path(country_test tests/game_state/country_test.cpp)
