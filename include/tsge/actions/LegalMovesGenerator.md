@@ -875,35 +875,3 @@ side: USSR
 手札: [China Card]
 
 出力：空のvector
-
-# Move 仕様詳細
-MoveはLegalMovesGeneratorによって作成され、PhaseMachineからPlayerに渡される。
-そこからPlayerは1つMoveを選びPhaseMachineに入力する。
-Moveは複数のCommandから実現されるため、toCommandによりCommand列に変換する。
-std::vector<CommandPtr> commands;に先に実行するCommandから先頭に入れていき、PhaseMachineに対して返却する。
-
-## addEventAfterAction関数
-使用したカードが相手陣営のカードであれば、アクションの後そのイベントが発動する。
-そのイベントをcommandsにpushするための関数
-
-## ActionPlaceInfluenceMove::toCommand
-ActionPlaceInfluenceCommand+addEventAfterAction
-
-## ActionCoupMove::toCommand
-ActionCoupCommand+addEventAfterAction
-
-## ActionSpaceRaceMove::toCommand
-ActionSpaceRaceCommand
-SpaceRaceのときは相手イベントだとしても発動しない。
-
-## ActionRealigmentMove::toCommand
-ActionRealigmentCommand+RequestCommand+addEventAfterAction
-RequestCommandによって返される合法手により、RealignmentRequestMoveが返されるため、
-次のRealignmentRequestMove::toCommandもPhaseMachineによって続けて実行されることになる。
-
-## RealignmentRequestMove::toCommand
-ActionRealigmentCommand+RequestCommand
-作戦値がつきるまで繰り返す。
-
-## ActionEventMove::toCommand
-まずカードのイベントを積み、その後そのカードが相手陣営のカードだった場合のみRequestCommandを積む。
