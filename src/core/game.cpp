@@ -45,8 +45,26 @@ void Game::next() {
       }
       break;
     }
+
     auto& player = players_[static_cast<size_t>(waitingForSide)];
-    pending = player.decideMove(board_, legalMoves);
+
+    // プレイヤーの手を検証するループ
+    while (true) {
+      pending = player.decideMove(board_, legalMoves);
+
+      // 返された手が合法手リストに含まれているかチェック
+      bool is_legal = false;
+      for (const auto& legal : legalMoves) {
+        if (pending && legal && **pending == *legal) {
+          is_legal = true;
+          break;
+        }
+      }
+
+      if (is_legal) {
+        break;  // 合法手なのでループを抜ける
+      }
+    }
   }
 }
 

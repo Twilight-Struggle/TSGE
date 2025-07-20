@@ -38,6 +38,9 @@ class Move {
   virtual std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const = 0;
 
+  [[nodiscard]]
+  virtual bool operator==(const Move& other) const = 0;
+
  private:
   const CardEnum card_;
   const Side side_;
@@ -53,6 +56,20 @@ class ActionPlaceInfluenceMove final : public Move {
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
 
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast =
+        dynamic_cast<const ActionPlaceInfluenceMove*>(&other);
+    if (other_cast == nullptr) {
+      return false;
+    }
+    return targetCountries_ == other_cast->targetCountries_;
+  }
+
  private:
   const std::map<CountryEnum, int> targetCountries_;
 };
@@ -66,6 +83,19 @@ class ActionCoupMove final : public Move {
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
 
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast = dynamic_cast<const ActionCoupMove*>(&other);
+    if (other_cast == nullptr) {
+      return false;
+    }
+    return targetCountry_ == other_cast->targetCountry_;
+  }
+
  private:
   const CountryEnum targetCountry_;
 };
@@ -77,6 +107,16 @@ class ActionSpaceRaceMove final : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast = dynamic_cast<const ActionSpaceRaceMove*>(&other);
+    return other_cast != nullptr;
+  }
 };
 
 class ActionRealigmentMove final : public Move {
@@ -87,6 +127,19 @@ class ActionRealigmentMove final : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast = dynamic_cast<const ActionRealigmentMove*>(&other);
+    if (other_cast == nullptr) {
+      return false;
+    }
+    return targetCountry_ == other_cast->targetCountry_;
+  }
 
  private:
   const CountryEnum targetCountry_;
@@ -109,6 +162,23 @@ class RealignmentRequestMove final : public Move {
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
 
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast =
+        dynamic_cast<const RealignmentRequestMove*>(&other);
+    if (other_cast == nullptr) {
+      return false;
+    }
+    return targetCountry_ == other_cast->targetCountry_ &&
+           realignmentHistory_ == other_cast->realignmentHistory_ &&
+           remainingOps_ == other_cast->remainingOps_ &&
+           appliedAdditionalOps_ == other_cast->appliedAdditionalOps_;
+  }
+
  private:
   const CountryEnum targetCountry_;
   const std::vector<CountryEnum> realignmentHistory_;
@@ -123,4 +193,14 @@ class ActionEventMove final : public Move {
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast = dynamic_cast<const ActionEventMove*>(&other);
+    return other_cast != nullptr;
+  }
 };
