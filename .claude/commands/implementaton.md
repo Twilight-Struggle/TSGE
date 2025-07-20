@@ -4,8 +4,8 @@
 実装計画からコードを実装する。
 
 ## 手順
-1. タスクファイルを読む: `.claude/work/tasks/task_$ARGUMENTS.md`
-2. 既存のスクラッチパッドがあれば読む: `.claude/work/scratchpads/scratchpad_$ARGUMENTS.md`
-3. もしタスクファイル `task_$ARGUMENTS.md` に追記(#追記1、#追記2)等あればその考えを取り入れる。
-4. もし `scratchpad_$ARGUMENTS.md` に「人間：...」コメントがあったらその考えを取り入れる。
+1. タスクファイルを読む: `.claude/work/tasks/task.md`
+2. 既存のスクラッチパッドがあれば読む: `.claude/work/scratchpads/scratchpad.md`
+3. もしタスクファイル `task.md` に追記(#追記1、#追記2)等あればその考えを取り入れる。
+4. もし `scratchpad.md` に「人間：...」コメントがあったらその考えを取り入れる。
 5. それらの計画に沿ってコードを実装。
