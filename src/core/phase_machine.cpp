@@ -61,21 +61,177 @@ PhaseMachine::step(Board& board,
       states.pop_back();
 
       switch (state_type) {
-        case StateType::AR_USSR:
-        case StateType::AR_USA: {
-          Side side = state_type == StateType::AR_USSR ? Side::USSR : Side::USA;
+        case StateType::AR_USSR: {
+          Side side = Side::USSR;
           board.setCurrentArPlayer(side);  // 現在のARプレイヤーを記録
-          states.emplace_back(StateType::AR_COMPLETE);
+          // Push the corresponding AR_COMPLETE state
+          states.emplace_back(StateType::AR_USSR_COMPLETE);
+          // TODO:
+          // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
+          return {LegalMovesGenerator::arLegalMoves(board, side), side,
+                  std::nullopt};  // 合法手を返して停止
+        }
+        case StateType::AR_USA: {
+          Side side = Side::USA;
+          board.setCurrentArPlayer(side);  // 現在のARプレイヤーを記録
+          // Push the corresponding AR_COMPLETE state
+          states.emplace_back(StateType::AR_USA_COMPLETE);
           // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
           return {LegalMovesGenerator::arLegalMoves(board, side), side,
                   std::nullopt};  // 合法手を返して停止
         }
 
-        case StateType::AR_COMPLETE:
-          // AR 終了処理して続行(仮コード)
-          // push_next_ar(states);  // TODO: 実装が必要
+        case StateType::AR_USSR_COMPLETE: {
+          Side current_side = Side::USSR;
+          Side opponent_side = getOpponentSide(current_side);
+
+          // 1. Increment current AR player's action round count
+          int current_turn = board.getTurnTrack().getTurn();
+          board.getActionRoundTrack().advanceActionRound(current_side,
+                                                         current_turn);
+
+          // 2. Check both players' action round counts
+          int current_ar =
+              board.getActionRoundTrack().getActionRound(current_side);
+          int opponent_ar =
+              board.getActionRoundTrack().getActionRound(opponent_side);
+          int defined_ar =
+              board.getActionRoundTrack().getDefinedActionRounds(current_turn);
+
+          // 3. Determine next phase transition
+          if (opponent_ar < defined_ar) {
+            // Opponent still has normal ARs remaining
+            states.emplace_back(StateType::AR_USA);
+          } else if (current_ar < defined_ar) [[unlikely]] {
+            // Current player still has normal ARs remaining
+            states.emplace_back(StateType::AR_USSR);
+          } else {
+            // All normal ARs are complete, check for extra ARs
+            bool current_has_extra =
+                board.getActionRoundTrack().hasExtraActionRound(current_side);
+            bool opponent_has_extra =
+                board.getActionRoundTrack().hasExtraActionRound(opponent_side);
+
+            if (current_has_extra || opponent_has_extra) {
+              if (opponent_has_extra) {
+                states.emplace_back(StateType::EXTRA_AR_USA);
+              } else {
+                states.emplace_back(StateType::EXTRA_AR_USSR);
+              }
+            } else {
+              // All action rounds complete, proceed to turn end
+              states.emplace_back(StateType::TURN_END);
+            }
+          }
+
+          // 4. TODO: Check for DEFCON 2 and NORAD effectiveness
+          // if (board.getDefconTrack().getDefcon() == 2 && /* NORAD is active
+          // */) {
+          //   return NORAD legal moves;
+          // }
+
           break;
+        }
+        case StateType::AR_USA_COMPLETE: {
+          Side current_side = Side::USA;
+          Side opponent_side = getOpponentSide(current_side);
+
+          // 1. Increment current AR player's action round count
+          int current_turn = board.getTurnTrack().getTurn();
+          board.getActionRoundTrack().advanceActionRound(current_side,
+                                                         current_turn);
+
+          // 2. Check both players' action round counts
+          int current_ar =
+              board.getActionRoundTrack().getActionRound(current_side);
+          int opponent_ar =
+              board.getActionRoundTrack().getActionRound(opponent_side);
+          int defined_ar =
+              board.getActionRoundTrack().getDefinedActionRounds(current_turn);
+
+          // 3. Determine next phase transition
+          if (opponent_ar < defined_ar) {
+            // Opponent still has normal ARs remaining
+            states.emplace_back(StateType::AR_USSR);
+          } else if (current_ar < defined_ar) [[unlikely]] {
+            // Current player still has normal ARs remaining
+            states.emplace_back(StateType::AR_USA);
+          } else {
+            // All normal ARs are complete, check for extra ARs
+            bool current_has_extra =
+                board.getActionRoundTrack().hasExtraActionRound(current_side);
+            bool opponent_has_extra =
+                board.getActionRoundTrack().hasExtraActionRound(opponent_side);
+
+            // 追加ARはたかだか1回しかない。
+            if (current_has_extra || opponent_has_extra) {
+              if (current_has_extra) {
+                states.emplace_back(StateType::EXTRA_AR_USSR);
+              }
+              if (opponent_has_extra) {
+                states.emplace_back(StateType::EXTRA_AR_USA);
+              }
+            } else {
+              // All action rounds complete, proceed to turn end
+              states.emplace_back(StateType::TURN_END);
+            }
+          }
+
+          // 4. TODO: Check for DEFCON 2 and NORAD effectiveness
+          // if (board.getDefconTrack().getDefcon() == 2 && /* NORAD is active
+          // */) {
+          //   return NORAD legal moves;
+          // }
+
+          break;
+        }
+
+        case StateType::EXTRA_AR_USSR: {
+          Side side = Side::USSR;
+          board.setCurrentArPlayer(side);  // Set current AR player
+
+          // Clear extra action round flag for USSR
+          board.getActionRoundTrack().clearExtraActionRound(Side::USSR);
+
+          // Transition to AR_USSR_COMPLETE
+          states.emplace_back(StateType::AR_USSR_COMPLETE);
+
+          // Generate legal moves with pass option for extra AR
+          // TODO: Add pass option to the legal moves list
+          // For now, return normal AR legal moves (pass functionality to be
+          // added)
+          return {LegalMovesGenerator::arLegalMoves(board, side), side,
+                  std::nullopt};
+        }
+        case StateType::EXTRA_AR_USA: {
+          Side side = Side::USA;
+          board.setCurrentArPlayer(Side::USA);  // Set current AR player
+
+          // Clear extra action round flag for USA
+          board.getActionRoundTrack().clearExtraActionRound(Side::USA);
+
+          // Transition to AR_USA_COMPLETE
+          states.emplace_back(StateType::AR_USA_COMPLETE);
+
+          // Generate legal moves with pass option for extra AR
+          // TODO: Add pass option to the legal moves list
+          // For now, return normal AR legal moves (pass functionality to be
+          // added)
+          return {LegalMovesGenerator::arLegalMoves(board, side), side,
+                  std::nullopt};
+        }
+
+        case StateType::TURN_END: {
+          // TODO: Implement complete turn end processing
+          // For now, just advance to next turn
+          board.getTurnTrack().nextTurn();
+          board.getActionRoundTrack().resetActionRounds();
+
+          // Push TURN_START for next turn
+          states.emplace_back(StateType::TURN_START);
+          break;
+        }
 
         case StateType::USSR_WIN_END: {
           return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
@@ -90,7 +246,23 @@ PhaseMachine::step(Board& board,
                   Side::NEUTRAL};
         }
 
-          /* HEADLINE, TURN_END など他のフェーズも同様に */
+        case StateType::TURN_START: {
+          // Check if either side has space track position 8
+          if (board.getSpaceTrack().getSpaceTrackPosition(Side::USSR) == 8) {
+            board.getActionRoundTrack().setExtraActionRound(Side::USSR);
+          }
+          if (board.getSpaceTrack().getSpaceTrackPosition(Side::USA) == 8) {
+            board.getActionRoundTrack().setExtraActionRound(Side::USA);
+          }
+
+          // TODO: NorthSeaOil check for USA
+
+          // TODO
+          states.emplace_back(StateType::AR_USSR);
+          break;
+        }
+
+          /* HEADLINE など他のフェーズも同様に */
       }
     }
   }

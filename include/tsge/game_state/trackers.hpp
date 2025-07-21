@@ -142,7 +142,41 @@ class ActionRoundTrack {
     return actionRound_[static_cast<std::size_t>(side)];
   }
 
+  void advanceActionRound(Side side, int turn) {
+    if (actionRound_[static_cast<std::size_t>(side)] <
+        actionRoundsByTurn_[turn - 1]) {
+      actionRound_[static_cast<std::size_t>(side)]++;
+    }
+  }
+
+  [[nodiscard]]
+  int getDefinedActionRounds(int turn) const {
+    if (turn < 1 || turn > 10) [[unlikely]] {
+      return 0;
+    }
+    return actionRoundsByTurn_[turn - 1];
+  }
+
+  void resetActionRounds() {
+    actionRound_[static_cast<std::size_t>(Side::USSR)] = 0;
+    actionRound_[static_cast<std::size_t>(Side::USA)] = 0;
+  }
+
+  [[nodiscard]]
+  bool hasExtraActionRound(Side side) const {
+    return extraActionRound_[static_cast<std::size_t>(side)];
+  }
+
+  void setExtraActionRound(Side side) {
+    extraActionRound_[static_cast<std::size_t>(side)] = true;
+  }
+
+  void clearExtraActionRound(Side side) {
+    extraActionRound_[static_cast<std::size_t>(side)] = false;
+  }
+
  private:
   std::array<int, 2> actionRound_ = {0, 0};
   std::array<int, 10> actionRoundsByTurn_ = {6, 6, 6, 7, 7, 7, 7, 7, 7, 7};
+  std::array<bool, 2> extraActionRound_ = {false, false};
 };

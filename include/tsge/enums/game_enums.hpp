@@ -114,9 +114,14 @@ enum class MoveType : uint8_t {
 };
 
 enum class StateType : uint8_t {
+  TURN_START,
   AR_USSR,
   AR_USA,
-  AR_COMPLETE,
+  AR_USSR_COMPLETE,
+  AR_USA_COMPLETE,
+  EXTRA_AR_USSR,
+  EXTRA_AR_USA,
+  TURN_END,
   USSR_WIN_END,
   USA_WIN_END,
   DRAW_END,
