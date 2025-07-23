@@ -78,36 +78,36 @@ void ActionCoupCommand::apply(Board& board) const {
 
 void ActionSpaceRaceCommand::apply(Board& board) const {
   auto& space_track = board.getSpaceTrack();
-  if (space_track.canSpace(side_, card_->getOps())) {
-    auto roll = Randomizer::getInstance().rollDice();
-    if (roll <= space_track.getRollMax(side_)) {
-      // スペーストラックを進める
-      space_track.advanceSpaceTrack(side_, 1);
+  auto roll = Randomizer::getInstance().rollDice();
+  if (roll <= space_track.getRollMax(side_)) {
+    // スペーストラックを進める
+    space_track.advanceSpaceTrack(side_, 1);
 
-      // 新しい位置を取得
-      int new_position = space_track.getSpaceTrackPosition(side_);
+    // 新しい位置を取得
+    int new_position = space_track.getSpaceTrackPosition(side_);
 
-      // VP計算
-      // NOLINTNEXTLINE(readability-identifier-length)
-      for (const auto& i : {1, 3, 5, 7, 8}) {
-        if (new_position == i) {
-          auto vp_data = SpaceTrack::getSpaceVp(i);
-          int opponent_position =
-              space_track.getSpaceTrackPosition(getOpponentSide(side_));
-          if (opponent_position < i) {
-            // 得点計算有利
-            board.changeVp(vp_data[0] * getVpMultiplier(side_));
-          } else {
-            // 得点計算不利
-            board.changeVp(vp_data[1] * getVpMultiplier(side_));
-          }
-          break;
+    // VP計算
+    // NOLINTNEXTLINE(readability-identifier-length)
+    for (const auto& i : {1, 3, 5, 7, 8}) {
+      if (new_position == i) {
+        auto vp_data = SpaceTrack::getSpaceVp(i);
+        int opponent_position =
+            space_track.getSpaceTrackPosition(getOpponentSide(side_));
+        if (opponent_position < i) {
+          // 得点計算有利
+          board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_data[0]));
+        } else {
+          // 得点計算不利
+          board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_data[1]));
         }
+        break;
       }
-      // TODO:8に到達した場合そのターンのARを増やす
     }
-    space_track.spaceTried(side_);
+    if (new_position == 8) {
+      board.getActionRoundTrack().setExtraActionRound(side_);
+    }
   }
+  space_track.spaceTried(side_);
 }
 
 void ChangeDefconCommand::apply(Board& board) const {

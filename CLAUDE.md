@@ -51,7 +51,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
    - Commandオブジェクトを通してのみ変更可能
 
 2. **Command** (`command.hpp`): 状態変更パターン
-   - `apply()`メソッドを通してのみBoard状態を変更できる唯一のクラス
+   - `apply()`メソッドを通してのみBoard状態を変更できるのクラス(他にはPhaseMachineのみ)
    - 派生クラス： `ActionPlaceInfluence`など
    - `Request` クラスはプレイヤー入力要求を処理
 
@@ -67,7 +67,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
 
 5. **PhaseMachine** (`phase_machine.hpp`): ゲームフロー制御
    - MoveをCommandに変換して適用
-   - ゲームフェーズと遷移を管理
+   - ゲームフェーズと遷移を管理(Board変更する可能性)
    - LegalMovesGeneratorから合法手を要求
 
 6. **LegalMovesGenerator** (`legal_moves_generator.hpp`): 合法手の検証
