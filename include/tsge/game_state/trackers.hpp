@@ -78,10 +78,7 @@ class DefconTrack {
  public:
   DefconTrack() = default;
   void setDefcon(int defcon) { defcon_ = defcon; }
-  void changeDefcon(int delta) {
-    int new_defcon = std::clamp(defcon_ + delta, 1, 5);
-    defcon_ = new_defcon;
-  }
+  void changeDefcon(int delta) { defcon_ = std::clamp(defcon_ + delta, 1, 5); }
   [[nodiscard]]
   int getDefcon() const {
     return defcon_;

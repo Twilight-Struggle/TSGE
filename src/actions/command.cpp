@@ -21,7 +21,7 @@ void ActionRealigmentCommand::apply(Board& board) const {
     return;
   }
   auto& worldmap = board.getWorldMap();
-  auto country = worldmap.getCountry(targetCountry_);
+  auto& country = worldmap.getCountry(targetCountry_);
 
   auto ussr_dice = Randomizer::getInstance().rollDice();
   auto usa_dice = Randomizer::getInstance().rollDice();
@@ -31,17 +31,16 @@ void ActionRealigmentCommand::apply(Board& board) const {
              country.getInfluence(Side::USSR)) {
     usa_dice += 1;
   }
-  std::vector<Country> adjacent_countries;
-  for (const auto& adjacent_country : country.getAdjacentCountries()) {
-    adjacent_countries.push_back(worldmap.getCountry(adjacent_country));
-  }
-  for (const auto& adjacent_country : adjacent_countries) {
+
+  for (const auto adjacent_country_enum : country.getAdjacentCountries()) {
+    const auto& adjacent_country = worldmap.getCountry(adjacent_country_enum);
     if (adjacent_country.getControlSide() == Side::USSR) {
       ussr_dice += 1;
     } else if (adjacent_country.getControlSide() == Side::USA) {
       usa_dice += 1;
     }
   }
+
   auto difference = ussr_dice - usa_dice;
   if (difference > 0) {
     country.removeInfluence(Side::USA, difference);
@@ -51,18 +50,13 @@ void ActionRealigmentCommand::apply(Board& board) const {
 }
 
 void ActionCoupCommand::apply(Board& board) const {
-  if (targetCountry_ == CountryEnum::USSR || targetCountry_ == CountryEnum::USA)
-      [[unlikely]] {
-    return;
-  }
   auto& worldmap = board.getWorldMap();
   auto& target_country = worldmap.getCountry(targetCountry_);
-  if ((side_ == Side::USSR && target_country.getInfluence(Side::USA) == 0) ||
-      (side_ == Side::USA && target_country.getInfluence(Side::USSR) == 0)) {
-    return;
-  }
+
   auto coup_dice = Randomizer::getInstance().rollDice();
   coup_dice += card_->getOps();
+  board.getMilopsTrack().advanceMilopsTrack(side_, card_->getOps());
+
   const auto defence_value = target_country.getStability() * 2;
   coup_dice = std::max(coup_dice - defence_value, 0);
   bool success = coup_dice != 0;
@@ -73,6 +67,9 @@ void ActionCoupCommand::apply(Board& board) const {
   } else {
     target_country.clearInfluence(getOpponentSide(side_));
     target_country.addInfluence(side_, -influence_diff);
+  }
+  if (target_country.isBattleground()) {
+    board.pushState(std::make_unique<ChangeDefconCommand>(-1));
   }
 }
 
