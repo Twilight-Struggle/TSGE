@@ -6,16 +6,14 @@
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
-void DuckAndCover::DefconBasedVpChangeCommand::apply(Board& board) const {
-  int current_defcon = board.getDefconTrack().getDefcon();
-  int vp_change = (5 - current_defcon);
-  board.pushState(std::make_unique<ChangeVpCommand>(Side::USA, vp_change));
-}
-
 std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   std::vector<CommandPtr> commands;
   commands.push_back(std::make_unique<ChangeDefconCommand>(-1));
-  commands.push_back(std::make_unique<DefconBasedVpChangeCommand>(side));
+  commands.push_back(std::make_unique<LambdaCommand>([](Board& board) {
+    int current_defcon = board.getDefconTrack().getDefcon();
+    int vp_change = (5 - current_defcon);
+    board.pushState(std::make_unique<ChangeVpCommand>(Side::USA, vp_change));
+  }));
   return commands;
 }
 
@@ -41,19 +39,17 @@ bool Fidel::canEvent(const Board& board) const {
   return true;
 }
 
-void NuclearTestBan::DefconBasedVpChangeCommand::apply(Board& board) const {
-  int current_defcon = board.getDefconTrack().getDefcon();
-  int vp_change = (current_defcon - 2);
-  board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_change));
-}
-
 bool NuclearTestBan::canEvent(const Board& board) const {
   return true;
 }
 
 std::vector<CommandPtr> NuclearTestBan::event(Side side) const {
   std::vector<CommandPtr> commands;
-  commands.push_back(std::make_unique<DefconBasedVpChangeCommand>(side));
+  commands.push_back(std::make_unique<LambdaCommand>([side](Board& board) {
+    int current_defcon = board.getDefconTrack().getDefcon();
+    int vp_change = (current_defcon - 2);
+    board.pushState(std::make_unique<ChangeVpCommand>(side, vp_change));
+  }));
   commands.push_back(std::make_unique<ChangeDefconCommand>(2));
   return commands;
 }

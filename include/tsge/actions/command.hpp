@@ -80,6 +80,17 @@ class ActionSpaceRaceCommand final : public Command {
   const std::unique_ptr<Card>& card_;
 };
 
+class LambdaCommand final : public Command {
+ public:
+  LambdaCommand(std::function<void(Board&)> lambda)
+      : Command(Side::NEUTRAL), lambda_(std::move(lambda)) {}
+
+  void apply(Board& board) const override { lambda_(board); }
+
+ private:
+  std::function<void(Board&)> lambda_;
+};
+
 class ChangeDefconCommand final : public Command {
  public:
   explicit ChangeDefconCommand(int delta)
