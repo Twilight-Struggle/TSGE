@@ -105,14 +105,6 @@ enum class Region : uint8_t {
   SPECIAL,
 };
 
-enum class MoveType : uint8_t {
-  COUP,
-  REALIGNMENT,
-  PLACE_INFLUENCE,
-  EVENT,
-  SPACE_RACE
-};
-
 enum class StateType : uint8_t {
   TURN_START,
   AR_USSR,
@@ -131,6 +123,13 @@ enum class Side : uint8_t {
   USSR,
   USA,
   NEUTRAL,
+};
+
+enum class WarPeriod : uint8_t {
+  DUMMY,
+  EARLY_WAR,
+  MID_WAR,
+  LATE_WAR,
 };
 
 constexpr Side getOpponentSide(Side side) noexcept {

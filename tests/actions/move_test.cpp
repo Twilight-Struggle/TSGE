@@ -15,7 +15,8 @@
 class DummyCard : public Card {
  public:
   DummyCard(int ops, Side side = Side::NEUTRAL)
-      : Card(CardEnum::Dummy, "DummyCard", ops, side, false) {}
+      : Card(CardEnum::Dummy, "DummyCard", ops, side, WarPeriod::DUMMY, false) {
+  }
 
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {

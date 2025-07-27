@@ -11,12 +11,13 @@ class Board;
 class Card {
  public:
   // NOLINTNEXTLINE(readability-identifier-length)
-  Card(CardEnum id, std::string&& name, int ops, Side side,
+  Card(CardEnum id, std::string&& name, int ops, Side side, WarPeriod warPeriod,
        bool removedAfterEvent)
       : id_{id},
         name_{std::move(name)},
         ops_{ops},
         side_{side},
+        warPeriod_{warPeriod},
         removedAfterEvent_{removedAfterEvent} {}
   virtual ~Card() = default;
   Card(const Card&) = delete;
@@ -36,11 +37,16 @@ class Card {
   Side getSide() const {
     return side_;
   }
+  [[nodiscard]]
+  WarPeriod getWarPeriod() const {
+    return warPeriod_;
+  }
 
  protected:
   CardEnum id_;
   std::string name_;
   int ops_;
   Side side_;
+  WarPeriod warPeriod_;
   bool removedAfterEvent_;
 };
