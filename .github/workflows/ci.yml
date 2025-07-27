@@ -99,6 +99,7 @@ jobs:
           -object ./build/country_test \
           -object ./build/trackers_test \
           -object ./build/cards_test \
+          -object ./build/deck_test \
           > coverage.lcov
 
         # lcovファイルの内容を確認（デバッグ用）

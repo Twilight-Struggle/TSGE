@@ -7,6 +7,7 @@
 #include "tsge/actions/command.hpp"
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
+#include "tsge/game_state/deck.hpp"
 #include "tsge/game_state/trackers.hpp"
 #include "tsge/game_state/world_map.hpp"
 #include "tsge/utils/randomizer.hpp"
@@ -14,7 +15,7 @@
 class Board {
  public:
   Board(const std::array<std::unique_ptr<Card>, 111>& cardpool)
-      : cardpool_{cardpool} {
+      : cardpool_{cardpool}, deck_{randomizer_, cardpool_} {
     for (auto& hand : playerHands_) {
       hand.reserve(9);
     }
@@ -33,6 +34,7 @@ class Board {
   TurnTrack& getTurnTrack() { return turnTrack_; }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
   Randomizer& getRandomizer() { return randomizer_; }
+  Deck& getDeck() { return deck_; }
   std::vector<CardEnum>& getPlayerHand(Side side) {
     return playerHands_[static_cast<size_t>(side)];
   }
@@ -51,6 +53,10 @@ class Board {
   [[nodiscard]]
   const Randomizer& getRandomizer() const {
     return randomizer_;
+  }
+  [[nodiscard]]
+  const Deck& getDeck() const {
+    return deck_;
   }
   [[nodiscard]]
   const std::vector<CardEnum>& getPlayerHand(Side side) const {
@@ -88,6 +94,7 @@ class Board {
   TurnTrack turnTrack_;
   ActionRoundTrack actionRoundTrack_;
   Randomizer randomizer_;
+  Deck deck_;
   std::array<std::vector<CardEnum>, 2> playerHands_;
   int vp_ = 0;
   Side currentArPlayer_ = Side::NEUTRAL;

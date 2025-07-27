@@ -81,6 +81,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
 - **Trackers** (`trackers.hpp`): 各種ゲームトラック（宇宙、DEFCON等）
 - **Player** (`player.hpp`): 合法手を受け取り、選択したMoveを返す
 - **Cards** (`cards.hpp`): カード定義と管理
+- **Deck** (`deck.hpp`): デッキ管理（現在のデッキ、捨て札、除去されたカードを管理）
 - **Randomizer** (`randomizer.hpp`): 乱数生成管理。BoardのメンバとしてMCTS対応
 - **world_map_constants** (`world_map_constants.hpp/cpp`): ゲーム固定値初期値等。固定値はcppの5~800行目、初期値はcppの802~819行目
 
@@ -128,6 +129,8 @@ tests/              # テストファイル（機能別にサブディレクト�
 ### claudeが分かりづらいところ
 - **policies.hpp**はplayersディレクトリに配置：DecisionPolicy（TestPolicy等）はPlayerから利用される構造のため
 - **unique_ptr使用時の注意**：`std::vector<std::unique_ptr<T>>`で`insert()`や範囲ベースコピーは禁止。`std::move()`と`emplace_back()`を使用する
+- **CMakeLists.txt更新時の注意**：新しいテストファイルを追加した際は、ソースファイルの追加、テストの追加、カバレッジターゲットへの追加（3箇所）を忘れずに行う
+- **CI設定（.github/workflows/ci.yml）**：新しいテストを追加した場合、カバレッジセクションのllvm-cov exportコマンドにも追加が必要
 
 ### パフォーマンス最適化ガイドライン
 - **constexpr活用**：Side enumを使った関数（getOpponentSide, getVpMultiplier等）はconstexpr化により配列アクセスにしてコンパイル時計算を可能にする

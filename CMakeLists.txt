@@ -44,6 +44,7 @@ add_library(ts_core
     src/game_state/world_map.cpp
     src/game_state/world_map_constants.cpp
     src/game_state/cards.cpp
+    src/game_state/deck.cpp
     src/players/policies.cpp
     src/utils/randomizer.cpp
 )
@@ -105,6 +106,7 @@ if(ENABLE_COVERAGE)
                 $<TARGET_FILE:country_test>
                 $<TARGET_FILE:trackers_test> 
                 $<TARGET_FILE:cards_test>
+                $<TARGET_FILE:deck_test>
                 
             # HTMLレポート
             COMMAND ${LLVM_COV} show 
@@ -121,13 +123,14 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:country_test>
                 -object $<TARGET_FILE:trackers_test>
                 -object $<TARGET_FILE:cards_test>
+                -object $<TARGET_FILE:deck_test>
 
             # カバレッジサマリーを表示
             COMMAND ${CMAKE_COMMAND} -E echo "Coverage report generated in: ${CMAKE_BINARY_DIR}/coverage_report/index.html"
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test
+            DEPENDS command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test deck_test
         )
     endif()
 endif()
@@ -183,4 +186,5 @@ if(ENABLE_TESTING)
     add_test_with_path(country_test tests/game_state/country_test.cpp)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
     add_test_with_path(cards_test tests/game_state/cards_test.cpp)
+    add_test_with_path(deck_test tests/game_state/deck_test.cpp)
 endif()
