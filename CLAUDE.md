@@ -46,7 +46,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
 ### Core Components
 
 1. **Board** (`board.hpp`): 中央ゲーム状態コンテナ
-   - 全ゲーム状態を保持： cards, world map, tracks, player hands, victory points, current AR player
+   - 全ゲーム状態を保持： cards, world map, tracks, player hands, victory points, current AR player, randomizer
    - MCTSコピー性能のために最適化
    - Commandオブジェクトを通してのみ変更可能
 
@@ -81,6 +81,7 @@ ctest --test-dir build --rerun-failed --output-on-failure
 - **Trackers** (`trackers.hpp`): 各種ゲームトラック（宇宙、DEFCON等）
 - **Player** (`player.hpp`): 合法手を受け取り、選択したMoveを返す
 - **Cards** (`cards.hpp`): カード定義と管理
+- **Randomizer** (`randomizer.hpp`): 乱数生成管理。BoardのメンバとしてMCTS対応
 - **world_map_constants** (`world_map_constants.hpp/cpp`): ゲーム固定値初期値等。固定値はcppの5~800行目、初期値はcppの802~819行目
 
 ## フォルダ構成

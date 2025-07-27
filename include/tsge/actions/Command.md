@@ -131,7 +131,7 @@ Commandクラスは以下のBoardメソッドにアクセス可能：
 
 ## ランダム要素の扱い
 
-- `Randomizer::getInstance().rollDice()` を使用
+- `board.getRandomizer().rollDice()` を使用
 - リアライメント、クーデター、宇宙開発でダイスロールを実行
 - 結果は即座にBoardの状態に反映
 

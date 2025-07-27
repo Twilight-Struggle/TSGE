@@ -4,7 +4,6 @@
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/card.hpp"
 #include "tsge/game_state/country.hpp"
-#include "tsge/utils/randomizer.hpp"
 
 void ActionPlaceInfluenceCommand::apply(Board& board) const {
   for (const auto& target_country : targetCountries_) {
@@ -23,8 +22,8 @@ void ActionRealigmentCommand::apply(Board& board) const {
   auto& worldmap = board.getWorldMap();
   auto& country = worldmap.getCountry(targetCountry_);
 
-  auto ussr_dice = Randomizer::getInstance().rollDice();
-  auto usa_dice = Randomizer::getInstance().rollDice();
+  auto ussr_dice = board.getRandomizer().rollDice();
+  auto usa_dice = board.getRandomizer().rollDice();
   if (country.getInfluence(Side::USSR) > country.getInfluence(Side::USA)) {
     ussr_dice += 1;
   } else if (country.getInfluence(Side::USA) >
@@ -53,7 +52,7 @@ void ActionCoupCommand::apply(Board& board) const {
   auto& worldmap = board.getWorldMap();
   auto& target_country = worldmap.getCountry(targetCountry_);
 
-  auto coup_dice = Randomizer::getInstance().rollDice();
+  auto coup_dice = board.getRandomizer().rollDice();
   coup_dice += card_->getOps();
   board.getMilopsTrack().advanceMilopsTrack(side_, card_->getOps());
 
@@ -75,7 +74,7 @@ void ActionCoupCommand::apply(Board& board) const {
 
 void ActionSpaceRaceCommand::apply(Board& board) const {
   auto& space_track = board.getSpaceTrack();
-  auto roll = Randomizer::getInstance().rollDice();
+  auto roll = board.getRandomizer().rollDice();
   if (roll <= space_track.getRollMax(side_)) {
     // スペーストラックを進める
     space_track.advanceSpaceTrack(side_, 1);

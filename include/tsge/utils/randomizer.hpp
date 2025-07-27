@@ -2,24 +2,21 @@
 
 #include <random>
 
-// singleton
 class Randomizer {
- private:
-  Randomizer();
-  Randomizer(const Randomizer&) = delete;
-  Randomizer& operator=(const Randomizer&) = delete;
-  Randomizer(Randomizer&&) = delete;
-  Randomizer& operator=(Randomizer&&) = delete;
-  ~Randomizer() {}
-
-  std::mt19937_64 rng;
-  std::uniform_int_distribution<int> dice;
-
  public:
-  static Randomizer& getInstance() {
-    static Randomizer inst;  // private なコンストラクタを呼び出す。
-    return inst;
-  }
+  Randomizer();
+  Randomizer(const Randomizer&) = default;
+  Randomizer& operator=(const Randomizer&) = default;
+  Randomizer(Randomizer&&) = default;
+  Randomizer& operator=(Randomizer&&) = default;
+  ~Randomizer() = default;
 
-  int rollDice() { return dice(rng); }
+  // MCTSシミュレーション用
+  void setRng(std::mt19937_64* rng) { external_rng_ = rng; }
+
+  int rollDice();
+
+ private:
+  std::mt19937_64 rng_;
+  std::mt19937_64* external_rng_ = nullptr;
 };

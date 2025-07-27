@@ -9,6 +9,7 @@
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/trackers.hpp"
 #include "tsge/game_state/world_map.hpp"
+#include "tsge/utils/randomizer.hpp"
 
 class Board {
  public:
@@ -31,6 +32,7 @@ class Board {
   MilopsTrack& getMilopsTrack() { return milopsTrack_; }
   TurnTrack& getTurnTrack() { return turnTrack_; }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
+  Randomizer& getRandomizer() { return randomizer_; }
   std::vector<CardEnum>& getPlayerHand(Side side) {
     return playerHands_[static_cast<size_t>(side)];
   }
@@ -45,6 +47,10 @@ class Board {
   [[nodiscard]]
   const DefconTrack& getDefconTrack() const {
     return defconTrack_;
+  }
+  [[nodiscard]]
+  const Randomizer& getRandomizer() const {
+    return randomizer_;
   }
   [[nodiscard]]
   const std::vector<CardEnum>& getPlayerHand(Side side) const {
@@ -81,6 +87,7 @@ class Board {
   MilopsTrack milopsTrack_;
   TurnTrack turnTrack_;
   ActionRoundTrack actionRoundTrack_;
+  Randomizer randomizer_;
   std::array<std::vector<CardEnum>, 2> playerHands_;
   int vp_ = 0;
   Side currentArPlayer_ = Side::NEUTRAL;

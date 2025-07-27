@@ -10,8 +10,11 @@ Randomizer::Randomizer() {
   }
   // seed_seq を使って mt19937_64 にシードを設定
   std::seed_seq seq(seed_data.begin(), seed_data.end());
-  rng = std::mt19937_64(seq);  // 64bit版のメルセンヌ・ツイスタ
+  rng_ = std::mt19937_64(seq);  // 64bit版のメルセンヌ・ツイスタ
+}
 
-  // 一様分布の設定（例：1から100）
-  dice = std::uniform_int_distribution<int>(1, 6);
+int Randomizer::rollDice() {
+  std::uniform_int_distribution<int> dice(1, 6);
+  auto& rng = (external_rng_ != nullptr) ? *external_rng_ : rng_;
+  return dice(rng);
 }
