@@ -77,6 +77,10 @@ class Board {
   void changeVp(int delta) { vp_ += delta; }
   void setCurrentArPlayer(Side side) { currentArPlayer_ = side; }
 
+  [[nodiscard]]
+  std::array<int, 2> calculateDrawCount(int turn) const;
+  void drawCardsForPlayers(int ussrDrawCount, int usaDrawCount);
+
 #ifdef TEST
   void addCardToHand(Side side, CardEnum card) {
     playerHands_[static_cast<size_t>(side)].push_back(card);
