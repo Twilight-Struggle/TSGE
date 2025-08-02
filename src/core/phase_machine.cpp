@@ -311,23 +311,31 @@ PhaseMachine::step(Board& board,
             // 作戦値を比較してイベント処理順序を決定
             if (ussr_ops > usa_ops) {
               // USSRから処理つまりUSAから積む
-              auto usa_events = usa_card->event(Side::USA);
-              for (auto& event : std::ranges::reverse_view(usa_events)) {
-                states.emplace_back(std::move(event));
+              if (usa_card->canEvent(board)) {
+                auto usa_events = usa_card->event(Side::USA);
+                for (auto& event : std::ranges::reverse_view(usa_events)) {
+                  states.emplace_back(std::move(event));
+                }
               }
-              auto ussr_events = ussr_card->event(Side::USSR);
-              for (auto& event : std::ranges::reverse_view(ussr_events)) {
-                states.emplace_back(std::move(event));
+              if (ussr_card->canEvent(board)) {
+                auto ussr_events = ussr_card->event(Side::USSR);
+                for (auto& event : std::ranges::reverse_view(ussr_events)) {
+                  states.emplace_back(std::move(event));
+                }
               }
             } else {
               // USAから処理（同値の場合もUSAから）つまりUSSRから積む
-              auto ussr_events = ussr_card->event(Side::USSR);
-              for (auto& event : std::ranges::reverse_view(ussr_events)) {
-                states.emplace_back(std::move(event));
+              if (ussr_card->canEvent(board)) {
+                auto ussr_events = ussr_card->event(Side::USSR);
+                for (auto& event : std::ranges::reverse_view(ussr_events)) {
+                  states.emplace_back(std::move(event));
+                }
               }
-              auto usa_events = usa_card->event(Side::USA);
-              for (auto& event : std::ranges::reverse_view(usa_events)) {
-                states.emplace_back(std::move(event));
+              if (usa_card->canEvent(board)) {
+                auto usa_events = usa_card->event(Side::USA);
+                for (auto& event : std::ranges::reverse_view(usa_events)) {
+                  states.emplace_back(std::move(event));
+                }
               }
             }
           }
