@@ -519,3 +519,36 @@ LegalMovesGenerator::headlineCardSelectLegalMoves(const Board& board,
 
   return legal_moves;
 }
+
+std::vector<std::unique_ptr<Move>> LegalMovesGenerator::arLegalMoves(
+    const Board& board, Side side) {
+  std::vector<std::unique_ptr<Move>> legal_moves;
+
+  auto place_influence_moves = actionPlaceInfluenceLegalMoves(board, side);
+  auto realignment_moves = actionRealignmentLegalMoves(board, side);
+  auto coup_moves = actionCoupLegalMoves(board, side);
+  auto space_race = actionSpaceRaceLegalMoves(board, side);
+  auto event_moves = actionEventLegalMoves(board, side);
+
+  legal_moves.reserve(place_influence_moves.size() + realignment_moves.size() +
+                      coup_moves.size() + space_race.size() +
+                      event_moves.size());
+  // 各アクションの合法手をlegal_movesに追加
+  for (auto& move : place_influence_moves) {
+    legal_moves.push_back(std::move(move));
+  }
+  for (auto& move : realignment_moves) {
+    legal_moves.push_back(std::move(move));
+  }
+  for (auto& move : coup_moves) {
+    legal_moves.push_back(std::move(move));
+  }
+  for (auto& move : space_race) {
+    legal_moves.push_back(std::move(move));
+  }
+  for (auto& move : event_moves) {
+    legal_moves.push_back(std::move(move));
+  }
+
+  return legal_moves;
+}
