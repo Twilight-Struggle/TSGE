@@ -81,6 +81,20 @@ class Board {
   std::array<int, 2> calculateDrawCount(int turn) const;
   void drawCardsForPlayers(int ussrDrawCount, int usaDrawCount);
 
+  [[nodiscard]]
+  CardEnum getHeadlineCard(Side side) const {
+    return headlineCards_[static_cast<size_t>(side)];
+  }
+  void setHeadlineCard(Side side, CardEnum card) {
+    headlineCards_[static_cast<size_t>(side)] = card;
+  }
+  void clearHeadlineCards() {
+    headlineCards_[static_cast<size_t>(Side::USSR)] = CardEnum::Dummy;
+    headlineCards_[static_cast<size_t>(Side::USA)] = CardEnum::Dummy;
+  }
+  [[nodiscard]]
+  bool isHeadlineCardVisible(Side viewer, Side target) const;
+
 #ifdef TEST
   void addCardToHand(Side side, CardEnum card) {
     playerHands_[static_cast<size_t>(side)].push_back(card);
@@ -100,6 +114,7 @@ class Board {
   Randomizer randomizer_;
   Deck deck_;
   std::array<std::vector<CardEnum>, 2> playerHands_;
+  std::array<CardEnum, 2> headlineCards_ = {CardEnum::Dummy, CardEnum::Dummy};
   int vp_ = 0;
   Side currentArPlayer_ = Side::NEUTRAL;
 };

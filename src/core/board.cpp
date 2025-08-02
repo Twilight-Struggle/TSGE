@@ -97,3 +97,14 @@ void Board::drawCardsForPlayers(int ussrDrawCount, int usaDrawCount) {
     }
   }
 }
+
+bool Board::isHeadlineCardVisible(Side viewer, Side target) const {
+  // 自分のカードは常に見える
+  if (viewer == target) {
+    return true;
+  }
+
+  // 宇宙開発トラック4の優位性チェック
+  // viewerがトラック4以上でtargetがトラック4未満の場合、targetのカードが見える
+  return spaceTrack_.effectEnabled(viewer, 4);
+}

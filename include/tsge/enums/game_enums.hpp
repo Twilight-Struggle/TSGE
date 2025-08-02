@@ -107,6 +107,10 @@ enum class Region : uint8_t {
 
 enum class StateType : uint8_t {
   TURN_START,
+  HEADLINE_PHASE,
+  HEADLINE_CARD_SELECT_USSR,
+  HEADLINE_CARD_SELECT_USA,
+  HEADLINE_PROCESS_EVENTS,
   AR_USSR,
   AR_USA,
   AR_USSR_COMPLETE,

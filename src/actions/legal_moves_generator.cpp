@@ -500,3 +500,22 @@ std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
 
   return results;
 }
+
+std::vector<std::unique_ptr<Move>>
+LegalMovesGenerator::headlineCardSelectLegalMoves(const Board& board,
+                                                  Side side) {
+  std::vector<std::unique_ptr<Move>> legal_moves;
+  const auto& hand = board.getPlayerHand(side);
+  const auto& cardpool = board.getCardpool();
+
+  legal_moves.reserve(hand.size());
+  // 手札から選択可能なカードを追加
+  for (const auto& card_enum : hand) {
+    // TODO: UN Interventionを除外する処理を追加
+    // なお発動条件を満たさないカードを選択することは可能
+    legal_moves.emplace_back(
+        std::make_unique<HeadlineCardSelectMove>(card_enum, side));
+  }
+
+  return legal_moves;
+}

@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
 
 class Board;
@@ -129,4 +130,15 @@ class RequestCommand final : public Command {
   Side getSide() const {
     return side_;
   }
+};
+
+class SetHeadlineCardCommand final : public Command {
+ public:
+  SetHeadlineCardCommand(Side side, CardEnum card)
+      : Command{side}, card_{card} {}
+
+  void apply(Board& board) const override;
+
+ private:
+  const CardEnum card_;
 };

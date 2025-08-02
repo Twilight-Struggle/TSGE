@@ -190,3 +190,48 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckButUsaOnly) {
   EXPECT_EQ(board_->getPlayerHand(Side::USA).size(), 8);
   EXPECT_EQ(board_->getDeck().getDiscardPile().size(), 0);
 }
+
+// ヘッドラインカード管理のテスト
+TEST_F(BoardDrawTest, HeadlineCardManagement) {
+  // 初期状態はDummy
+  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::Dummy);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::Dummy);
+
+  // ヘッドラインカードの設定
+  board_->setHeadlineCard(Side::USSR, CardEnum::DuckAndCover);
+  board_->setHeadlineCard(Side::USA, CardEnum::Fidel);
+
+  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::Fidel);
+
+  // ヘッドラインカードのクリア
+  board_->clearHeadlineCards();
+
+  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::Dummy);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::Dummy);
+}
+
+TEST_F(BoardDrawTest, HeadlineCardVisibility) {
+  // 自分のカードは常に見える
+  EXPECT_TRUE(board_->isHeadlineCardVisible(Side::USSR, Side::USSR));
+  EXPECT_TRUE(board_->isHeadlineCardVisible(Side::USA, Side::USA));
+
+  // 宇宙開発トラック4の優位性がない場合、相手のカードは見えない
+  EXPECT_FALSE(board_->isHeadlineCardVisible(Side::USSR, Side::USA));
+  EXPECT_FALSE(board_->isHeadlineCardVisible(Side::USA, Side::USSR));
+
+  // USSRが宇宙開発トラック4に到達
+  board_->getSpaceTrack().advanceSpaceTrack(Side::USSR, 4);
+
+  // USSRからUSAのカードが見える
+  EXPECT_TRUE(board_->isHeadlineCardVisible(Side::USSR, Side::USA));
+  // USAからUSSRのカードは見えない
+  EXPECT_FALSE(board_->isHeadlineCardVisible(Side::USA, Side::USSR));
+
+  // USAも宇宙開発トラック4に到達（優位性がなくなる）
+  board_->getSpaceTrack().advanceSpaceTrack(Side::USA, 4);
+
+  // お互いに相手のカードが見えない
+  EXPECT_FALSE(board_->isHeadlineCardVisible(Side::USSR, Side::USA));
+  EXPECT_FALSE(board_->isHeadlineCardVisible(Side::USA, Side::USSR));
+}

@@ -1,3 +1,5 @@
+#include "tsge/core/phase_machine.hpp"
+
 #include <gtest/gtest.h>
 
 #include "tsge/core/board.hpp"
@@ -49,4 +51,40 @@ TEST_F(PhaseMachineTest, BoardArPlayerFunctionalityTest) {
   // NEUTRALに戻す
   board.setCurrentArPlayer(Side::NEUTRAL);
   EXPECT_EQ(board.getCurrentArPlayer(), Side::NEUTRAL);
+}
+
+// ヘッドラインフェイズの基本テスト
+TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
+  // プレイヤーに手札を追加
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  // TURN_STARTをプッシュしてヘッドラインフェイズをトリガー
+  board.pushState(StateType::TURN_START);
+
+  // TURN_STARTを実行してHEADLINE_PHASEがプッシュされることを確認
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  // HEADLINE_CARD_SELECT_USSRが返されることを期待（同時選択の疑似実装）
+  EXPECT_EQ(std::get<1>(result), Side::USSR);
+  EXPECT_FALSE(std::get<0>(result).empty());
+}
+
+// 宇宙開発トラック優位性があるケースのテスト
+TEST_F(PhaseMachineTest, HeadlinePhaseSpaceAdvantage) {
+  // プレイヤーに手札を追加
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  // USSRが宇宙開発トラック4に到達
+  board.getSpaceTrack().advanceSpaceTrack(Side::USSR, 4);
+
+  // HEADLINE_PHASEを直接実行
+  board.pushState(StateType::HEADLINE_PHASE);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  // USAが先に選択することを期待（劣位側が先）
+  EXPECT_EQ(std::get<1>(result), Side::USA);
+  EXPECT_FALSE(std::get<0>(result).empty());
 }

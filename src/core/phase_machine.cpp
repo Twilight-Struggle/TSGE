@@ -257,12 +257,89 @@ PhaseMachine::step(Board& board,
 
           // TODO: NorthSeaOil check for USA
 
-          // TODO
+          // ヘッドラインフェイズを追加
+          states.emplace_back(StateType::HEADLINE_PHASE);
+          break;
+        }
+
+        case StateType::HEADLINE_PHASE: {
+          // 宇宙開発トラック4の優位性チェック
+          bool ussr_space4 = board.getSpaceTrack().effectEnabled(Side::USSR, 4);
+
+          // 最後にHEADLINE_PROCESS_EVENTSをプッシュ
+          states.emplace_back(StateType::HEADLINE_PROCESS_EVENTS);
+
+          if (ussr_space4) {
+            // USSRが優位：USA→USSRの順で選択
+            states.emplace_back(StateType::HEADLINE_CARD_SELECT_USSR);
+            states.emplace_back(StateType::HEADLINE_CARD_SELECT_USA);
+          } else {
+            // ソ連の優位なし：USSR→USAの順で選択
+            states.emplace_back(StateType::HEADLINE_CARD_SELECT_USA);
+            states.emplace_back(StateType::HEADLINE_CARD_SELECT_USSR);
+          }
+          break;
+        }
+
+        case StateType::HEADLINE_CARD_SELECT_USSR: {
+          return {LegalMovesGenerator::headlineCardSelectLegalMoves(board,
+                                                                    Side::USSR),
+                  Side::USSR, std::nullopt};
+        }
+
+        case StateType::HEADLINE_CARD_SELECT_USA: {
+          return {LegalMovesGenerator::headlineCardSelectLegalMoves(board,
+                                                                    Side::USA),
+                  Side::USA, std::nullopt};
+        }
+
+        case StateType::HEADLINE_PROCESS_EVENTS: {
+          // 両側のヘッドラインカードを取得
+          CardEnum ussr_card_enum = board.getHeadlineCard(Side::USSR);
+          CardEnum usa_card_enum = board.getHeadlineCard(Side::USA);
+
+          if (ussr_card_enum != CardEnum::Dummy &&
+              usa_card_enum != CardEnum::Dummy) {
+            const auto& cardpool = board.getCardpool();
+            const auto& ussr_card =
+                cardpool[static_cast<size_t>(ussr_card_enum)];
+            const auto& usa_card = cardpool[static_cast<size_t>(usa_card_enum)];
+
+            int ussr_ops = ussr_card->getOps();
+            int usa_ops = usa_card->getOps();
+
+            // 作戦値を比較してイベント処理順序を決定
+            if (ussr_ops > usa_ops) {
+              // USSRから処理つまりUSAから積む
+              auto usa_events = usa_card->event(Side::USA);
+              for (auto& event : std::ranges::reverse_view(usa_events)) {
+                states.emplace_back(std::move(event));
+              }
+              auto ussr_events = ussr_card->event(Side::USSR);
+              for (auto& event : std::ranges::reverse_view(ussr_events)) {
+                states.emplace_back(std::move(event));
+              }
+            } else {
+              // USAから処理（同値の場合もUSAから）つまりUSSRから積む
+              auto ussr_events = ussr_card->event(Side::USSR);
+              for (auto& event : std::ranges::reverse_view(ussr_events)) {
+                states.emplace_back(std::move(event));
+              }
+              auto usa_events = usa_card->event(Side::USA);
+              for (auto& event : std::ranges::reverse_view(usa_events)) {
+                states.emplace_back(std::move(event));
+              }
+            }
+          }
+
+          // ヘッドラインカードをクリア
+          board.clearHeadlineCards();
+
           states.emplace_back(StateType::AR_USSR);
           break;
         }
 
-          /* HEADLINE など他のフェーズも同様に */
+          /* その他のフェーズ */
       }
     }
   }

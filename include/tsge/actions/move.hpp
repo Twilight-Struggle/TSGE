@@ -204,3 +204,19 @@ class ActionEventMove final : public Move {
     return other_cast != nullptr;
   }
 };
+
+class HeadlineCardSelectMove final : public Move {
+ public:
+  HeadlineCardSelectMove(CardEnum card, Side side) : Move{card, side} {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> toCommand(
+      const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    return this->getCard() == other.getCard() &&
+           this->getSide() == other.getSide() &&
+           dynamic_cast<const HeadlineCardSelectMove*>(&other) != nullptr;
+  }
+};

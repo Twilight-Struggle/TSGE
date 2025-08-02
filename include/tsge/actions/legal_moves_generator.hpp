@@ -26,4 +26,6 @@ class LegalMovesGenerator {
       const Board& board, Side side);
   static std::vector<std::unique_ptr<Move>> actionSpaceRaceLegalMoves(
       const Board& board, Side side);
+  static std::vector<std::unique_ptr<Move>> headlineCardSelectLegalMoves(
+      const Board& board, Side side);
 };

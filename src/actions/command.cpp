@@ -142,3 +142,7 @@ void ChangeVpCommand::apply(Board& board) const {
 }
 
 void RequestCommand::apply(Board& board) const {}
+
+void SetHeadlineCardCommand::apply(Board& board) const {
+  board.setHeadlineCard(side_, card_);
+}

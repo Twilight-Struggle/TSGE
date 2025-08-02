@@ -18,6 +18,14 @@ void addEventAfterAction(std::vector<CommandPtr>& commands,
   }
 }
 
+std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
+    const std::unique_ptr<Card>& card) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(
+      std::make_unique<SetHeadlineCardCommand>(getSide(), getCard()));
+  return commands;
+}
+
 std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
