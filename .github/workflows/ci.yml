@@ -92,6 +92,7 @@ jobs:
           -format=lcov \
           -instr-profile=default.profdata \
           -object ./build/board_test \
+          -object ./build/board_mcts_test \
           -object ./build/command_test \
           -object ./build/legal_moves_generator_test \
           -object ./build/move_test \

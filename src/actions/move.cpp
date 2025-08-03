@@ -22,14 +22,14 @@ std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(
-      std::make_unique<SetHeadlineCardCommand>(getSide(), getCard()));
+      std::make_shared<SetHeadlineCardCommand>(getSide(), getCard()));
   return commands;
 }
 
 std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
-  commands.emplace_back(std::make_unique<ActionPlaceInfluenceCommand>(
+  commands.emplace_back(std::make_shared<ActionPlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
   addEventAfterAction(commands, card, getSide());
   return commands;
@@ -39,7 +39,7 @@ std::vector<CommandPtr> ActionCoupMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(
-      std::make_unique<ActionCoupCommand>(getSide(), card, targetCountry_));
+      std::make_shared<ActionCoupCommand>(getSide(), card, targetCountry_));
   addEventAfterAction(commands, card, getSide());
   return commands;
 }
@@ -48,14 +48,14 @@ std::vector<CommandPtr> ActionSpaceRaceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(
-      std::make_unique<ActionSpaceRaceCommand>(getSide(), card));
+      std::make_shared<ActionSpaceRaceCommand>(getSide(), card));
   return commands;
 }
 
 std::vector<CommandPtr> ActionRealigmentMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
-  commands.emplace_back(std::make_unique<ActionRealigmentCommand>(
+  commands.emplace_back(std::make_shared<ActionRealigmentCommand>(
       getSide(), card, targetCountry_));
 
   // 最初の実行履歴を作成
@@ -63,7 +63,7 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
   // カードのOps数に応じてRequestコマンドを追加（最初の1回分は既に実行されるため-1）
   const int remaining_ops = card->getOps() - 1;
   if (remaining_ops > 0) {
-    commands.emplace_back(std::make_unique<RequestCommand>(
+    commands.emplace_back(std::make_shared<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(initial_history), ops = remaining_ops](
@@ -74,7 +74,7 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
   } else {
     // すべてのOpsを使い切った場合、追加Opsの処理
     // 実際の判定はLegalMovesGeneratorで行う
-    commands.emplace_back(std::make_unique<RequestCommand>(
+    commands.emplace_back(std::make_shared<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(initial_history)](
@@ -96,7 +96,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
     return {};
   }
   std::vector<CommandPtr> commands;
-  commands.emplace_back(std::make_unique<ActionRealigmentCommand>(
+  commands.emplace_back(std::make_shared<ActionRealigmentCommand>(
       getSide(), card, targetCountry_));
 
   // 実行履歴を更新
@@ -108,7 +108,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
 
   if (new_remaining_ops > 0) {
     // まだOpsが残っている場合は、次のRequestを生成
-    commands.emplace_back(std::make_unique<RequestCommand>(
+    commands.emplace_back(std::make_shared<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(updated_history), ops = new_remaining_ops,
@@ -120,7 +120,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
   } else {
     // すべてのOpsを使い切った場合、追加Opsの処理
     // 実際の判定はLegalMovesGeneratorで行う
-    commands.emplace_back(std::make_unique<RequestCommand>(
+    commands.emplace_back(std::make_shared<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(updated_history),
@@ -153,7 +153,7 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
   // non-event action
   if (card_side != player_side && card_side != Side::NEUTRAL) {
     // Add a RequestCommand for the player to choose Place/Realign/Coup action
-    commands.emplace_back(std::make_unique<RequestCommand>(
+    commands.emplace_back(std::make_shared<RequestCommand>(
         player_side,
         [card_enum = getCard(), side = player_side](
             const Board& board) -> std::vector<std::unique_ptr<Move>> {

@@ -95,6 +95,9 @@ class Board {
   [[nodiscard]]
   bool isHeadlineCardVisible(Side viewer, Side target) const;
 
+  [[nodiscard]]
+  Board copyForMCTS(Side viewerSide) const;
+
 #ifdef TEST
   void addCardToHand(Side side, CardEnum card) {
     playerHands_[static_cast<size_t>(side)].push_back(card);

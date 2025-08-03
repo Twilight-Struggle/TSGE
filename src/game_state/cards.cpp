@@ -8,11 +8,11 @@
 
 std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   std::vector<CommandPtr> commands;
-  commands.push_back(std::make_unique<ChangeDefconCommand>(-1));
-  commands.push_back(std::make_unique<LambdaCommand>([](Board& board) {
+  commands.push_back(std::make_shared<ChangeDefconCommand>(-1));
+  commands.push_back(std::make_shared<LambdaCommand>([](Board& board) {
     int current_defcon = board.getDefconTrack().getDefcon();
     int vp_change = (5 - current_defcon);
-    board.pushState(std::make_unique<ChangeVpCommand>(Side::USA, vp_change));
+    board.pushState(std::make_shared<ChangeVpCommand>(Side::USA, vp_change));
   }));
   return commands;
 }
@@ -45,11 +45,11 @@ bool NuclearTestBan::canEvent(const Board& board) const {
 
 std::vector<CommandPtr> NuclearTestBan::event(Side side) const {
   std::vector<CommandPtr> commands;
-  commands.push_back(std::make_unique<LambdaCommand>([side](Board& board) {
+  commands.push_back(std::make_shared<LambdaCommand>([side](Board& board) {
     int current_defcon = board.getDefconTrack().getDefcon();
     int vp_change = (current_defcon - 2);
-    board.pushState(std::make_unique<ChangeVpCommand>(side, vp_change));
+    board.pushState(std::make_shared<ChangeVpCommand>(side, vp_change));
   }));
-  commands.push_back(std::make_unique<ChangeDefconCommand>(2));
+  commands.push_back(std::make_shared<ChangeDefconCommand>(2));
   return commands;
 }

@@ -29,7 +29,7 @@ class Command {
   const Side side_;
 };
 
-using CommandPtr = std::unique_ptr<Command>;
+using CommandPtr = std::shared_ptr<Command>;
 
 class ActionPlaceInfluenceCommand final : public Command {
  public:

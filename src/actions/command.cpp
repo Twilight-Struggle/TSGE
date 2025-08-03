@@ -68,7 +68,7 @@ void ActionCoupCommand::apply(Board& board) const {
     target_country.addInfluence(side_, -influence_diff);
   }
   if (target_country.isBattleground()) {
-    board.pushState(std::make_unique<ChangeDefconCommand>(-1));
+    board.pushState(std::make_shared<ChangeDefconCommand>(-1));
   }
 }
 
@@ -91,10 +91,10 @@ void ActionSpaceRaceCommand::apply(Board& board) const {
             space_track.getSpaceTrackPosition(getOpponentSide(side_));
         if (opponent_position < i) {
           // 得点計算有利
-          board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_data[0]));
+          board.pushState(std::make_shared<ChangeVpCommand>(side_, vp_data[0]));
         } else {
           // 得点計算不利
-          board.pushState(std::make_unique<ChangeVpCommand>(side_, vp_data[1]));
+          board.pushState(std::make_shared<ChangeVpCommand>(side_, vp_data[1]));
         }
         break;
       }

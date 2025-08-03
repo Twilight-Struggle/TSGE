@@ -108,3 +108,29 @@ bool Board::isHeadlineCardVisible(Side viewer, Side target) const {
   // viewerがトラック4以上でtargetがトラック4未満の場合、targetのカードが見える
   return spaceTrack_.effectEnabled(viewer, 4);
 }
+
+Board Board::copyForMCTS(Side viewerSide) const {
+  // shared_ptrに変更したことで、完全なコピーコンストラクタが使用可能
+  Board copy = *this;
+
+  // 相手側のSideを取得
+  const Side opponent_side = getOpponentSide(viewerSide);
+
+  // 相手の手札を隠蔽（カード枚数は維持し、内容をDummyに置換）
+  // TODO: 将来activeEvents_メンバを追加して、CIA Createdなどのイベントによる
+  // 手札可視性の変更に対応する（例：activeEvents_にCIA_Createdが含まれている場合は隠蔽しない）
+  auto& opponent_hand = copy.playerHands_[static_cast<size_t>(opponent_side)];
+  for (auto& card : opponent_hand) {
+    card = CardEnum::Dummy;
+  }
+
+  // ヘッドラインカードの隠蔽
+  if (!copy.isHeadlineCardVisible(viewerSide, opponent_side)) {
+    copy.headlineCards_[static_cast<size_t>(opponent_side)] = CardEnum::Dummy;
+  }
+
+  // Randomizerの外部RNGポインタをリセット（MCTSで独自に設定される）
+  // copy.randomizer_.setRng(nullptr);
+
+  return copy;
+}

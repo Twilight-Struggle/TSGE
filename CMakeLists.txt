@@ -100,6 +100,7 @@ if(ENABLE_COVERAGE)
             COMMAND ${LLVM_COV} report 
                 -instr-profile=default.profdata 
                 $<TARGET_FILE:board_test>
+                $<TARGET_FILE:board_mcts_test>
                 $<TARGET_FILE:command_test> 
                 $<TARGET_FILE:legal_moves_generator_test>
                 $<TARGET_FILE:move_test>
@@ -118,6 +119,7 @@ if(ENABLE_COVERAGE)
                 -show-line-counts-or-regions
                 -show-expansions
                 -object $<TARGET_FILE:board_test>
+                -object $<TARGET_FILE:board_mcts_test>
                 -object $<TARGET_FILE:command_test>
                 -object $<TARGET_FILE:legal_moves_generator_test>
                 -object $<TARGET_FILE:move_test>
@@ -133,7 +135,7 @@ if(ENABLE_COVERAGE)
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS board_test command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test deck_test
+            DEPENDS board_test board_mcts_test command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test deck_test
         )
     endif()
 endif()
@@ -182,6 +184,7 @@ if(ENABLE_TESTING)
     endfunction()
 
     add_test_with_path(board_test tests/core/board_test.cpp)
+    add_test_with_path(board_mcts_test tests/core/board_mcts_test.cpp)
     add_test_with_path(command_test tests/actions/command_test.cpp)
     add_test_with_path(legal_moves_generator_test tests/actions/legal_moves_generator_test.cpp)
     add_test_with_path(move_test tests/actions/move_test.cpp)
