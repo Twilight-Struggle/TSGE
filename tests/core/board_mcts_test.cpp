@@ -191,7 +191,7 @@ TEST_F(BoardMCTSTest, CopyForMCTS_CopiesWorldMapAndDeckStates) {
       copy_world_map.getCountry(CountryEnum::JAPAN).getInfluence(Side::USSR),
       5);
 
-  // Deckの状態がコピーされていることを確認
+  // Deckのサイズがコピーされていることを確認
   auto& copy_deck = copy.getDeck();
   EXPECT_EQ(copy_deck.getDeck().size(), deck.getDeck().size());
 
@@ -202,4 +202,17 @@ TEST_F(BoardMCTSTest, CopyForMCTS_CopiesWorldMapAndDeckStates) {
   EXPECT_EQ(
       copy_world_map.getCountry(CountryEnum::JAPAN).getInfluence(Side::USSR),
       5);
+}
+
+TEST_F(BoardMCTSTest, CopyForMCTS_HidesDeck) {
+  auto& deck = board_.getDeck();
+  deck.addEarlyWarCards();
+  // USSRの視点でコピーを作成
+  Board ussr_copy = board_.copyForMCTS(Side::USSR);
+
+  // Deckは隠蔽される
+  EXPECT_EQ(ussr_copy.getDeck().getDeck().size(),
+            board_.getDeck().getDeck().size());
+  EXPECT_EQ(ussr_copy.getDeck().getDeck()[0], CardEnum::Dummy);
+  EXPECT_EQ(ussr_copy.getDeck().getDeck()[1], CardEnum::Dummy);
 }

@@ -124,6 +124,12 @@ Board Board::copyForMCTS(Side viewerSide) const {
     card = CardEnum::Dummy;
   }
 
+  // デッキは見えない
+  auto& deck = copy.getDeck().getDeck();
+  for (auto& card : deck) {
+    card = CardEnum::Dummy;
+  }
+
   // ヘッドラインカードの隠蔽
   if (!copy.isHeadlineCardVisible(viewerSide, opponent_side)) {
     copy.headlineCards_[static_cast<size_t>(opponent_side)] = CardEnum::Dummy;
