@@ -7,7 +7,7 @@ TestPolicy::TestPolicy(std::vector<std::unique_ptr<Move>>&& moves)
 
 std::unique_ptr<Move> TestPolicy::decideMove(
     const Board& /*board*/,
-    const std::vector<std::unique_ptr<Move>>& /*legal_moves*/) {
+    const std::vector<std::unique_ptr<Move>>& /*legal_moves*/, Side /*side*/) {
   if (currentMoveIndex_ >= moves_.size()) {
     throw std::runtime_error("No more moves available");
   }

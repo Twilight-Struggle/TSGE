@@ -50,7 +50,7 @@ void Game::next() {
 
     // プレイヤーの手を検証するループ
     while (true) {
-      pending = player.decideMove(board_, legalMoves);
+      pending = player.decideMove(board_, legalMoves, waitingForSide);
 
       // 返された手が合法手リストに含まれているかチェック
       bool is_legal = false;

@@ -10,9 +10,9 @@ template <typename DecisionPolicy>
 class Player {
  public:
   std::unique_ptr<Move> decideMove(
-      const Board& board,
-      const std::vector<std::unique_ptr<Move>>& legalMoves) {
-    return decision_policy_.decideMove(board, legalMoves);
+      const Board& board, const std::vector<std::unique_ptr<Move>>& legalMoves,
+      Side side) {
+    return decision_policy_.decideMove(board, legalMoves, side);
   }
 
  private:
