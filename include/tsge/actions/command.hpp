@@ -117,11 +117,11 @@ class ChangeVpCommand final : public Command {
 class RequestCommand final : public Command {
  public:
   RequestCommand(Side side,
-                 std::function<std::vector<std::unique_ptr<Move>>(const Board&)>
+                 std::function<std::vector<std::shared_ptr<Move>>(const Board&)>
                      legalMoves)
       : Command(side), legalMoves(std::move(legalMoves)) {}
 
-  std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;
+  std::function<std::vector<std::shared_ptr<Move>>(const Board&)> legalMoves;
   // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
   void apply(Board& board) const override;

@@ -6,26 +6,26 @@
 
 class LegalMovesGenerator {
  public:
-  static std::vector<std::unique_ptr<Move>> arLegalMoves(const Board& board,
+  static std::vector<std::shared_ptr<Move>> arLegalMoves(const Board& board,
                                                          Side side);
-  static std::vector<std::unique_ptr<Move>> realignmentRequestLegalMoves(
+  static std::vector<std::shared_ptr<Move>> realignmentRequestLegalMoves(
       const Board& board, Side side, CardEnum cardEnum,
       const std::vector<CountryEnum>& history, int remainingOps,
       AdditionalOpsType appliedAdditionalOps = AdditionalOpsType::NONE);
-  static std::vector<std::unique_ptr<Move>> additionalOpsRealignmentLegalMoves(
+  static std::vector<std::shared_ptr<Move>> additionalOpsRealignmentLegalMoves(
       const Board& board, Side side, CardEnum cardEnum,
       const std::vector<CountryEnum>& history,
       AdditionalOpsType appliedAdditionalOps);
-  static std::vector<std::unique_ptr<Move>> actionPlaceInfluenceLegalMoves(
+  static std::vector<std::shared_ptr<Move>> actionPlaceInfluenceLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> actionRealignmentLegalMoves(
+  static std::vector<std::shared_ptr<Move>> actionRealignmentLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> actionCoupLegalMoves(
+  static std::vector<std::shared_ptr<Move>> actionCoupLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> actionEventLegalMoves(
+  static std::vector<std::shared_ptr<Move>> actionEventLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> actionSpaceRaceLegalMoves(
+  static std::vector<std::shared_ptr<Move>> actionSpaceRaceLegalMoves(
       const Board& board, Side side);
-  static std::vector<std::unique_ptr<Move>> headlineCardSelectLegalMoves(
+  static std::vector<std::shared_ptr<Move>> headlineCardSelectLegalMoves(
       const Board& board, Side side);
 };

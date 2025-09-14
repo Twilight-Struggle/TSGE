@@ -36,16 +36,16 @@ class IllegalMovePolicy {
  public:
   IllegalMovePolicy();
 
-  std::unique_ptr<Move> decideMove(
+  std::shared_ptr<Move> decideMove(
       const Board& board,
-      const std::vector<std::unique_ptr<Move>>& legalMoves) {
+      const std::vector<std::shared_ptr<Move>>& legalMoves) {
     call_count_++;
 
     if (call_count_ <= 2) {
       // 最初の2回は不正な手を返す（存在しない国への影響力配置）
       std::map<CountryEnum, int> illegal_countries;
       illegal_countries[static_cast<CountryEnum>(999)] = 1;  // 存在しない国
-      return std::make_unique<ActionPlaceInfluenceMove>(
+      return std::make_shared<ActionPlaceInfluenceMove>(
           CardEnum::Dummy, Side::USSR, illegal_countries);
     }
     // 3回目以降は合法手を返す
@@ -60,16 +60,16 @@ class IllegalMovePolicy {
         // ActionPlaceInfluenceMoveの場合、適当な合法手を作成
         std::map<CountryEnum, int> countries;
         countries[CountryEnum::AFGHANISTAN] = 1;
-        return std::make_unique<ActionPlaceInfluenceMove>(
+        return std::make_shared<ActionPlaceInfluenceMove>(
             place_move->getCard(), place_move->getSide(), countries);
       }
 
       // 他の型の場合も同様に対応が必要だが、テストでは単純化
-      return std::make_unique<ActionEventMove>(CardEnum::Dummy, Side::USSR);
+      return std::make_shared<ActionEventMove>(CardEnum::Dummy, Side::USSR);
     }
 
     // フォールバック
-    return std::make_unique<ActionEventMove>(CardEnum::Dummy, Side::USSR);
+    return std::make_shared<ActionEventMove>(CardEnum::Dummy, Side::USSR);
   }
 
   [[nodiscard]]

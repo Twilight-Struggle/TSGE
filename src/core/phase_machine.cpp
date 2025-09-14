@@ -10,9 +10,9 @@
 
 /// 入力 (Move) がある場合はそれを使って１フェーズ進め，
 /// まだ入力が必要なら合法 Move を返す
-std::tuple<std::vector<std::unique_ptr<Move>>, Side, std::optional<Side>>
+std::tuple<std::vector<std::shared_ptr<Move>>, Side, std::optional<Side>>
 PhaseMachine::step(Board& board,
-                   std::optional<std::unique_ptr<Move>>&& answer) {
+                   std::optional<std::shared_ptr<Move>>&& answer) {
   auto& states = board.getStates();
 
   /*===============================
@@ -234,15 +234,15 @@ PhaseMachine::step(Board& board,
         }
 
         case StateType::USSR_WIN_END: {
-          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+          return {std::vector<std::shared_ptr<Move>>{}, Side::NEUTRAL,
                   Side::USSR};
         }
         case StateType::USA_WIN_END: {
-          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+          return {std::vector<std::shared_ptr<Move>>{}, Side::NEUTRAL,
                   Side::USA};
         }
         case StateType::DRAW_END: {
-          return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+          return {std::vector<std::shared_ptr<Move>>{}, Side::NEUTRAL,
                   Side::NEUTRAL};
         }
 
@@ -351,6 +351,6 @@ PhaseMachine::step(Board& board,
       }
     }
   }
-  return {std::vector<std::unique_ptr<Move>>{}, Side::NEUTRAL,
+  return {std::vector<std::shared_ptr<Move>>{}, Side::NEUTRAL,
           Side::NEUTRAL};  // スタックが空→ゲーム終了
 }

@@ -9,8 +9,8 @@ class Board;
 template <typename DecisionPolicy>
 class Player {
  public:
-  std::unique_ptr<Move> decideMove(
-      const Board& board, const std::vector<std::unique_ptr<Move>>& legalMoves,
+  std::shared_ptr<Move> decideMove(
+      const Board& board, const std::vector<std::shared_ptr<Move>>& legalMoves,
       Side side) {
     return decision_policy_.decideMove(board, legalMoves, side);
   }

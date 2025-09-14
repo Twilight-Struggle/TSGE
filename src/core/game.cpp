@@ -32,7 +32,7 @@ Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
 #endif
 
 void Game::next() {
-  std::optional<std::unique_ptr<Move>> pending;
+  std::optional<std::shared_ptr<Move>> pending;
   while (true) {
     auto [legalMoves, waitingForSide, winner] =
         PhaseMachine::step(board_, std::move(pending));
