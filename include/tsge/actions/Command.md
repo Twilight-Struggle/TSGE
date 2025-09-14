@@ -102,7 +102,7 @@ DEFCONレベルを変更するCommand。
 
 #### メンバ変数
 - `Side side_`: 要求対象プレイヤー
-- `std::function<std::vector<std::unique_ptr<Move>>(const Board&)> legalMoves;`: Requestの合法手を返すメソッド
+- `std::function<std::vector<std::shared_ptr<Move>>(const Board&)> legalMoves;`: Requestの合法手を返すメソッド
 
 #### apply()の処理
 何もしない

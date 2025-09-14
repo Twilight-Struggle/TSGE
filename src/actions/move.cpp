@@ -67,7 +67,7 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(initial_history), ops = remaining_ops](
-            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+            const Board& board) -> std::vector<std::shared_ptr<Move>> {
           return LegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, AdditionalOpsType::NONE);
         }));
@@ -78,7 +78,7 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(initial_history)](
-            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+            const Board& board) -> std::vector<std::shared_ptr<Move>> {
           return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
               board, side, card_enum, history, AdditionalOpsType::NONE);
         }));
@@ -113,7 +113,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
         [side = getSide(), card_enum = getCard(),
          history = std::move(updated_history), ops = new_remaining_ops,
          applied_ops = appliedAdditionalOps_](
-            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+            const Board& board) -> std::vector<std::shared_ptr<Move>> {
           return LegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, applied_ops);
         }));
@@ -125,7 +125,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
         [side = getSide(), card_enum = getCard(),
          history = std::move(updated_history),
          applied_ops = appliedAdditionalOps_](
-            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+            const Board& board) -> std::vector<std::shared_ptr<Move>> {
           return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
               board, side, card_enum, history, applied_ops);
         }));
@@ -156,7 +156,7 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
     commands.emplace_back(std::make_shared<RequestCommand>(
         player_side,
         [card_enum = getCard(), side = player_side](
-            const Board& board) -> std::vector<std::unique_ptr<Move>> {
+            const Board& board) -> std::vector<std::shared_ptr<Move>> {
           // TODO: This should be implemented in LegalMovesGenerator
           // For now, return empty vector as placeholder
           return {};

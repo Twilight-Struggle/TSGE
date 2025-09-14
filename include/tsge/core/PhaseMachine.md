@@ -18,14 +18,14 @@
 ```cpp
 class PhaseMachine {
 public:
-  static std::tuple<std::vector<std::unique_ptr<Move>>, Side, std::optional<Side>>
-  step(Board& board, std::optional<std::unique_ptr<Move>>&& answer = std::nullopt);
+  static std::tuple<std::vector<std::shared_ptr<Move>>, Side, std::optional<Side>>
+  step(Board& board, std::optional<std::shared_ptr<Move>>&& answer = std::nullopt);
 };
 ```
 
 ### step() メソッドの戻り値
 
-- **第1要素**: `std::vector<std::unique_ptr<Move>>` - 次のプレイヤーが選択可能な合法手のリスト
+- **第1要素**: `std::vector<std::shared_ptr<Move>>` - 次のプレイヤーが選択可能な合法手のリスト
 - **第2要素**: `Side` - 次に行動すべきプレイヤー（USSR/USA/NEUTRAL）
 - **第3要素**: `std::optional<Side>` - 勝者（ゲーム終了時のみ有効）
 

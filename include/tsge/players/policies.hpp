@@ -10,8 +10,8 @@ class TestPolicy {
  public:
   explicit TestPolicy(std::vector<std::unique_ptr<Move>>&& moves);
   TestPolicy() = default;
-  std::unique_ptr<Move> decideMove(
-      const Board&, const std::vector<std::unique_ptr<Move>>& legalMoves,
+  std::shared_ptr<Move> decideMove(
+      const Board&, const std::vector<std::shared_ptr<Move>>& legalMoves,
       Side side);
 
  private:

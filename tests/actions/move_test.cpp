@@ -22,7 +22,7 @@ class DummyCard : public Card {
   std::vector<CommandPtr> event(Side side) const override {
     // テスト用：イベントコマンドを1つ返す
     std::vector<CommandPtr> commands;
-    commands.emplace_back(std::make_unique<ChangeVpCommand>(side, 1));
+    commands.emplace_back(std::make_shared<ChangeVpCommand>(side, 1));
     return commands;
   }
 

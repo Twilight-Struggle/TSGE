@@ -138,7 +138,7 @@ void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
   }
 }
 
-std::vector<std::unique_ptr<Move>>
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
                                                     Side side) {
   const auto& hands = board.getPlayerHand(side);
@@ -169,7 +169,7 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
   std::map<Key, std::vector<std::map<CountryEnum, int>>, decltype(cmp)> cache(
       cmp);
 
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
 
   for (CardEnum card_enum : hands) {
     // Ops 0のカードは除外（スコアカード相当）
@@ -191,7 +191,7 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
       }
       results.reserve(results.size() + cache[key].size());
       for (const auto& pattern : cache[key]) {
-        results.emplace_back(std::make_unique<ActionPlaceInfluenceMove>(
+        results.emplace_back(std::make_shared<ActionPlaceInfluenceMove>(
             card_enum, side, pattern));
       }
     }
@@ -199,7 +199,7 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
   return results;
 }
 
-std::vector<std::unique_ptr<Move>>
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
                                                  Side side) {
   const auto& hands = board.getPlayerHand(side);
@@ -208,7 +208,7 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
   }
 
   const auto& world_map = board.getWorldMap();
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
 
   // DEFCON値を取得
   int defcon = board.getDefconTrack().getDefcon();
@@ -241,7 +241,7 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
       if (card->getOps() == 0) {
         continue;  // Opsが0のカードは除外
       }
-      results.emplace_back(std::make_unique<ActionRealigmentMove>(
+      results.emplace_back(std::make_shared<ActionRealigmentMove>(
           card_enum, side, country_enum));
     }
   }
@@ -249,14 +249,14 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
   return results;
 }
 
-std::vector<std::unique_ptr<Move>>
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::realignmentRequestLegalMoves(
     const Board& board, Side side, CardEnum cardEnum,
     const std::vector<CountryEnum>& history, int remainingOps,
     AdditionalOpsType appliedAdditionalOps) {
   const auto& world_map = board.getWorldMap();
 
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
   // 事前に容量を確保（最大で国数+1個のMOVEが生成される）
   results.reserve(world_map.getCountriesCount());
 
@@ -284,13 +284,13 @@ LegalMovesGenerator::realignmentRequestLegalMoves(
       continue;
     }
 
-    results.emplace_back(std::make_unique<RealignmentRequestMove>(
+    results.emplace_back(std::make_shared<RealignmentRequestMove>(
         cardEnum, side, country_enum, history, remainingOps,
         appliedAdditionalOps));
   }
   // RealignRequestMoveではUSSR=パスも選択可能
   if (!results.empty()) {
-    results.emplace_back(std::make_unique<RealignmentRequestMove>(
+    results.emplace_back(std::make_shared<RealignmentRequestMove>(
         cardEnum, side, CountryEnum::USSR, history, remainingOps,
         appliedAdditionalOps));
   }
@@ -298,12 +298,12 @@ LegalMovesGenerator::realignmentRequestLegalMoves(
   return results;
 }
 
-std::vector<std::unique_ptr<Move>>
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
     const Board& board, Side side, CardEnum cardEnum,
     const std::vector<CountryEnum>& history,
     AdditionalOpsType appliedAdditionalOps) {
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
   const auto& world_map = board.getWorldMap();
   Side opponent_side = getOpponentSide(side);
 
@@ -360,7 +360,7 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
         continue;
       }
 
-      results.emplace_back(std::make_unique<RealignmentRequestMove>(
+      results.emplace_back(std::make_shared<RealignmentRequestMove>(
           cardEnum, side, country_enum, history, 1, new_applied_ops));
     }
   }
@@ -389,20 +389,20 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
         continue;
       }
 
-      results.emplace_back(std::make_unique<RealignmentRequestMove>(
+      results.emplace_back(std::make_shared<RealignmentRequestMove>(
           cardEnum, side, country_enum, history, 1, new_applied_ops));
     }
   }
 
   if (!results.empty()) {
-    results.emplace_back(std::make_unique<RealignmentRequestMove>(
+    results.emplace_back(std::make_shared<RealignmentRequestMove>(
         cardEnum, side, CountryEnum::USSR, history, 1, appliedAdditionalOps));
   }
 
   return results;
 }
 
-std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
+std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
     const Board& board, Side side) {
   const auto& hands = board.getPlayerHand(side);
   if (hands.empty()) {
@@ -410,7 +410,7 @@ std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
   }
 
   const auto& world_map = board.getWorldMap();
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
 
   // DEFCON値を取得
   int defcon = board.getDefconTrack().getDefcon();
@@ -444,21 +444,21 @@ std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
         continue;  // Opsが0のカードは除外
       }
       results.emplace_back(
-          std::make_unique<ActionCoupMove>(card_enum, side, country_enum));
+          std::make_shared<ActionCoupMove>(card_enum, side, country_enum));
     }
   }
 
   return results;
 }
 
-std::vector<std::unique_ptr<Move>>
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionSpaceRaceLegalMoves(const Board& board, Side side) {
   const auto& hands = board.getPlayerHand(side);
   if (hands.empty()) {
     return {};
   }
 
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
   results.reserve(hands.size());
 
   for (CardEnum card_enum : hands) {
@@ -472,21 +472,21 @@ LegalMovesGenerator::actionSpaceRaceLegalMoves(const Board& board, Side side) {
     // canSpaceチェック（試行回数・位置8チェック込み）
     if (board.getSpaceTrack().canSpace(side, card->getOps())) {
       results.emplace_back(
-          std::make_unique<ActionSpaceRaceMove>(card_enum, side));
+          std::make_shared<ActionSpaceRaceMove>(card_enum, side));
     }
   }
 
   return results;
 }
 
-std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
+std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
     const Board& board, Side side) {
   const auto& hands = board.getPlayerHand(side);
   if (hands.empty()) {
     return {};
   }
 
-  std::vector<std::unique_ptr<Move>> results;
+  std::vector<std::shared_ptr<Move>> results;
   results.reserve(hands.size());
 
   for (CardEnum card_enum : hands) {
@@ -494,17 +494,17 @@ std::vector<std::unique_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
 
     // canEventチェック（中国カードは自動的にfalseで除外される）
     if (card->canEvent(board)) {
-      results.emplace_back(std::make_unique<ActionEventMove>(card_enum, side));
+      results.emplace_back(std::make_shared<ActionEventMove>(card_enum, side));
     }
   }
 
   return results;
 }
 
-std::vector<std::unique_ptr<Move>>
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::headlineCardSelectLegalMoves(const Board& board,
                                                   Side side) {
-  std::vector<std::unique_ptr<Move>> legal_moves;
+  std::vector<std::shared_ptr<Move>> legal_moves;
   const auto& hand = board.getPlayerHand(side);
   const auto& cardpool = board.getCardpool();
 
@@ -514,15 +514,15 @@ LegalMovesGenerator::headlineCardSelectLegalMoves(const Board& board,
     // TODO: UN Interventionを除外する処理を追加
     // なお発動条件を満たさないカードを選択することは可能
     legal_moves.emplace_back(
-        std::make_unique<HeadlineCardSelectMove>(card_enum, side));
+        std::make_shared<HeadlineCardSelectMove>(card_enum, side));
   }
 
   return legal_moves;
 }
 
-std::vector<std::unique_ptr<Move>> LegalMovesGenerator::arLegalMoves(
+std::vector<std::shared_ptr<Move>> LegalMovesGenerator::arLegalMoves(
     const Board& board, Side side) {
-  std::vector<std::unique_ptr<Move>> legal_moves;
+  std::vector<std::shared_ptr<Move>> legal_moves;
 
   auto place_influence_moves = actionPlaceInfluenceLegalMoves(board, side);
   auto realignment_moves = actionRealignmentLegalMoves(board, side);

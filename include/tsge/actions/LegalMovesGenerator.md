@@ -11,7 +11,7 @@
 - `side`: アクションを実行するプレイヤー側（USSR/USA）
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: 全ての合法な影響力配置の組み合わせ
+- `std::vector<std::shared_ptr<Move>>`: 全ての合法な影響力配置の組み合わせ
 
 ### 基本ルール
 
@@ -135,7 +135,7 @@
 - `side`: アクションを実行するプレイヤー側（USSR/USA）
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: 各手札から各対象国へのRealignmentMove
+- `std::vector<std::shared_ptr<Move>>`: 各手札から各対象国へのRealignmentMove
 
 ### 基本ルール
 
@@ -243,7 +243,7 @@ Realignmentアクション中の追加実行（2回目以降）の合法手を�
 - `appliedAdditionalOps`: 既に適用された追加Opsのフラグ（中国カード/ベトナム蜂起）
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: 次のRealignment実行またはパスの選択肢
+- `std::vector<std::shared_ptr<Move>>`: 次のRealignment実行またはパスの選択肢
 
 ### 基本ルール
 
@@ -356,7 +356,7 @@ RealignmentRequestMove(USSR, history:[日本], remainingOps:2) ← パス
 - `appliedAdditionalOps`: 既に適用された追加Opsのビットフラグ
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: 追加Opsによる追加Realignmentの選択肢
+- `std::vector<std::shared_ptr<Move>>`: 追加Opsによる追加Realignmentの選択肢
 - 条件を満たさない場合は空のvector
 
 ### 基本ルール
@@ -492,7 +492,7 @@ appliedAdditionalOps: NONE
 - `side`: アクションを実行するプレイヤー側（USSR/USA）
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: 各手札から各対象国へのCoupMove
+- `std::vector<std::shared_ptr<Move>>`: 各手札から各対象国へのCoupMove
 
 ### 基本ルール
 
@@ -635,7 +635,7 @@ DEFCON: 3
 - `side`: アクションを実行するプレイヤー側（USSR/USA）
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: 宇宙開発に使用可能な各カードのSpaceRaceMove
+- `std::vector<std::shared_ptr<Move>>`: 宇宙開発に使用可能な各カードのSpaceRaceMove
 
 ### 基本ルール
 
@@ -776,7 +776,7 @@ side: USSR
 - `side`: アクションを実行するプレイヤー側（USSR/USA）
 
 ### 出力
-- `std::vector<std::unique_ptr<Move>>`: イベントとして実行可能な各カードのEventMove
+- `std::vector<std::shared_ptr<Move>>`: イベントとして実行可能な各カードのEventMove
 
 ### 基本ルール
 

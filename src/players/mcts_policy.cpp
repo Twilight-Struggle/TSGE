@@ -476,13 +476,13 @@ std::shared_ptr<Move> MCTSExecutor::selectBestMove(
                 child->getLastMove())) {
           move_key += "_place";
           if (move_key == best_move_key) {
-            return std::make_unique<ActionPlaceInfluenceMove>(*place_move);
+            return std::make_shared<ActionPlaceInfluenceMove>(*place_move);
           }
         } else if (auto* coup_move = dynamic_cast<const ActionCoupMove*>(
                        child->getLastMove())) {
           move_key += "_coup";
           if (move_key == best_move_key) {
-            return std::make_unique<ActionCoupMove>(*coup_move);
+            return std::make_shared<ActionCoupMove>(*coup_move);
           }
         }
         // 他の型も同様に処理

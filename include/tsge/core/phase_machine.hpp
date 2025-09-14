@@ -8,8 +8,8 @@
 
 class PhaseMachine {
  public:
-  static std::tuple<std::vector<std::unique_ptr<Move>>, Side,
+  static std::tuple<std::vector<std::shared_ptr<Move>>, Side,
                     std::optional<Side>>
   step(Board& board,
-       std::optional<std::unique_ptr<Move>>&& answer = std::nullopt);
+       std::optional<std::shared_ptr<Move>>&& answer = std::nullopt);
 };
