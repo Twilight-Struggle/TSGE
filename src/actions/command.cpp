@@ -99,9 +99,7 @@ void ActionSpaceRaceCommand::apply(Board& board) const {
         break;
       }
     }
-    if (new_position == 8) {
-      board.getActionRoundTrack().setExtraActionRound(side_);
-    }
+    board.getActionRoundTrack().updateExtraActionRound(space_track);
   }
   space_track.spaceTried(side_);
 }

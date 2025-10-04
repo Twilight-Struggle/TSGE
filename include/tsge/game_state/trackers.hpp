@@ -172,6 +172,21 @@ class ActionRoundTrack {
     extraActionRound_[static_cast<std::size_t>(side)] = false;
   }
 
+  // 宇宙トラック8到達時の追加行動権と、相手側の追い付きによる権利喪失を常に同期する。
+  // - SideごとにSpaceTrack::effectEnabled(side, 8)
+  // を評価し、優位時のみ権利をセットする。
+  // - 相手が同値以上であればクリアし、不要な追加ラウンド発火を防ぐ。
+  void updateExtraActionRound(const SpaceTrack& spaceTrack) {
+    for (const auto side : {Side::USSR, Side::USA}) {
+      const bool should_enable = spaceTrack.effectEnabled(side, 8);
+      if (should_enable) {
+        setExtraActionRound(side);
+      } else {
+        clearExtraActionRound(side);
+      }
+    }
+  }
+
  private:
   std::array<int, 2> actionRound_ = {0, 0};
   std::array<int, 10> actionRoundsByTurn_ = {6, 6, 6, 7, 7, 7, 7, 7, 7, 7};

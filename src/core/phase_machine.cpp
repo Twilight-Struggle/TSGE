@@ -262,13 +262,8 @@ PhaseMachine::step(Board& board,
         }
 
         case StateType::TURN_START: {
-          // Check if either side has space track position 8
-          if (board.getSpaceTrack().getSpaceTrackPosition(Side::USSR) == 8) {
-            board.getActionRoundTrack().setExtraActionRound(Side::USSR);
-          }
-          if (board.getSpaceTrack().getSpaceTrackPosition(Side::USA) == 8) {
-            board.getActionRoundTrack().setExtraActionRound(Side::USA);
-          }
+          board.getActionRoundTrack().updateExtraActionRound(
+              board.getSpaceTrack());
 
           // TODO: NorthSeaOil check for USA
 

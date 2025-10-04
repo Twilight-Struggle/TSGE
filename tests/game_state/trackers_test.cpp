@@ -205,3 +205,28 @@ TEST_F(TrackTest, ActionRoundTrackTest) {
   EXPECT_EQ(actionRoundTrack.getActionRound(Side::USSR), 0);
   EXPECT_EQ(actionRoundTrack.getActionRound(Side::USA), 0);
 }
+
+TEST_F(TrackTest, ExtraActionRoundEnablesOnlyWhenAheadAtEight) {
+  // 初期状態ではどちらの陣営にも追加アクション権がないことを確認。
+  actionRoundTrack.updateExtraActionRound(spaceTrack);
+  EXPECT_FALSE(actionRoundTrack.hasExtraActionRound(Side::USSR));
+  EXPECT_FALSE(actionRoundTrack.hasExtraActionRound(Side::USA));
+
+  // USSRがスペーストラック8に到達し、USAが未到達ならUSSRのみ権利を得る。
+  spaceTrack.advanceSpaceTrack(Side::USSR, 8);
+  actionRoundTrack.updateExtraActionRound(spaceTrack);
+  EXPECT_TRUE(actionRoundTrack.hasExtraActionRound(Side::USSR));
+  EXPECT_FALSE(actionRoundTrack.hasExtraActionRound(Side::USA));
+}
+
+TEST_F(TrackTest, ExtraActionRoundDisablesWhenOpponentCatchesUp) {
+  // USSRがリードして権利を取得した直後にUSAが追い付いた場合、双方の権利が失われる。
+  spaceTrack.advanceSpaceTrack(Side::USSR, 8);
+  actionRoundTrack.updateExtraActionRound(spaceTrack);
+  EXPECT_TRUE(actionRoundTrack.hasExtraActionRound(Side::USSR));
+
+  spaceTrack.advanceSpaceTrack(Side::USA, 8);
+  actionRoundTrack.updateExtraActionRound(spaceTrack);
+  EXPECT_FALSE(actionRoundTrack.hasExtraActionRound(Side::USSR));
+  EXPECT_FALSE(actionRoundTrack.hasExtraActionRound(Side::USA));
+}
