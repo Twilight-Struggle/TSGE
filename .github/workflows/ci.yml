@@ -102,6 +102,7 @@ jobs:
           -object ./build/trackers_test \
           -object ./build/cards_test \
           -object ./build/deck_test \
+          -object ./build/tsnnmcts_policy_test \
           > coverage.lcov
 
         # lcovファイルの内容を確認（デバッグ用）

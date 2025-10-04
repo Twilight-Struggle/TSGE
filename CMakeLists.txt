@@ -46,6 +46,7 @@ add_library(ts_core
     src/game_state/world_map_constants.cpp
     src/game_state/cards.cpp
     src/game_state/deck.cpp
+    src/players/tsnnmcts.cpp
     src/players/policies.cpp
     src/utils/randomizer.cpp
 )
@@ -110,6 +111,7 @@ if(ENABLE_COVERAGE)
                 $<TARGET_FILE:trackers_test> 
                 $<TARGET_FILE:cards_test>
                 $<TARGET_FILE:deck_test>
+                $<TARGET_FILE:tsnnmcts_policy_test>
                 
             # HTMLレポート
             COMMAND ${LLVM_COV} show 
@@ -129,6 +131,7 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:trackers_test>
                 -object $<TARGET_FILE:cards_test>
                 -object $<TARGET_FILE:deck_test>
+                -object $<TARGET_FILE:tsnnmcts_policy_test>
 
             # カバレッジサマリーを表示
             COMMAND ${CMAKE_COMMAND} -E echo "Coverage report generated in: ${CMAKE_BINARY_DIR}/coverage_report/index.html"
@@ -194,4 +197,5 @@ if(ENABLE_TESTING)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
     add_test_with_path(cards_test tests/game_state/cards_test.cpp)
     add_test_with_path(deck_test tests/game_state/deck_test.cpp)
+    add_test_with_path(tsnnmcts_policy_test tests/players/tsnnmcts_policy_test.cpp)
 endif()
