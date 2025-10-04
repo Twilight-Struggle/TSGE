@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "tsge/core/board.hpp"
 #include "tsge/game_state/card.hpp"
 
@@ -27,9 +29,14 @@ class PhaseMachineTest : public ::testing::Test {
 
   static const std::array<std::unique_ptr<Card>, 111>& defaultCardPool() {
     static std::array<std::unique_ptr<Card>, 111> pool{};
-    if (!pool[0]) {
-      // Create a dummy card for testing
-      pool[0] = std::make_unique<DummyCard>();
+    static bool initialized = false;
+    if (!initialized) {
+      for (auto& card : pool) {
+        if (!card) {
+          card = std::make_unique<DummyCard>();
+        }
+      }
+      initialized = true;
     }
     return pool;
   }
@@ -86,5 +93,37 @@ TEST_F(PhaseMachineTest, HeadlinePhaseSpaceAdvantage) {
 
   // USAが先に選択することを期待（劣位側が先）
   EXPECT_EQ(std::get<1>(result), Side::USA);
+  EXPECT_FALSE(std::get<0>(result).empty());
+}
+
+// 合法手が存在しないARは自動的に完了へ遷移する
+TEST_F(PhaseMachineTest, ActionRoundSkipsWhenNoLegalMoves) {
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USA, CardEnum::DuckAndCover);
+
+  board.pushState(StateType::AR_USSR);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(std::get<1>(result), Side::USA);
+  EXPECT_FALSE(std::get<0>(result).empty());
+  EXPECT_EQ(board.getActionRoundTrack().getActionRound(Side::USSR), 1);
+  EXPECT_EQ(board.getActionRoundTrack().getActionRound(Side::USA), 0);
+}
+
+// RequestCommandが合法手を返さない場合でもフェーズが前進する
+TEST_F(PhaseMachineTest, RequestCommandWithNoLegalMovesIsDiscarded) {
+  board.clearHand(Side::USSR);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+
+  board.pushState(StateType::AR_USSR);
+  board.pushState(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [](const Board&) { return std::vector<std::shared_ptr<Move>>{}; }));
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(std::get<1>(result), Side::USSR);
   EXPECT_FALSE(std::get<0>(result).empty());
 }

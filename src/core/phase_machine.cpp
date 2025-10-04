@@ -45,9 +45,12 @@ PhaseMachine::step(Board& board,
       // A) Request なら入力待ち
       // cmdPtrがRequestなら
       if (auto* req = dynamic_cast<RequestCommand*>(cmd_ptr->get())) {
-        // TODO:
-        // req->legalMoves(board)={}の可能性があるのでこの場合はPhaseを進める処理が必要
-        return {req->legalMoves(board), req->getSide(), std::nullopt};
+        auto legal_moves = req->legalMoves(board);
+        if (legal_moves.empty()) {
+          states.pop_back();
+          continue;
+        }
+        return {std::move(legal_moves), req->getSide(), std::nullopt};
       }
       (*cmd_ptr)->apply(board);
       // board.history.push_back(*cmdPtr);  // undo ログ
@@ -66,9 +69,12 @@ PhaseMachine::step(Board& board,
           board.setCurrentArPlayer(side);  // 現在のARプレイヤーを記録
           // Push the corresponding AR_COMPLETE state
           states.emplace_back(StateType::AR_USSR_COMPLETE);
-          // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
-          return {LegalMovesGenerator::arLegalMoves(board, side), side,
+          auto legal_moves = LegalMovesGenerator::arLegalMoves(board, side);
+          if (legal_moves.empty()) {
+            continue;
+          }
+          return {std::move(legal_moves), side,
                   std::nullopt};  // 合法手を返して停止
         }
         case StateType::AR_USA: {
@@ -76,9 +82,12 @@ PhaseMachine::step(Board& board,
           board.setCurrentArPlayer(side);  // 現在のARプレイヤーを記録
           // Push the corresponding AR_COMPLETE state
           states.emplace_back(StateType::AR_USA_COMPLETE);
-          // TODO:
           // 手札が空等で合法手={}の場合があるためこの場合はPhaseを進める処理が必要
-          return {LegalMovesGenerator::arLegalMoves(board, side), side,
+          auto legal_moves = LegalMovesGenerator::arLegalMoves(board, side);
+          if (legal_moves.empty()) {
+            continue;
+          }
+          return {std::move(legal_moves), side,
                   std::nullopt};  // 合法手を返して停止
         }
 
@@ -201,8 +210,11 @@ PhaseMachine::step(Board& board,
           // TODO: Add pass option to the legal moves list
           // For now, return normal AR legal moves (pass functionality to be
           // added)
-          return {LegalMovesGenerator::arLegalMoves(board, side), side,
-                  std::nullopt};
+          auto legal_moves = LegalMovesGenerator::arLegalMoves(board, side);
+          if (legal_moves.empty()) {
+            continue;
+          }
+          return {std::move(legal_moves), side, std::nullopt};
         }
         case StateType::EXTRA_AR_USA: {
           Side side = Side::USA;
@@ -218,8 +230,11 @@ PhaseMachine::step(Board& board,
           // TODO: Add pass option to the legal moves list
           // For now, return normal AR legal moves (pass functionality to be
           // added)
-          return {LegalMovesGenerator::arLegalMoves(board, side), side,
-                  std::nullopt};
+          auto legal_moves = LegalMovesGenerator::arLegalMoves(board, side);
+          if (legal_moves.empty()) {
+            continue;
+          }
+          return {std::move(legal_moves), side, std::nullopt};
         }
 
         case StateType::TURN_END: {
