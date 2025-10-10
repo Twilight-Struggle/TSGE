@@ -1,9 +1,40 @@
+// どこで: tests/actions/command_test.cpp
+// 何を: Command適用ロジックとRequestCommandの契約を検証する単体テスト
+// なぜ: 各種コマンドの仕様を退行から守り、入力要求の基本挙動を固定するため
+
 #include "tsge/actions/command.hpp"
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <random>
+
+#include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/game_state/card.hpp"
+
+// RequestCommandのlegalMoves戻り値を追跡するための簡易Move実装
+class StubMove final : public Move {
+ public:
+  StubMove(Side side, int identifier)
+      : Move(CardEnum::Dummy, side), identifier_(identifier) {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> toCommand(
+      const std::unique_ptr<Card>& /*card*/) const override {
+    return {};
+  }
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    const auto* other_cast = dynamic_cast<const StubMove*>(&other);
+    return other_cast != nullptr && identifier_ == other_cast->identifier_ &&
+           getSide() == other_cast->getSide();
+  }
+
+ private:
+  int identifier_;
+};
 
 // Dummy card class for testing
 class DummyCard : public Card {
@@ -107,6 +138,71 @@ TEST_F(CommandTest, CoupTest) {
   ActionCoupCommand action_can_coup_usa(Side::USA, board.getCardpool()[0],
                                         CountryEnum::NORTH_KOREA);
   action_can_coup_usa.apply(board);
+}
+
+TEST_F(CommandTest, SpaceRaceCommandSuccessAdvancesTrackAndAwardsVp) {
+  // ロール最大値以下になるシードを探索し、成功パスを確実に再現する
+  auto& space_track = board.getSpaceTrack();
+  const int roll_max = space_track.getRollMax(Side::USSR);
+  std::uniform_int_distribution<int> dice(1, 6);
+  std::mt19937_64 success_rng;
+  int success_roll = 0;
+  for (std::mt19937_64::result_type seed = 0; seed < 1000; ++seed) {
+    std::mt19937_64 candidate(seed);
+    auto candidate_copy = candidate;
+    const int roll = dice(candidate_copy);
+    if (roll <= roll_max) {
+      success_rng = candidate;
+      success_roll = roll;
+      break;
+    }
+  }
+  ASSERT_NE(success_roll, 0);
+
+  // 成功時は進行が+1され、VP変化コマンドがpushされることを検証する
+  board.getRandomizer().setRng(&success_rng);
+  ActionSpaceRaceCommand action(Side::USSR, board.getCardpool()[0]);
+  action.apply(board);
+  board.getRandomizer().setRng(nullptr);
+
+  EXPECT_EQ(space_track.getSpaceTrackPosition(Side::USSR), 1);
+  auto& states = board.getStates();
+  ASSERT_EQ(states.size(), 1);
+  ASSERT_TRUE(std::holds_alternative<CommandPtr>(states.back()));
+  auto change_vp_ptr = std::get<CommandPtr>(states.back());
+  ASSERT_NE(change_vp_ptr, nullptr);
+  auto* change_vp_cmd = dynamic_cast<ChangeVpCommand*>(change_vp_ptr.get());
+  ASSERT_NE(change_vp_cmd, nullptr);
+}
+
+TEST_F(CommandTest, SpaceRaceCommandFailureDoesNotAdvanceTrack) {
+  // ロール最大値を超えるシードを探索し、失敗パスを再現する
+  auto& space_track = board.getSpaceTrack();
+  const int roll_max = space_track.getRollMax(Side::USSR);
+  std::uniform_int_distribution<int> dice(1, 6);
+  std::mt19937_64 failure_rng;
+  int failure_roll = 0;
+  for (std::mt19937_64::result_type seed = 0; seed < 1000; ++seed) {
+    std::mt19937_64 candidate(seed);
+    auto candidate_copy = candidate;
+    const int roll = dice(candidate_copy);
+    if (roll > roll_max) {
+      failure_rng = candidate;
+      failure_roll = roll;
+      break;
+    }
+  }
+  ASSERT_GT(failure_roll, roll_max);
+
+  // 失敗時は位置維持かつstate未追加で、spaceTried実行による挑戦不可を確認
+  board.getRandomizer().setRng(&failure_rng);
+  ActionSpaceRaceCommand action(Side::USSR, board.getCardpool()[0]);
+  action.apply(board);
+  board.getRandomizer().setRng(nullptr);
+
+  EXPECT_EQ(space_track.getSpaceTrackPosition(Side::USSR), 0);
+  EXPECT_TRUE(board.getStates().empty());
+  EXPECT_FALSE(space_track.canSpaceChallenge(Side::USSR));
 }
 
 TEST_F(CommandTest, ChangeDefconCommandTest) {
@@ -250,4 +346,37 @@ TEST_F(CommandTest, BoardArPlayerManagementTest) {
   // NEUTRALに戻す
   board.setCurrentArPlayer(Side::NEUTRAL);
   EXPECT_EQ(board.getCurrentArPlayer(), Side::NEUTRAL);
+}
+
+TEST_F(CommandTest, RequestCommandLegalMovesLambdaIsInvoked) {
+  // Arrange: legalMovesラムダが呼ばれた回数と参照を追跡
+  int call_count = 0;
+  const Board* observed_board = nullptr;
+  auto expected_move = std::make_shared<StubMove>(Side::USA, 42);
+
+  RequestCommand command(Side::USA, [this, &call_count, &observed_board,
+                                     expected_move](const Board& ref) {
+    ++call_count;
+    observed_board = &ref;
+    return std::vector<std::shared_ptr<Move>>{expected_move};
+  });
+
+  // Act: legalMovesを実行し戻り値を取得
+  const auto moves = command.legalMoves(board);
+
+  // Assert: ラムダが1回だけ呼ばれ、返されたMoveが期待通り
+  ASSERT_EQ(call_count, 1);
+  ASSERT_EQ(observed_board, &board);
+  ASSERT_EQ(moves.size(), 1U);
+  EXPECT_EQ(moves.front(), expected_move);
+}
+
+TEST_F(CommandTest, RequestCommandGetSide) {
+  // Arrange: USSR側で初期化し、legalMovesは空コレクションを返す
+  RequestCommand command(Side::USSR, [](const Board&) {
+    return std::vector<std::shared_ptr<Move>>{};
+  });
+
+  // Assert: getSide()が注入されたSideをそのまま返す
+  EXPECT_EQ(command.getSide(), Side::USSR);
 }

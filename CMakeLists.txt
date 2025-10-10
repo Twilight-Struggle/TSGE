@@ -79,14 +79,12 @@ if(ENABLE_COVERAGE)
     endif()
 
     # カバレッジフラグの設定
-    target_compile_options(ts_core PRIVATE 
+    target_compile_options(ts_core PRIVATE
         -fprofile-instr-generate
         -fcoverage-mapping
         -mllvm -enable-name-compression=false
-        -fprofile-arcs  # 追加：関数カバレッジ用
-        -ftest-coverage # 追加：テストカバレッジ用
     )
-    target_link_options(ts_core PRIVATE -fprofile-instr-generate -fprofile-arcs)
+    target_link_options(ts_core PRIVATE -fprofile-instr-generate)
     
     if(ENABLE_TESTING)
         find_program(LLVM_COV llvm-cov REQUIRED)
@@ -98,28 +96,10 @@ if(ENABLE_COVERAGE)
             COMMAND ${LLVM_PROFDATA} merge -sparse *.profraw -o default.profdata
             
             # テキストレポート
-            COMMAND ${LLVM_COV} report 
-                -instr-profile=default.profdata 
-                $<TARGET_FILE:board_test>
-                $<TARGET_FILE:board_mcts_test>
-                $<TARGET_FILE:command_test> 
-                $<TARGET_FILE:legal_moves_generator_test>
-                $<TARGET_FILE:move_test>
-                $<TARGET_FILE:phase_machine_test>
-                $<TARGET_FILE:world_map_test> 
-                $<TARGET_FILE:country_test>
-                $<TARGET_FILE:trackers_test> 
-                $<TARGET_FILE:cards_test>
-                $<TARGET_FILE:deck_test>
-                $<TARGET_FILE:tsnnmcts_policy_test>
-                
-            # HTMLレポート
-            COMMAND ${LLVM_COV} show 
-                -instr-profile=default.profdata 
-                -format=html 
-                -output-dir=coverage_report
-                -show-line-counts-or-regions
-                -show-expansions
+            COMMAND ${LLVM_COV} report
+                --instr-profile=default.profdata
+                -object $<TARGET_FILE:trackers_test>
+                -object $<TARGET_FILE:country_test>
                 -object $<TARGET_FILE:board_test>
                 -object $<TARGET_FILE:board_mcts_test>
                 -object $<TARGET_FILE:command_test>
@@ -127,8 +107,27 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:move_test>
                 -object $<TARGET_FILE:phase_machine_test>
                 -object $<TARGET_FILE:world_map_test>
-                -object $<TARGET_FILE:country_test>
+                -object $<TARGET_FILE:cards_test>
+                -object $<TARGET_FILE:deck_test>
+                -object $<TARGET_FILE:tsnnmcts_policy_test>
+                
+            # HTMLレポート
+            COMMAND ${LLVM_COV} show
+                $<TARGET_FILE:country_test>
+                -instr-profile=default.profdata
+                -format=html
+                -output-dir=coverage_report
+                -show-line-counts-or-regions
+                -show-instantiations
+                -show-expansions
                 -object $<TARGET_FILE:trackers_test>
+                -object $<TARGET_FILE:board_test>
+                -object $<TARGET_FILE:board_mcts_test>
+                -object $<TARGET_FILE:command_test>
+                -object $<TARGET_FILE:legal_moves_generator_test>
+                -object $<TARGET_FILE:move_test>
+                -object $<TARGET_FILE:phase_machine_test>
+                -object $<TARGET_FILE:world_map_test>
                 -object $<TARGET_FILE:cards_test>
                 -object $<TARGET_FILE:deck_test>
                 -object $<TARGET_FILE:tsnnmcts_policy_test>
@@ -177,13 +176,15 @@ if(ENABLE_TESTING)
             target_compile_options(${TEST_NAME} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
             target_link_options(${TEST_NAME} PRIVATE -fprofile-instr-generate)
         endif()
-        gtest_discover_tests(${TEST_NAME})
+        set(_gtest_discover_props)
         if(ENABLE_COVERAGE)
             # テスト実行時のプロファイルファイル出力先を設定
-            gtest_discover_tests(${TEST_NAME}
-                PROPERTIES ENVIRONMENT "LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/${TEST_NAME}_%p.profraw"
+            list(APPEND _gtest_discover_props
+                PROPERTIES
+                    ENVIRONMENT "LLVM_PROFILE_FILE=${CMAKE_BINARY_DIR}/${TEST_NAME}_%p.profraw"
             )
         endif()
+        gtest_discover_tests(${TEST_NAME} ${_gtest_discover_props})
     endfunction()
 
     add_test_with_path(board_test tests/core/board_test.cpp)

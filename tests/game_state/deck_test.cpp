@@ -1,3 +1,7 @@
+// どこで: tests/game_state
+// 何を: Deckクラスのアクセサとカード管理の挙動を検証するテスト群
+// なぜ: デッキ状態の整合性とアクセサのカバレッジを確保するため
+
 #include "tsge/game_state/deck.hpp"
 
 #include <gtest/gtest.h>
@@ -131,4 +135,40 @@ TEST_F(DeckTest, BoardIntegration) {
   const Board& const_board = board;
   const auto& const_deck = const_board.getDeck();
   EXPECT_EQ(30, const_deck.getDeck().size());
+}
+
+TEST_F(DeckTest, DiscardPileAccessorsConsistency) {
+  Randomizer randomizer;
+  Deck deck(randomizer, cardpool_);
+
+  // 非constアクセサを通じて捨て札にカードを積み上げる
+  auto& discard_mutable = deck.getDiscardPile();
+  discard_mutable.push_back(CardEnum::Dummy);
+  discard_mutable.push_back(CardEnum::Dummy);
+
+  // constアクセサが同じメモリ領域を参照し、内容も一致することを検証
+  const Deck& const_deck = deck;
+  const auto& discard_const = const_deck.getDiscardPile();
+  EXPECT_EQ(2, discard_const.size());
+  EXPECT_EQ(static_cast<const void*>(&discard_mutable),
+            static_cast<const void*>(&discard_const));
+  EXPECT_EQ(discard_mutable[0], discard_const[0]);
+  EXPECT_EQ(discard_mutable[1], discard_const[1]);
+}
+
+TEST_F(DeckTest, RemovedCardsAccessorsConsistency) {
+  Randomizer randomizer;
+  Deck deck(randomizer, cardpool_);
+
+  // 非constアクセサを通じて除外カードを記録する
+  auto& removed_mutable = deck.getRemovedCards();
+  removed_mutable.push_back(CardEnum::Dummy);
+
+  // constアクセサが同じコンテナを参照し、内容が共有されていることを確認
+  const Deck& const_deck = deck;
+  const auto& removed_const = const_deck.getRemovedCards();
+  EXPECT_EQ(1, removed_const.size());
+  EXPECT_EQ(static_cast<const void*>(&removed_mutable),
+            static_cast<const void*>(&removed_const));
+  EXPECT_EQ(removed_mutable.front(), removed_const.front());
 }
