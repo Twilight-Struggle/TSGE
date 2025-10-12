@@ -63,6 +63,18 @@ class Board {
     return playerHands_[static_cast<size_t>(side)];
   }
   [[nodiscard]]
+  CardEnum getHeadlineCard(Side side) const {
+    return headlineCards_[static_cast<size_t>(side)];
+  }
+  [[nodiscard]]
+  const std::set<CardEnum>& getCardEffectsInProgress() const {
+    return cardEffectsInProgress_;
+  }
+  [[nodiscard]]
+  const std::vector<CardEnum>& getCardsEffectsInThisTurn(Side side) const {
+    return cardsEffectsInThisTurn_[static_cast<size_t>(side)];
+  }
+  [[nodiscard]]
   int getVp() const {
     return vp_;
   }
@@ -74,17 +86,7 @@ class Board {
   void pushState(std::variant<StateType, CommandPtr>&& state) {
     states_.emplace_back(std::move(state));
   }
-  void changeVp(int delta) { vp_ += delta; }
-  void setCurrentArPlayer(Side side) { currentArPlayer_ = side; }
 
-  [[nodiscard]]
-  std::array<int, 2> calculateDrawCount(int turn) const;
-  void drawCardsForPlayers(int ussrDrawCount, int usaDrawCount);
-
-  [[nodiscard]]
-  CardEnum getHeadlineCard(Side side) const {
-    return headlineCards_[static_cast<size_t>(side)];
-  }
   void setHeadlineCard(Side side, CardEnum card) {
     headlineCards_[static_cast<size_t>(side)] = card;
   }
@@ -95,6 +97,27 @@ class Board {
   [[nodiscard]]
   bool isHeadlineCardVisible(Side viewer, Side target) const;
 
+  void addCardEffectInProgress(CardEnum cardEnum) {
+    cardEffectsInProgress_.insert(cardEnum);
+  }
+  void removeCardEffectInProgress(CardEnum cardEnum) {
+    cardEffectsInProgress_.erase(cardEnum);
+  }
+  void addCardEffectInThisTurn(Side side, CardEnum cardEnum) {
+    cardsEffectsInThisTurn_[static_cast<size_t>(side)].push_back(cardEnum);
+  }
+  void clearCardsEffectsInThisTurn() {
+    for (auto& vec : cardsEffectsInThisTurn_) {
+      vec.clear();
+    }
+  }
+
+  void changeVp(int delta) { vp_ += delta; }
+  void setCurrentArPlayer(Side side) { currentArPlayer_ = side; }
+
+  [[nodiscard]]
+  std::array<int, 2> calculateDrawCount(int turn) const;
+  void drawCardsForPlayers(int ussrDrawCount, int usaDrawCount);
   [[nodiscard]]
   Board copyForMCTS(Side viewerSide) const;
 
@@ -118,6 +141,8 @@ class Board {
   Deck deck_;
   std::array<std::vector<CardEnum>, 2> playerHands_;
   std::array<CardEnum, 2> headlineCards_ = {CardEnum::Dummy, CardEnum::Dummy};
+  std::set<CardEnum> cardEffectsInProgress_;
+  std::array<std::vector<CardEnum>, 2> cardsEffectsInThisTurn_;
   int vp_ = 0;
   Side currentArPlayer_ = Side::NEUTRAL;
 };
