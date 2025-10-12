@@ -63,7 +63,7 @@ void processAnswer(Board& board, StateStack& states,
 MaybeStepOutput handleCommandOnTop(Board& board, StateStack& states) {
   auto& top_variant = states.back();
   auto* command_ptr = std::get_if<CommandPtr>(&top_variant);
-  if (command_ptr == nullptr) {
+  if (command_ptr == nullptr) [[unlikely]] {
     return std::nullopt;
   }
 
@@ -146,7 +146,8 @@ void handleArCompleteForUssr(Board& board, StateStack& states) {
     states.emplace_back(StateType::AR_USA);
     return;
   }
-  if (status.current_has_normal) {
+  // 起き得ない
+  if (status.current_has_normal) [[unlikely]] {
     states.emplace_back(StateType::AR_USSR);
     return;
   }
@@ -154,7 +155,8 @@ void handleArCompleteForUssr(Board& board, StateStack& states) {
     states.emplace_back(StateType::EXTRA_AR_USA);
     return;
   }
-  if (status.current_has_extra) {
+  // 起き得ない
+  if (status.current_has_extra) [[unlikely]] {
     states.emplace_back(StateType::EXTRA_AR_USSR);
     return;
   }
@@ -169,17 +171,17 @@ void handleArCompleteForUsa(Board& board, StateStack& states) {
     states.emplace_back(StateType::AR_USSR);
     return;
   }
-  if (status.current_has_normal) {
+  // 起き得ない
+  if (status.current_has_normal) [[unlikely]] {
     states.emplace_back(StateType::AR_USA);
     return;
   }
-  if (status.current_has_extra || status.opponent_has_extra) {
-    if (status.current_has_extra) {
-      states.emplace_back(StateType::EXTRA_AR_USSR);
-    }
-    if (status.opponent_has_extra) {
-      states.emplace_back(StateType::EXTRA_AR_USA);
-    }
+  if (status.opponent_has_extra) {
+    states.emplace_back(StateType::EXTRA_AR_USSR);
+    return;
+  }
+  if (status.current_has_extra) {
+    states.emplace_back(StateType::EXTRA_AR_USA);
     return;
   }
 

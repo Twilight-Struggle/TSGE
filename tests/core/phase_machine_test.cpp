@@ -293,6 +293,28 @@ TEST_F(PhaseMachineTest, RequestCommandWithNoLegalMovesIsDiscarded) {
   EXPECT_FALSE(std::get<0>(result).empty());
 }
 
+// RequestCommandが合法手を返した場合に入力要求が返される
+TEST_F(PhaseMachineTest, RequestCommandWithLegalMovesReturnsInput) {
+  auto executed = std::make_shared<bool>(false);
+  auto tracking_move = std::make_shared<TrackingMove>(CardEnum::DuckAndCover,
+                                                      Side::USSR, executed);
+
+  board.pushState(std::make_shared<RequestCommand>(
+      Side::USSR, [tracking_move](const Board&) {
+        return std::vector<std::shared_ptr<Move>>{tracking_move};
+      }));
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(std::get<1>(result), Side::USSR);
+  ASSERT_EQ(std::get<0>(result).size(), 1);
+  EXPECT_EQ(std::get<0>(result).front(), tracking_move);
+  ASSERT_FALSE(board.getStates().empty());
+  EXPECT_TRUE(std::holds_alternative<CommandPtr>(board.getStates().back()));
+  auto request_ptr = std::get<CommandPtr>(board.getStates().back());
+  ASSERT_NE(dynamic_cast<RequestCommand*>(request_ptr.get()), nullptr);
+}
+
 // 終端状態を検出できることを確認する
 TEST_F(PhaseMachineTest, TerminalStateReturnsWinner) {
   board.pushState(StateType::USSR_WIN_END);
@@ -303,6 +325,26 @@ TEST_F(PhaseMachineTest, TerminalStateReturnsWinner) {
   EXPECT_EQ(std::get<1>(result), Side::NEUTRAL);
   ASSERT_TRUE(std::get<2>(result).has_value());
   EXPECT_EQ(std::get<2>(result).value(), Side::USSR);
+}
+
+// AR_USA_COMPLETE後にUSA側の完了ハンドラがUSSRのARをスケジュールする
+TEST_F(PhaseMachineTest, ArUsaCompleteSchedulesUssrActionRound) {
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  board.pushState(StateType::AR_USA_COMPLETE);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(std::get<1>(result), Side::USSR);
+  EXPECT_FALSE(std::get<0>(result).empty());
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
+  ASSERT_FALSE(board.getStates().empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(board.getStates().back()));
+  EXPECT_EQ(std::get<StateType>(board.getStates().back()),
+            StateType::AR_USSR_COMPLETE);
 }
 
 // 回答済みMoveがCommandに変換され実行されることを検証する
@@ -346,4 +388,38 @@ TEST_F(PhaseMachineTest, TurnEndAdvancesTurnAndResetsActionRounds) {
   EXPECT_EQ(action_track.getActionRound(Side::USSR), 0);
   EXPECT_EQ(action_track.getActionRound(Side::USA), 0);
   EXPECT_FALSE(std::get<0>(result).empty());
+}
+
+// USAの追加ARが要求された場合に対応する分岐を通る
+TEST_F(PhaseMachineTest, ExtraActionRoundForUsaRequestsInput) {
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  auto& track = board.getActionRoundTrack();
+  const int turn = board.getTurnTrack().getTurn();
+  const int defined_rounds = track.getDefinedActionRounds(turn);
+
+  for (int i = 0; i < defined_rounds; ++i) {
+    track.advanceActionRound(Side::USSR, turn);
+  }
+  for (int i = 0; i < defined_rounds - 1; ++i) {
+    track.advanceActionRound(Side::USA, turn);
+  }
+
+  track.clearExtraActionRound(Side::USSR);
+  track.setExtraActionRound(Side::USA);
+
+  board.pushState(StateType::AR_USA_COMPLETE);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(std::get<1>(result), Side::USA);
+  EXPECT_FALSE(std::get<0>(result).empty());
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::USA);
+  EXPECT_FALSE(track.hasExtraActionRound(Side::USA));
+  ASSERT_FALSE(board.getStates().empty());
+  EXPECT_TRUE(std::holds_alternative<StateType>(board.getStates().back()));
+  EXPECT_EQ(std::get<StateType>(board.getStates().back()),
+            StateType::AR_USA_COMPLETE);
 }
