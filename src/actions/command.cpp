@@ -1,5 +1,7 @@
 #include "tsge/actions/command.hpp"
 
+#include <algorithm>
+
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/card.hpp"
@@ -143,4 +145,19 @@ void RequestCommand::apply(Board& board) const {}
 
 void SetHeadlineCardCommand::apply(Board& board) const {
   board.setHeadlineCard(side_, card_);
+}
+
+void FinalizeCardPlayCommand::apply(Board& board) const {
+  auto& hand = board.getPlayerHand(side_);
+  if (auto iter = std::find(hand.begin(), hand.end(), card_);
+      iter != hand.end()) {
+    hand.erase(iter);
+  }
+
+  auto& deck = board.getDeck();
+  if (removeAfterEvent_) {
+    deck.getRemovedCards().push_back(card_);
+  } else {
+    deck.getDiscardPile().push_back(card_);
+  }
 }

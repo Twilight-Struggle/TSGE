@@ -42,6 +42,11 @@ class Card {
     return warPeriod_;
   }
 
+  [[nodiscard]]
+  bool isRemovedAfterEvent() const {
+    return removedAfterEvent_;
+  }
+
  protected:
   CardEnum id_;
   std::string name_;

@@ -1,21 +1,34 @@
 #include "tsge/actions/move.hpp"
 
 #include <memory>
+#include <utility>
 
 #include "tsge/actions/command.hpp"
 #include "tsge/actions/legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
-void addEventAfterAction(std::vector<CommandPtr>& commands,
+bool addEventAfterAction(std::vector<CommandPtr>& commands,
                          const std::unique_ptr<Card>& card, Side arPlayerSide) {
-  if (getOpponentSide(arPlayerSide) == card->getSide()) {
-    // Opponent's event is triggered after the action
-    auto event_commands = card->event(arPlayerSide);
-    for (auto& cmd : event_commands) {
-      commands.emplace_back(std::move(cmd));
-    }
+  if (getOpponentSide(arPlayerSide) != card->getSide()) {
+    return false;
   }
+
+  // Opponent's event is triggered after the action
+  auto event_commands = card->event(arPlayerSide);
+  for (auto& cmd : event_commands) {
+    commands.emplace_back(std::move(cmd));
+  }
+  return true;
+}
+
+std::vector<CommandPtr> addFinalizeCardPlayCommand(
+    std::vector<CommandPtr>&& commands, Side side, CardEnum cardEnum,
+    const std::unique_ptr<Card>& card, bool eventTriggered) {
+  const bool remove_after_event = eventTriggered && card->isRemovedAfterEvent();
+  commands.emplace_back(std::make_shared<FinalizeCardPlayCommand>(
+      side, cardEnum, remove_after_event));
+  return std::move(commands);
 }
 
 std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
@@ -31,8 +44,9 @@ std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<ActionPlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
-  addEventAfterAction(commands, card, getSide());
-  return commands;
+  const bool event_triggered = addEventAfterAction(commands, card, getSide());
+  return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
+                                    card, event_triggered);
 }
 
 std::vector<CommandPtr> ActionCoupMove::toCommand(
@@ -40,8 +54,9 @@ std::vector<CommandPtr> ActionCoupMove::toCommand(
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_shared<ActionCoupCommand>(getSide(), card, targetCountry_));
-  addEventAfterAction(commands, card, getSide());
-  return commands;
+  const bool event_triggered = addEventAfterAction(commands, card, getSide());
+  return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
+                                    card, event_triggered);
 }
 
 std::vector<CommandPtr> ActionSpaceRaceMove::toCommand(
@@ -49,7 +64,8 @@ std::vector<CommandPtr> ActionSpaceRaceMove::toCommand(
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_shared<ActionSpaceRaceCommand>(getSide(), card));
-  return commands;
+  return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
+                                    card, false);
 }
 
 std::vector<CommandPtr> ActionRealigmentMove::toCommand(
@@ -84,9 +100,10 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
         }));
   }
 
-  addEventAfterAction(commands, card, getSide());
+  const bool event_triggered = addEventAfterAction(commands, card, getSide());
 
-  return commands;
+  return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
+                                    card, event_triggered);
 }
 
 std::vector<CommandPtr> RealignmentRequestMove::toCommand(
@@ -163,5 +180,6 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
         }));
   }
 
-  return commands;
+  return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
+                                    card, true);
 }

@@ -142,3 +142,15 @@ class SetHeadlineCardCommand final : public Command {
  private:
   const CardEnum card_;
 };
+
+class FinalizeCardPlayCommand final : public Command {
+ public:
+  FinalizeCardPlayCommand(Side side, CardEnum card, bool removeAfterEvent)
+      : Command{side}, card_{card}, removeAfterEvent_{removeAfterEvent} {}
+
+  void apply(Board& board) const override;
+
+ private:
+  const CardEnum card_;
+  const bool removeAfterEvent_;
+};

@@ -14,9 +14,9 @@
 // テスト用DummyCardクラス
 class DummyCard : public Card {
  public:
-  DummyCard(int ops, Side side = Side::NEUTRAL)
-      : Card(CardEnum::Dummy, "DummyCard", ops, side, WarPeriod::DUMMY, false) {
-  }
+  DummyCard(int ops, Side side = Side::NEUTRAL, bool removedAfterEvent = false)
+      : Card(CardEnum::Dummy, "DummyCard", ops, side, WarPeriod::DUMMY,
+             removedAfterEvent) {}
 
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
@@ -82,12 +82,16 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_BasicCommand) {
   auto commands = move.toCommand(dummy_card_neutral_);
 
   // コマンド数の確認（PlaceInfluenceCommand + イベントなし）
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
 
   // 最初のコマンドがActionPlaceInfluenceCommandであることを確認
   auto* place_cmd =
       dynamic_cast<ActionPlaceInfluenceCommand*>(commands[0].get());
   ASSERT_NE(place_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionPlaceInfluenceMove_OpponentEvent) {
@@ -99,11 +103,15 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_OpponentEvent) {
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // コマンド数の確認（PlaceInfluenceCommand + イベント）
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
 
   // 2番目のコマンドがイベントコマンドであることを確認
   auto* vp_cmd = dynamic_cast<ChangeVpCommand*>(commands[1].get());
   ASSERT_NE(vp_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionPlaceInfluenceMove_OwnEvent) {
@@ -115,7 +123,11 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_OwnEvent) {
   auto commands = move.toCommand(dummy_card_usa_);
 
   // コマンド数の確認（PlaceInfluenceCommandのみ）
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 // ActionCoupMoveのテスト
@@ -123,9 +135,13 @@ TEST_F(MoveTest, ActionCoupMove_BasicCommand) {
   ActionCoupMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
   auto commands = move.toCommand(dummy_card_neutral_);
 
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
   auto* coup_cmd = dynamic_cast<ActionCoupCommand*>(commands[0].get());
   ASSERT_NE(coup_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionCoupMove_OpponentEvent) {
@@ -133,9 +149,13 @@ TEST_F(MoveTest, ActionCoupMove_OpponentEvent) {
   ActionCoupMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
   auto commands = move.toCommand(dummy_card_usa_);
 
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
   auto* vp_cmd = dynamic_cast<ChangeVpCommand*>(commands[1].get());
   ASSERT_NE(vp_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 // ActionSpaceRaceMoveのテスト
@@ -145,18 +165,26 @@ TEST_F(MoveTest, ActionSpaceRaceMove_NoOpponentEvent) {
   auto commands = move.toCommand(dummy_card_usa_);
 
   // SpaceRaceでは相手イベントが発動しない
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
   auto* space_cmd = dynamic_cast<ActionSpaceRaceCommand*>(commands[0].get());
   ASSERT_NE(space_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionSpaceRaceMove_NeutralCard) {
   ActionSpaceRaceMove move(CardEnum::Dummy, Side::USA);
   auto commands = move.toCommand(dummy_card_neutral_);
 
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
   auto* space_cmd = dynamic_cast<ActionSpaceRaceCommand*>(commands[0].get());
   ASSERT_NE(space_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 // ActionRealigmentMoveのテスト
@@ -166,13 +194,17 @@ TEST_F(MoveTest, ActionRealigmentMove_MultipleOps) {
   auto commands = move.toCommand(dummy_card_neutral_);
 
   // ActionRealigmentCommand + RequestCommand
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
 
   auto* realign_cmd = dynamic_cast<ActionRealigmentCommand*>(commands[0].get());
   ASSERT_NE(realign_cmd, nullptr);
 
   auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
   ASSERT_NE(request_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionRealigmentMove_SingleOp) {
@@ -181,13 +213,17 @@ TEST_F(MoveTest, ActionRealigmentMove_SingleOp) {
   auto commands = move.toCommand(dummy_card_1_ops_);
 
   // ActionRealigmentCommand + RequestCommand（additionalOps用）
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
 
   auto* realign_cmd = dynamic_cast<ActionRealigmentCommand*>(commands[0].get());
   ASSERT_NE(realign_cmd, nullptr);
 
   auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
   ASSERT_NE(request_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionRealigmentMove_OpponentEvent) {
@@ -196,10 +232,14 @@ TEST_F(MoveTest, ActionRealigmentMove_OpponentEvent) {
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // ActionRealigmentCommand + RequestCommand + イベント
-  ASSERT_EQ(commands.size(), 3);
+  ASSERT_EQ(commands.size(), 4);
 
   auto* vp_cmd = dynamic_cast<ChangeVpCommand*>(commands[2].get());
   ASSERT_NE(vp_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 // RealignmentRequestMoveのテスト
@@ -263,9 +303,13 @@ TEST_F(MoveTest, ActionEventMove_OwnSideEvent) {
   auto commands = move.toCommand(dummy_card_usa_);
 
   // イベントコマンドのみ（追加アクションなし）
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
   auto* vp_cmd = dynamic_cast<ChangeVpCommand*>(commands[0].get());
   ASSERT_NE(vp_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionEventMove_OpponentSideEvent) {
@@ -274,13 +318,17 @@ TEST_F(MoveTest, ActionEventMove_OpponentSideEvent) {
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // イベントコマンド + RequestCommand（追加アクション用）
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
 
   auto* vp_cmd = dynamic_cast<ChangeVpCommand*>(commands[0].get());
   ASSERT_NE(vp_cmd, nullptr);
 
   auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
   ASSERT_NE(request_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }
 
 TEST_F(MoveTest, ActionEventMove_NeutralEvent) {
@@ -288,9 +336,22 @@ TEST_F(MoveTest, ActionEventMove_NeutralEvent) {
   auto commands = move.toCommand(dummy_card_neutral_);
 
   // 中立イベントは追加アクションなし
-  ASSERT_EQ(commands.size(), 1);
+  ASSERT_EQ(commands.size(), 2);
   auto* vp_cmd = dynamic_cast<ChangeVpCommand*>(commands[0].get());
   ASSERT_NE(vp_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
+}
+
+TEST_F(MoveTest, HeadlineCardSelectMove) {
+  HeadlineCardSelectMove move(CardEnum::Dummy, Side::USA);
+  auto commands = move.toCommand(dummy_card_neutral_);
+
+  ASSERT_EQ(commands.size(), 1);
+  auto* headline_cmd = dynamic_cast<SetHeadlineCardCommand*>(commands[0].get());
+  ASSERT_NE(headline_cmd, nullptr);
 }
 
 // RequestCommandのラムダ関数テスト（間接的な検証アプローチ）
@@ -298,9 +359,13 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommandLambda) {
   ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
   auto commands = move.toCommand(dummy_card_4_ops_);
 
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
   auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
   ASSERT_NE(request_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 
   // RequestCommandのラムダ関数を実行してみる
   auto legal_moves = request_cmd->legalMoves(board_);
@@ -339,9 +404,13 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_IntegrationTest) {
   ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
   auto commands = move.toCommand(dummy_card_4_ops_);
 
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
   auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
   ASSERT_NE(request_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 
   // ラムダ関数のキャプチャ値が正しく設定されているかを間接的に検証
   // 実際の実装を呼び出して、期待される動作を確認
@@ -374,9 +443,13 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
     ActionRealigmentMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
     auto commands = move.toCommand(dummy_card_1_ops_);
 
-    ASSERT_EQ(commands.size(), 2);
+    ASSERT_EQ(commands.size(), 3);
     auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
     ASSERT_NE(request_cmd, nullptr);
+
+    auto* finalize_cmd =
+        dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+    ASSERT_NE(finalize_cmd, nullptr);
 
     // remainingOps=0の場合でも適切に動作することを確認
     auto legal_moves = request_cmd->legalMoves(board_);
@@ -399,9 +472,13 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
     ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
     auto commands = move.toCommand(dummy_card_neutral_);
 
-    ASSERT_EQ(commands.size(), 2);
+    ASSERT_EQ(commands.size(), 3);
     auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
     ASSERT_NE(request_cmd, nullptr);
+
+    auto* finalize_cmd =
+        dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+    ASSERT_NE(finalize_cmd, nullptr);
 
     // remainingOps=2の場合の動作を確認
     auto legal_moves = request_cmd->legalMoves(board_);
@@ -503,10 +580,14 @@ TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
   ActionEventMove move(CardEnum::Dummy, Side::USA);
   auto commands = move.toCommand(dummy_card_ussr_);
 
-  ASSERT_EQ(commands.size(), 2);
+  ASSERT_EQ(commands.size(), 3);
 
   auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
   ASSERT_NE(request_cmd, nullptr);
+
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands.back().get());
+  ASSERT_NE(finalize_cmd, nullptr);
 
   // ラムダ関数内部を実行してカバレッジを通す
   auto legal_moves = request_cmd->legalMoves(board_);

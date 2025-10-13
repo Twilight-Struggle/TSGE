@@ -140,6 +140,32 @@ TEST_F(CommandTest, CoupTest) {
   action_can_coup_usa.apply(board);
 }
 
+TEST_F(CommandTest, FinalizeCardPlayCommandMovesCardToDiscard) {
+  board.addCardToHand(Side::USA, CardEnum::Dummy);
+  FinalizeCardPlayCommand finalize(Side::USA, CardEnum::Dummy, false);
+
+  finalize.apply(board);
+
+  EXPECT_TRUE(board.getPlayerHand(Side::USA).empty());
+  const auto& discard = board.getDeck().getDiscardPile();
+  ASSERT_FALSE(discard.empty());
+  EXPECT_EQ(discard.back(), CardEnum::Dummy);
+  EXPECT_TRUE(board.getDeck().getRemovedCards().empty());
+}
+
+TEST_F(CommandTest, FinalizeCardPlayCommandMovesCardToRemoved) {
+  board.addCardToHand(Side::USSR, CardEnum::Dummy);
+  FinalizeCardPlayCommand finalize(Side::USSR, CardEnum::Dummy, true);
+
+  finalize.apply(board);
+
+  EXPECT_TRUE(board.getPlayerHand(Side::USSR).empty());
+  const auto& removed = board.getDeck().getRemovedCards();
+  ASSERT_FALSE(removed.empty());
+  EXPECT_EQ(removed.back(), CardEnum::Dummy);
+  EXPECT_TRUE(board.getDeck().getDiscardPile().empty());
+}
+
 TEST_F(CommandTest, SpaceRaceCommandSuccessAdvancesTrackAndAwardsVp) {
   // ロール最大値以下になるシードを探索し、成功パスを確実に再現する
   auto& space_track = board.getSpaceTrack();
