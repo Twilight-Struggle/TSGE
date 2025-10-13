@@ -16,86 +16,51 @@ std::array<int, 2> Board::calculateDrawCount(int turn) const {
 
 void Board::drawCardsForPlayers(int ussrDrawCount, int usaDrawCount) {
   const int total_draw_count = ussrDrawCount + usaDrawCount;
-  auto& deck_cards = deck_.getDeck();
-  const int deck_size = static_cast<int>(deck_cards.size());
-
   if (total_draw_count == 0) {
     return;
   }
 
-  if (total_draw_count < deck_size) {
-    for (int i = 0; i < ussrDrawCount; ++i) {
-      playerHands_[static_cast<size_t>(Side::USSR)].push_back(
-          deck_cards.back());
-      deck_cards.pop_back();
-    }
-    for (int i = 0; i < usaDrawCount; ++i) {
-      playerHands_[static_cast<size_t>(Side::USA)].push_back(deck_cards.back());
-      deck_cards.pop_back();
-    }
-  } else if (total_draw_count == deck_size) {
-    for (int i = 0; i < ussrDrawCount; ++i) {
-      playerHands_[static_cast<size_t>(Side::USSR)].push_back(
-          deck_cards.back());
-      deck_cards.pop_back();
-    }
-    for (int i = 0; i < usaDrawCount; ++i) {
-      playerHands_[static_cast<size_t>(Side::USA)].push_back(deck_cards.back());
-      deck_cards.pop_back();
-    }
-    deck_.reshuffleFromDiscard();
-  } else {
-    int ussr_distributed = 0;
-    int usa_distributed = 0;
+  auto& deck_cards = deck_.getDeck();
+  const int deck_size = static_cast<int>(deck_cards.size());
 
-    if (deck_size % 2 == 0) {
-      const int cards_per_player = deck_size / 2;
-      for (int i = 0; i < cards_per_player && ussr_distributed < ussrDrawCount;
-           ++i) {
-        playerHands_[static_cast<size_t>(Side::USSR)].push_back(
-            deck_cards.back());
-        deck_cards.pop_back();
-        ussr_distributed++;
-      }
-      for (int i = 0; i < cards_per_player && usa_distributed < usaDrawCount;
-           ++i) {
-        playerHands_[static_cast<size_t>(Side::USA)].push_back(
-            deck_cards.back());
-        deck_cards.pop_back();
-        usa_distributed++;
-      }
-    } else {
-      const int base_cards = deck_size / 2;
-      for (int i = 0; i < base_cards + 1 && ussr_distributed < ussrDrawCount;
-           ++i) {
-        playerHands_[static_cast<size_t>(Side::USSR)].push_back(
-            deck_cards.back());
-        deck_cards.pop_back();
-        ussr_distributed++;
-      }
-      for (int i = 0; i < base_cards && usa_distributed < usaDrawCount; ++i) {
-        playerHands_[static_cast<size_t>(Side::USA)].push_back(
-            deck_cards.back());
-        deck_cards.pop_back();
-        usa_distributed++;
-      }
-    }
-
-    deck_.reshuffleFromDiscard();
-
-    const int ussr_remaining = ussrDrawCount - ussr_distributed;
-    const int usa_remaining = usaDrawCount - usa_distributed;
-
-    for (int i = 0; i < ussr_remaining; ++i) {
-      playerHands_[static_cast<size_t>(Side::USSR)].push_back(
-          deck_cards.back());
+  const auto draw_for_side = [&](Side side, int count) {
+    auto& hand = playerHands_[static_cast<size_t>(side)];
+    for (int i = 0; i < count; ++i) {
+      hand.push_back(deck_cards.back());
       deck_cards.pop_back();
     }
-    for (int i = 0; i < usa_remaining; ++i) {
-      playerHands_[static_cast<size_t>(Side::USA)].push_back(deck_cards.back());
-      deck_cards.pop_back();
+  };
+
+  const auto draw_limited_for_side = [&](Side side, int& remaining, int cap) {
+    const int draw_cap = std::min(remaining, cap);
+    const int draw_count =
+        std::min(draw_cap, static_cast<int>(deck_cards.size()));
+    draw_for_side(side, draw_count);
+    remaining -= draw_count;
+  };
+
+  if (total_draw_count <= deck_size) {
+    draw_for_side(Side::USSR, ussrDrawCount);
+    draw_for_side(Side::USA, usaDrawCount);
+    if (total_draw_count == deck_size) {
+      deck_.reshuffleFromDiscard();
     }
+    return;
   }
+
+  int ussr_remaining = ussrDrawCount;
+  int usa_remaining = usaDrawCount;
+
+  const int ussr_share = (deck_size + 1) / 2;
+  const int usa_share = deck_size - ussr_share;
+
+  draw_limited_for_side(Side::USSR, ussr_remaining, ussr_share);
+  draw_limited_for_side(Side::USA, usa_remaining, usa_share);
+
+  deck_.reshuffleFromDiscard();
+
+  draw_limited_for_side(Side::USSR, ussr_remaining, ussr_remaining);
+  draw_limited_for_side(Side::USA, usa_remaining, usa_remaining);
 }
 
 bool Board::isHeadlineCardVisible(Side viewer, Side target) const {

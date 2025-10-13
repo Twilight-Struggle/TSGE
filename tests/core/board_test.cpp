@@ -148,6 +148,25 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckOddCase) {
   EXPECT_EQ(board_->getPlayerHand(Side::USA).size(), 10);
 }
 
+TEST_F(BoardDrawTest, DrawCardsMoreThanDeckRedistributesAfterCap) {
+  // デッキ不足時に片側の要求枚数が少ないケース
+  auto& discard_pile = board_->getDeck().getDiscardPile();
+  for (int i = 0; i < 20; ++i) {
+    discard_pile.push_back(CardEnum::Dummy);
+  }
+
+  auto& deck = board_->getDeck().getDeck();
+  while (deck.size() > 5) {
+    deck.pop_back();
+  }
+
+  board_->drawCardsForPlayers(1, 6);
+
+  EXPECT_EQ(board_->getPlayerHand(Side::USSR).size(), 1);
+  EXPECT_EQ(board_->getPlayerHand(Side::USA).size(), 6);
+  EXPECT_EQ(board_->getDeck().getDiscardPile().size(), 0);
+}
+
 TEST_F(BoardDrawTest, DrawCardsZeroCase) {
   const size_t initial_deck_size = board_->getDeck().getDeck().size();
 
