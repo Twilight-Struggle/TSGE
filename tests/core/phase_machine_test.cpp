@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <optional>
@@ -39,9 +40,12 @@ class HeadlineEventCard final : public Card {
  public:
   // NOLINTNEXTLINE(readability-identifier-length)
   HeadlineEventCard(CardEnum id, std::string&& name, int ops, Side allegiance,
-                    std::shared_ptr<std::vector<std::pair<Side, CardEnum>>> log)
-      : Card(id, std::move(name), ops, allegiance, WarPeriod::DUMMY, false),
-        executionLog_(std::move(log)) {}
+                    std::shared_ptr<std::vector<std::pair<Side, CardEnum>>> log,
+                    bool removedAfterEvent = false, bool canEventValue = true)
+      : Card(id, std::move(name), ops, allegiance, WarPeriod::DUMMY,
+             removedAfterEvent),
+        executionLog_(std::move(log)),
+        canEventEnabled_(canEventValue) {}
 
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
@@ -52,12 +56,13 @@ class HeadlineEventCard final : public Card {
   }
 
   [[nodiscard]]
-  bool canEvent(const Board& board) const override {
-    return true;
+  bool canEvent(const Board& /*board*/) const override {
+    return canEventEnabled_;
   }
 
  private:
   std::shared_ptr<std::vector<std::pair<Side, CardEnum>>> executionLog_;
+  bool canEventEnabled_;
 };
 
 class CardPoolGuard final {
@@ -163,7 +168,9 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
                                           Side::USA, execution_log));
 
   board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USSR, CardEnum::NuclearTestBan);
   board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
 
   // TURN_STARTをプッシュしてヘッドラインフェイズをトリガー
   board.pushState(StateType::TURN_START);
@@ -172,8 +179,13 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
   auto first_result = PhaseMachine::step(board, std::nullopt);
 
   auto& ussr_moves = std::get<0>(first_result);
-  ASSERT_EQ(ussr_moves.size(), 1);
-  auto ussr_move = ussr_moves.front();
+  ASSERT_EQ(ussr_moves.size(), 2);
+  auto ussr_move_it =
+      std::find_if(ussr_moves.begin(), ussr_moves.end(), [](const auto& move) {
+        return move->getCard() == CardEnum::DuckAndCover;
+      });
+  ASSERT_NE(ussr_move_it, ussr_moves.end());
+  auto ussr_move = *ussr_move_it;
 
   // HEADLINE_CARD_SELECT_USSRが返されることを期待（同時選択の疑似実装）
   EXPECT_EQ(std::get<1>(first_result), Side::USSR);
@@ -182,17 +194,32 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
   auto second_result = PhaseMachine::step(
       board, std::optional<std::shared_ptr<Move>>(std::move(ussr_move)));
 
+  EXPECT_EQ(board.getPlayerHand(Side::USSR).size(), 1);
+  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
+
   auto& usa_moves = std::get<0>(second_result);
-  ASSERT_EQ(usa_moves.size(), 1);
-  auto usa_move = usa_moves.front();
+  ASSERT_EQ(usa_moves.size(), 2);
+  auto usa_move_it = std::find_if(
+      usa_moves.begin(), usa_moves.end(),
+      [](const auto& move) { return move->getCard() == CardEnum::Fidel; });
+  ASSERT_NE(usa_move_it, usa_moves.end());
+  auto usa_move = *usa_move_it;
   EXPECT_EQ(std::get<1>(second_result), Side::USA);
   EXPECT_TRUE(usa_move);
 
   auto third_result = PhaseMachine::step(
       board, std::optional<std::shared_ptr<Move>>(std::move(usa_move)));
 
+  EXPECT_EQ(board.getPlayerHand(Side::USSR).size(), 1);
+  EXPECT_EQ(board.getPlayerHand(Side::USA).size(), 1);
   EXPECT_EQ(std::get<1>(third_result), Side::USSR);
-  EXPECT_FALSE(std::get<0>(third_result).empty());
+  const auto& ar_moves = std::get<0>(third_result);
+  ASSERT_FALSE(ar_moves.empty());
+  EXPECT_TRUE(
+      std::any_of(ar_moves.begin(), ar_moves.end(), [](const auto& move) {
+        return move->getCard() == CardEnum::NuclearTestBan &&
+               move->getSide() == Side::USSR;
+      }));
   EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
   EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::Dummy);
   EXPECT_EQ(board.getHeadlineCard(Side::USA), CardEnum::Dummy);
@@ -208,6 +235,155 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
       EXPECT_EQ(dynamic_cast<LambdaCommand*>(command.get()), nullptr);
     }
   }
+}
+
+// ヘッドラインで発動したカードが適切な山へ移動することを検証する
+TEST_F(PhaseMachineTest, HeadlineCardsMoveToCorrectPiles) {
+  auto execution_log =
+      std::make_shared<std::vector<std::pair<Side, CardEnum>>>();
+  auto& pool = defaultCardPool();
+  CardPoolGuard ussr_guard(pool, CardEnum::DuckAndCover,
+                           std::make_unique<HeadlineEventCard>(
+                               CardEnum::DuckAndCover, "USSR Headline", 2,
+                               Side::USSR, execution_log, false));
+  CardPoolGuard usa_guard(
+      pool, CardEnum::Fidel,
+      std::make_unique<HeadlineEventCard>(CardEnum::Fidel, "USA Headline", 4,
+                                          Side::USA, execution_log, true));
+
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USSR, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+
+  board.pushState(StateType::TURN_START);
+
+  auto first_result = PhaseMachine::step(board, std::nullopt);
+  auto& ussr_moves = std::get<0>(first_result);
+  ASSERT_EQ(ussr_moves.size(), 2);
+  auto ussr_move_it =
+      std::find_if(ussr_moves.begin(), ussr_moves.end(), [](const auto& move) {
+        return move->getCard() == CardEnum::DuckAndCover;
+      });
+  ASSERT_NE(ussr_move_it, ussr_moves.end());
+  auto ussr_move = *ussr_move_it;
+
+  auto second_result = PhaseMachine::step(
+      board, std::optional<std::shared_ptr<Move>>(std::move(ussr_move)));
+  auto& usa_moves = std::get<0>(second_result);
+  ASSERT_EQ(usa_moves.size(), 2);
+  auto usa_move_it = std::find_if(
+      usa_moves.begin(), usa_moves.end(),
+      [](const auto& move) { return move->getCard() == CardEnum::Fidel; });
+  ASSERT_NE(usa_move_it, usa_moves.end());
+  auto usa_move = *usa_move_it;
+
+  EXPECT_EQ(board.getPlayerHand(Side::USSR).size(), 1);
+  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
+  EXPECT_EQ(board.getPlayerHand(Side::USA).size(), 2);
+
+  auto third_result = PhaseMachine::step(
+      board, std::optional<std::shared_ptr<Move>>(std::move(usa_move)));
+
+  // ヘッドライン処理後も各プレイヤーに1枚ずつ手札が残り、ARへ移行できる
+  EXPECT_EQ(board.getPlayerHand(Side::USSR).size(), 1);
+  EXPECT_EQ(board.getPlayerHand(Side::USA).size(), 1);
+
+  const auto& discard = board.getDeck().getDiscardPile();
+  ASSERT_EQ(discard.size(), 1);
+  EXPECT_EQ(discard.front(), CardEnum::DuckAndCover);
+
+  const auto& removed = board.getDeck().getRemovedCards();
+  ASSERT_EQ(removed.size(), 1);
+  EXPECT_EQ(removed.front(), CardEnum::Fidel);
+
+  // AR入力を要求する状態へ遷移し、USSRが行動待ちになる
+  EXPECT_EQ(std::get<1>(third_result), Side::USSR);
+  const auto& ar_moves_for_guard = std::get<0>(third_result);
+  ASSERT_FALSE(ar_moves_for_guard.empty());
+  EXPECT_TRUE(std::any_of(ar_moves_for_guard.begin(), ar_moves_for_guard.end(),
+                          [](const auto& move) {
+                            return move->getCard() ==
+                                       CardEnum::NuclearTestBan &&
+                                   move->getSide() == Side::USSR;
+                          }));
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
+}
+
+// 発動不可カードでも解決後に正しく捨て札へ移動することを確認する
+TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
+  auto execution_log =
+      std::make_shared<std::vector<std::pair<Side, CardEnum>>>();
+  auto& pool = defaultCardPool();
+  CardPoolGuard ussr_guard(pool, CardEnum::DuckAndCover,
+                           std::make_unique<HeadlineEventCard>(
+                               CardEnum::DuckAndCover, "USSR Headline", 2,
+                               Side::USSR, execution_log, true, false));
+  CardPoolGuard usa_guard(pool, CardEnum::Fidel,
+                          std::make_unique<HeadlineEventCard>(
+                              CardEnum::Fidel, "USA Headline", 4, Side::USA,
+                              execution_log, false, true));
+
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USSR, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+
+  board.pushState(StateType::TURN_START);
+
+  auto first_result = PhaseMachine::step(board, std::nullopt);
+  auto& ussr_moves = std::get<0>(first_result);
+  ASSERT_EQ(ussr_moves.size(), 2);
+  auto ussr_move_it =
+      std::find_if(ussr_moves.begin(), ussr_moves.end(), [](const auto& move) {
+        return move->getCard() == CardEnum::DuckAndCover;
+      });
+  ASSERT_NE(ussr_move_it, ussr_moves.end());
+  auto ussr_move = *ussr_move_it;
+
+  auto second_result = PhaseMachine::step(
+      board, std::optional<std::shared_ptr<Move>>(std::move(ussr_move)));
+  auto& usa_moves = std::get<0>(second_result);
+  ASSERT_EQ(usa_moves.size(), 2);
+  auto usa_move_it = std::find_if(
+      usa_moves.begin(), usa_moves.end(),
+      [](const auto& move) { return move->getCard() == CardEnum::Fidel; });
+  ASSERT_NE(usa_move_it, usa_moves.end());
+  auto usa_move = *usa_move_it;
+
+  auto third_result = PhaseMachine::step(
+      board, std::optional<std::shared_ptr<Move>>(std::move(usa_move)));
+
+  EXPECT_EQ(board.getPlayerHand(Side::USSR).size(), 1);
+  EXPECT_EQ(board.getPlayerHand(Side::USA).size(), 1);
+
+  const auto& discard = board.getDeck().getDiscardPile();
+  ASSERT_EQ(discard.size(), 2);
+  EXPECT_EQ(std::count(discard.begin(), discard.end(), CardEnum::DuckAndCover),
+            1);
+  EXPECT_EQ(std::count(discard.begin(), discard.end(), CardEnum::Fidel), 1);
+
+  const auto& removed = board.getDeck().getRemovedCards();
+  EXPECT_TRUE(removed.empty());
+
+  // USSRカードは発動していないためログにはUSAカードのみ記録される
+  ASSERT_EQ(execution_log->size(), 1);
+  EXPECT_EQ(execution_log->front(), std::make_pair(Side::USA, CardEnum::Fidel));
+
+  EXPECT_EQ(std::get<1>(third_result), Side::USSR);
+  const auto& ar_moves_without_event = std::get<0>(third_result);
+  ASSERT_FALSE(ar_moves_without_event.empty());
+  EXPECT_TRUE(std::any_of(ar_moves_without_event.begin(),
+                          ar_moves_without_event.end(), [](const auto& move) {
+                            return move->getCard() ==
+                                       CardEnum::NuclearTestBan &&
+                                   move->getSide() == Side::USSR;
+                          }));
+  EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
 }
 
 // 宇宙開発トラック優位性があるケースのテスト

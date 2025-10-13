@@ -202,9 +202,18 @@ void enqueueHeadlineSelections(Board& board, StateStack& states) {
   }
 }
 
-void enqueueHeadlineEvents(Board& board, StateStack& states,
+void enqueueHeadlineEvents(Board& board, StateStack& states, CardEnum cardEnum,
                            const std::unique_ptr<Card>& card, Side side) {
-  if (!card->canEvent(board)) {
+  const bool can_event = card->canEvent(board);
+  const bool remove_after_event = can_event && card->isRemovedAfterEvent();
+
+  // FinalizeCardPlayCommandはイベント実行後に手札からカードを移動させる。
+  // ただしヘッドラインフェイズでは手札にすでにないが、その場合でも手札から削除が適切にスキップされる。
+  // 先にスタックへ積むことで後続のイベント群が確実に処理された後に発火する。
+  states.emplace_back(std::make_shared<FinalizeCardPlayCommand>(
+      side, cardEnum, remove_after_event));
+
+  if (!can_event) {
     return;
   }
 
@@ -229,11 +238,11 @@ MaybeStepOutput handleHeadlineProcess(Board& board, StateStack& states) {
     const int usa_ops = usa_card->getOps();
 
     if (ussr_ops > usa_ops) {
-      enqueueHeadlineEvents(board, states, usa_card, Side::USA);
-      enqueueHeadlineEvents(board, states, ussr_card, Side::USSR);
+      enqueueHeadlineEvents(board, states, usa_card_id, usa_card, Side::USA);
+      enqueueHeadlineEvents(board, states, ussr_card_id, ussr_card, Side::USSR);
     } else {
-      enqueueHeadlineEvents(board, states, ussr_card, Side::USSR);
-      enqueueHeadlineEvents(board, states, usa_card, Side::USA);
+      enqueueHeadlineEvents(board, states, ussr_card_id, ussr_card, Side::USSR);
+      enqueueHeadlineEvents(board, states, usa_card_id, usa_card, Side::USA);
     }
   }
 

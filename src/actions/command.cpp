@@ -144,6 +144,11 @@ void ChangeVpCommand::apply(Board& board) const {
 void RequestCommand::apply(Board& board) const {}
 
 void SetHeadlineCardCommand::apply(Board& board) const {
+  auto& hand = board.getPlayerHand(side_);
+  if (auto iter = std::find(hand.begin(), hand.end(), card_);
+      iter != hand.end()) {
+    hand.erase(iter);
+  }
   board.setHeadlineCard(side_, card_);
 }
 
