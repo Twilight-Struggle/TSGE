@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
 #include <map>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -50,6 +52,50 @@ static inline bool isRegionRestrictedByDefcon(const Country& country,
   }
 
   return false;  // 制限なし
+}
+
+struct OpponentCountryFilter {
+  /// 地域条件（例: アジア限定）を課す場合に設定する
+  std::optional<Region> requiredRegion;
+  /// 局所的な絞り込み（追加Ops要件など）が必要な場合に設定する(将来用)
+  // std::function<bool(const Country&)> additionalCondition;
+};
+
+static std::vector<CountryEnum> collectOpponentInfluencedCountries(
+    const Board& board, Side side, const OpponentCountryFilter& filter = {}) {
+  const auto& world_map = board.getWorldMap();
+  Side opponent_side = getOpponentSide(side);
+  int defcon = board.getDefconTrack().getDefcon();
+
+  std::vector<CountryEnum> candidates;
+  candidates.reserve(world_map.getCountriesCount());
+
+  // 全ての国を調べて、相手の影響力がある国を対象とする
+  // USA/USSRを除く84か国（インデックス2から85まで）
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+    const auto& country = world_map.getCountry(country_enum);
+
+    if (country.getInfluence(opponent_side) == 0) {
+      continue;  // 相手影響力なし
+    }
+    if (isRegionRestrictedByDefcon(country, defcon)) {
+      continue;  // DEFCONによる地域制限
+    }
+    if (filter.requiredRegion.has_value() &&
+        !country.hasRegion(*filter.requiredRegion)) {
+      continue;  // 地域条件を満たさない
+    }
+    // if (filter.additionalCondition != nullptr &&
+    //     !filter.additionalCondition(country)) {
+    //   continue;  // カスタム条件不一致
+    // }
+
+    candidates.push_back(country_enum);
+  }
+
+  return candidates;
 }
 
 struct BonusCondition {
@@ -207,40 +253,29 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
     return {};
   }
 
-  const auto& world_map = board.getWorldMap();
+  auto target_countries = collectOpponentInfluencedCountries(board, side);
+  if (target_countries.empty()) {
+    return {};
+  }
+
+  size_t playable_cards =
+      std::count_if(hands.begin(), hands.end(), [&](auto card_enum) {
+        const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+        return card->getOps() > 0;
+      });
+  if (playable_cards == 0) {
+    return {};
+  }
+
   std::vector<std::shared_ptr<Move>> results;
+  results.reserve(playable_cards * target_countries.size());
 
-  // DEFCON値を取得
-  int defcon = board.getDefconTrack().getDefcon();
-
-  // 相手側を取得
-  Side opponent_side = getOpponentSide(side);
-
-  // 全ての国を調べて、相手の影響力がある国を対象とする
-  // USA/USSRを除く84か国（インデックス2から85まで）
-  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
-       i < world_map.getCountriesCount(); ++i) {
-    auto country_enum = static_cast<CountryEnum>(i);
-
-    const auto& country = world_map.getCountry(country_enum);
-
-    // 相手の影響力が0の国は対象外
-    if (country.getInfluence(opponent_side) == 0) {
+  for (CardEnum card_enum : hands) {
+    const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+    if (card->getOps() == 0) {
       continue;
     }
-
-    // DEFCON制限チェック
-    if (isRegionRestrictedByDefcon(country, defcon)) {
-      continue;
-    }
-
-    // 各手札から対象国へのRealignmentMoveを生成
-    results.reserve(results.size() + hands.size());
-    for (CardEnum card_enum : hands) {
-      const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
-      if (card->getOps() == 0) {
-        continue;  // Opsが0のカードは除外
-      }
+    for (auto country_enum : target_countries) {
       results.emplace_back(std::make_shared<ActionRealigmentMove>(
           card_enum, side, country_enum));
     }
@@ -254,46 +289,24 @@ LegalMovesGenerator::realignmentRequestLegalMoves(
     const Board& board, Side side, CardEnum cardEnum,
     const std::vector<CountryEnum>& history, int remainingOps,
     AdditionalOpsType appliedAdditionalOps) {
-  const auto& world_map = board.getWorldMap();
+  auto target_countries = collectOpponentInfluencedCountries(board, side);
+  if (target_countries.empty()) {
+    return {};
+  }
 
   std::vector<std::shared_ptr<Move>> results;
-  // 事前に容量を確保（最大で国数+1個のMOVEが生成される）
-  results.reserve(world_map.getCountriesCount());
+  results.reserve(target_countries.size() + 1);
 
-  // DEFCON値を取得
-  int defcon = board.getDefconTrack().getDefcon();
-
-  // 相手側を取得
-  Side opponent_side = getOpponentSide(side);
-
-  // 全ての国を調べて、相手の影響力がある国を対象とする
-  // USA/USSRを除く84か国（インデックス2から85まで）
-  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
-       i < world_map.getCountriesCount(); ++i) {
-    auto country_enum = static_cast<CountryEnum>(i);
-
-    const auto& country = world_map.getCountry(country_enum);
-
-    // 相手の影響力が0の国は対象外
-    if (country.getInfluence(opponent_side) == 0) {
-      continue;
-    }
-
-    // DEFCON制限チェック
-    if (isRegionRestrictedByDefcon(country, defcon)) {
-      continue;
-    }
-
+  for (auto country_enum : target_countries) {
     results.emplace_back(std::make_shared<RealignmentRequestMove>(
         cardEnum, side, country_enum, history, remainingOps,
         appliedAdditionalOps));
   }
+
   // RealignRequestMoveではUSSR=パスも選択可能
-  if (!results.empty()) {
-    results.emplace_back(std::make_shared<RealignmentRequestMove>(
-        cardEnum, side, CountryEnum::USSR, history, remainingOps,
-        appliedAdditionalOps));
-  }
+  results.emplace_back(std::make_shared<RealignmentRequestMove>(
+      cardEnum, side, CountryEnum::USSR, history, remainingOps,
+      appliedAdditionalOps));
 
   return results;
 }
@@ -304,11 +317,6 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
     const std::vector<CountryEnum>& history,
     AdditionalOpsType appliedAdditionalOps) {
   std::vector<std::shared_ptr<Move>> results;
-  const auto& world_map = board.getWorldMap();
-  Side opponent_side = getOpponentSide(side);
-
-  // DEFCON値を取得
-  int defcon = board.getDefconTrack().getDefcon();
 
   // 中国カードの追加Opsチェック
   bool china_card_bonus = false;
@@ -343,23 +351,11 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
         static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD));
 
     // アジア地域限定の合法手を生成
-    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
-         i < world_map.getCountriesCount(); ++i) {
-      auto country_enum = static_cast<CountryEnum>(i);
-      const auto& country = world_map.getCountry(country_enum);
-
-      if (country.getInfluence(opponent_side) == 0) {
-        continue;
-      }
-      if (!country.hasRegion(Region::ASIA)) {
-        continue;
-      }
-
-      // DEFCON制限チェック
-      if (isRegionRestrictedByDefcon(country, defcon)) {
-        continue;
-      }
-
+    OpponentCountryFilter filter;
+    filter.requiredRegion = Region::ASIA;
+    auto asia_targets = collectOpponentInfluencedCountries(board, side, filter);
+    results.reserve(results.size() + asia_targets.size());
+    for (auto country_enum : asia_targets) {
       results.emplace_back(std::make_shared<RealignmentRequestMove>(
           cardEnum, side, country_enum, history, 1, new_applied_ops));
     }
@@ -372,23 +368,12 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
         static_cast<uint8_t>(AdditionalOpsType::VIETNAM_REVOLTS));
 
     // 東南アジア地域限定の合法手を生成
-    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
-         i < world_map.getCountriesCount(); ++i) {
-      auto country_enum = static_cast<CountryEnum>(i);
-      const auto& country = world_map.getCountry(country_enum);
-
-      if (country.getInfluence(opponent_side) == 0) {
-        continue;
-      }
-      if (!country.hasRegion(Region::SOUTH_EAST_ASIA)) {
-        continue;
-      }
-
-      // DEFCON制限チェック
-      if (isRegionRestrictedByDefcon(country, defcon)) {
-        continue;
-      }
-
+    OpponentCountryFilter filter;
+    filter.requiredRegion = Region::SOUTH_EAST_ASIA;
+    auto se_asia_targets =
+        collectOpponentInfluencedCountries(board, side, filter);
+    results.reserve(results.size() + se_asia_targets.size());
+    for (auto country_enum : se_asia_targets) {
       results.emplace_back(std::make_shared<RealignmentRequestMove>(
           cardEnum, side, country_enum, history, 1, new_applied_ops));
     }
@@ -409,40 +394,29 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
     return {};
   }
 
-  const auto& world_map = board.getWorldMap();
+  auto target_countries = collectOpponentInfluencedCountries(board, side);
+  if (target_countries.empty()) {
+    return {};
+  }
+
+  size_t playable_cards =
+      std::count_if(hands.begin(), hands.end(), [&](auto card_enum) {
+        const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+        return card->getOps() > 0;
+      });
+  if (playable_cards == 0) {
+    return {};
+  }
+
   std::vector<std::shared_ptr<Move>> results;
+  results.reserve(playable_cards * target_countries.size());
 
-  // DEFCON値を取得
-  int defcon = board.getDefconTrack().getDefcon();
-
-  // 相手側を取得
-  Side opponent_side = getOpponentSide(side);
-
-  // 全ての国を調べて、相手の影響力がある国を対象とする
-  // USA/USSRを除く84か国（インデックス2から85まで）
-  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
-       i < world_map.getCountriesCount(); ++i) {
-    auto country_enum = static_cast<CountryEnum>(i);
-
-    const auto& country = world_map.getCountry(country_enum);
-
-    // 相手の影響力が0の国は対象外
-    if (country.getInfluence(opponent_side) == 0) {
+  for (CardEnum card_enum : hands) {
+    const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
+    if (card->getOps() == 0) {
       continue;
     }
-
-    // DEFCON制限チェック
-    if (isRegionRestrictedByDefcon(country, defcon)) {
-      continue;
-    }
-
-    // 各手札から対象国へのCoupMoveを生成
-    results.reserve(results.size() + hands.size());
-    for (CardEnum card_enum : hands) {
-      const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
-      if (card->getOps() == 0) {
-        continue;  // Opsが0のカードは除外
-      }
+    for (auto country_enum : target_countries) {
       results.emplace_back(
           std::make_shared<ActionCoupMove>(card_enum, side, country_enum));
     }

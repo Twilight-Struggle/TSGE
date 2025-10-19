@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
@@ -219,6 +221,20 @@ TEST_F(RealignmentRequestLegalMovesTest, DefconRestrictions) {
   // TODO: 現在の実装ではDEFCON制限が考慮されていない可能性
   // 西ドイツ（ヨーロッパ）が除外されるべきだが、実装では除外されない可能性
   EXPECT_EQ(moves.size(), 4);
+
+  auto has_move = [&](CountryEnum target) {
+    RealignmentRequestMove expected(CardEnum::DuckAndCover, Side::USSR, target,
+                                    history, remaining_ops,
+                                    AdditionalOpsType::NONE);
+    return std::any_of(moves.begin(), moves.end(),
+                       [&](const auto& move) { return *move == expected; });
+  };
+
+  EXPECT_TRUE(has_move(CountryEnum::JAPAN));
+  EXPECT_TRUE(has_move(CountryEnum::IRAN));
+  EXPECT_TRUE(has_move(CountryEnum::ANGOLA));
+  EXPECT_TRUE(has_move(CountryEnum::USSR));  // パス
+  EXPECT_FALSE(has_move(CountryEnum::WEST_GERMANY));
 }
 
 // TODO
@@ -348,6 +364,18 @@ TEST_F(ActionRealignmentLegalMovesTest, BasicCaseStandardHand) {
 
   // 手札2枚 × 相手影響力4か国 = 8個
   EXPECT_EQ(moves.size(), 8);
+
+  auto has_move = [&](CardEnum card, CountryEnum target) {
+    ActionRealigmentMove expected(card, Side::USSR, target);
+    return std::any_of(moves.begin(), moves.end(),
+                       [&](const auto& move) { return *move == expected; });
+  };
+
+  for (CountryEnum target : {CountryEnum::JAPAN, CountryEnum::WEST_GERMANY,
+                             CountryEnum::IRAN, CountryEnum::ANGOLA}) {
+    EXPECT_TRUE(has_move(CardEnum::DuckAndCover, target));
+    EXPECT_TRUE(has_move(CardEnum::Fidel, target));
+  }
 }
 
 TEST_F(ActionRealignmentLegalMovesTest, EmptyHand) {
@@ -619,6 +647,17 @@ TEST_F(ActionCoupLegalMovesTest, Defcon4RestrictionEurope) {
   // 西ドイツ（ヨーロッパ）が除外される
   // 日本、イラン、アンゴラの3か国のみ
   EXPECT_EQ(moves.size(), 3);
+
+  auto has_move = [&](CountryEnum target) {
+    ActionCoupMove expected(CardEnum::DuckAndCover, Side::USSR, target);
+    return std::any_of(moves.begin(), moves.end(),
+                       [&](const auto& move) { return *move == expected; });
+  };
+
+  EXPECT_TRUE(has_move(CountryEnum::JAPAN));
+  EXPECT_TRUE(has_move(CountryEnum::IRAN));
+  EXPECT_TRUE(has_move(CountryEnum::ANGOLA));
+  EXPECT_FALSE(has_move(CountryEnum::WEST_GERMANY));
 }
 
 TEST_F(ActionCoupLegalMovesTest, Defcon3RestrictionEuropeAsia) {
