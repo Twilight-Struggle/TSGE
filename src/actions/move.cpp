@@ -8,6 +8,8 @@
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
+namespace {
+
 bool addEventAfterAction(std::vector<CommandPtr>& commands,
                          const std::unique_ptr<Card>& card, Side arPlayerSide) {
   if (getOpponentSide(arPlayerSide) != card->getSide()) {
@@ -30,6 +32,8 @@ std::vector<CommandPtr> addFinalizeCardPlayCommand(
       side, cardEnum, remove_after_event));
   return std::move(commands);
 }
+
+}  // namespace
 
 std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
     const std::unique_ptr<Card>& card) const {

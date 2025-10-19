@@ -13,6 +13,8 @@
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/world_map.hpp"
 
+namespace {
+
 // CountryEnum抽出用のヘルパー
 template <typename T>
 struct CountryExtractor {
@@ -28,8 +30,7 @@ struct CountryExtractor<std::pair<const CountryEnum, V>> {
 
 // ヘルパー関数：コンテナ内のすべての国が特定の地域に属するかチェック
 template <Region region, typename Container>
-static inline bool isAllInRegion(const Container& countries,
-                                 const Board& board) {
+bool isAllInRegion(const Container& countries, const Board& board) {
   return std::ranges::all_of(countries, [&](const auto& elem) {
     const auto country =
         CountryExtractor<std::decay_t<decltype(elem)>>::extract(elem);
@@ -39,8 +40,7 @@ static inline bool isAllInRegion(const Container& countries,
 }
 
 // DEFCON制限により特定の国がRealignmentできないかを判定
-static inline bool isRegionRestrictedByDefcon(const Country& country,
-                                              int defcon) {
+bool isRegionRestrictedByDefcon(const Country& country, int defcon) {
   if (defcon <= 4 && country.hasRegion(Region::EUROPE)) {
     return true;  // ヨーロッパ制限
   }
@@ -61,7 +61,7 @@ struct OpponentCountryFilter {
   // std::function<bool(const Country&)> additionalCondition;
 };
 
-static std::vector<CountryEnum> collectOpponentInfluencedCountries(
+std::vector<CountryEnum> collectOpponentInfluencedCountries(
     const Board& board, Side side, const OpponentCountryFilter& filter = {}) {
   const auto& world_map = board.getWorldMap();
   Side opponent_side = getOpponentSide(side);
@@ -103,7 +103,7 @@ struct BonusCondition {
   std::function<bool(const std::map<CountryEnum, int>&)> isSatisfied;
 };
 
-static std::vector<std::pair<int, const BonusCondition*>> computeOpsVariants(
+std::vector<std::pair<int, const BonusCondition*>> computeOpsVariants(
     CardEnum cardId, const Board& board, Side side) {
   const int base_ops =
       board.getCardpool()[static_cast<size_t>(cardId)]->getOps();
@@ -183,6 +183,8 @@ void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
     }
   }
 }
+
+}  // namespace
 
 std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
