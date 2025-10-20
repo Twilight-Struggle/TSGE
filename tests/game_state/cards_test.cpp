@@ -1,3 +1,7 @@
+// File: tests/game_state/cards_test.cpp
+// Summary: カードイベントと列挙値の動作を検証する。
+// Reason: CardEnumのID整合性とカード実装の品質を保証する。
+
 #include "tsge/game_state/cards.hpp"
 
 #include <gtest/gtest.h>
