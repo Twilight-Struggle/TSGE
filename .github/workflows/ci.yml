@@ -167,13 +167,13 @@ jobs:
         sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-18 100
         
     - name: Configure CMake (for compile_commands.json)
-      run: cmake -B build -G Ninja
+      run: cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       
     - name: Run clang-tidy
       run: |
-        find src include -name "*.cpp" -o -name "*.hpp" | grep -v build | while read file; do
-          clang-tidy -p build "$file"
-        done
+            set -eo pipefail
+            find src include -name "*.cpp" -print0 \
+            | xargs -0 -r -P"$(nproc)" -n1 -I{} bash -lc 'clang-tidy -p build -header-filter=".*" "{}"'
         
   sanitizers:
     runs-on: ubuntu-latest
