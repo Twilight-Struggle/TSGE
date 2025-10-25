@@ -1,156 +1,42 @@
-# Command 仕様詳細
+# Command 仕様概要
 
-CommandはBoardの状態を変更する唯一の手段であり、ゲームのすべての状態変更を表現する。
-MoveからtoCommand()によって生成され、PhaseMachineによってBoardに適用される。
+CommandはBoardの状態を更新するほぼ唯一の手段(例外はPhaseMahine)であり、ゲーム内のあらゆる状態遷移を表現する。Moveは`toCommand()`で`std::vector<CommandPtr>`へ展開され、PhaseMachineが先頭から順に`apply()`を実行する。`Board::pushState(std::variant<StateType, CommandPtr>)`によりCommandやStateを同一キューで扱う。
 
-## 基本構造
+## Command基礎
+- `apply(Board&) const`のみが状態変更の入り口。Commandはコピー構築可・代入禁止で、生成後の差し替えを想定しない。
+- `Side side_`を必須メンバとし、`Side::NEUTRAL`を含む。外部からサイドを読む必要があるのは`RequestCommand::getSide()`程度。
+- undoは未実装（MCTS向けに将来追加予定）。
 
-### 基底クラス Command
-- 純粋仮想関数 `apply(Board& board) const` を持つ抽象クラス
-- すべてのCommandは `Side side_` メンバを保持（USSR/USA/NEUTRAL）
-- Boardの状態変更は`apply()`メソッドを通してのみ可能
-- undo機能は将来実装予定（MCTS用）
+## Moveとの関係
+- アクション系Moveは「主Command → 相手イベントCommand → `FinalizeCardPlayCommand`」の順で積む。
+- リアライメント系Moveは`RequestCommand`を差し込み、残Opsに応じて追加の合法手を取得する。
+- イベント系Moveはカード効果で発生するCommandを順次生成し、副次効果（VP/DEFCON変更など）はCommandチェーンとして追加される。
 
-## 派生Commandクラス
+## 主なCommandカテゴリ
 
-### ActionPlaceInfluenceCommand
-影響力を配置するCommand。Moveから生成される際は、複数国への配置情報を保持。
+### アクション実行
+- `ActionPlaceInfluenceCommand`：配列で受け取った国ごとの配置数を`Country::addInfluence`へ適用。
+- `ActionRealigmentCommand`：ダイス2個＋修正（対象国の影響差、隣接支配）で差分を求め、相手影響力を削る。USSR/USAが対象の場合は安全装置として何もしない。
+- `ActionCoupCommand`：ダイス＋Ops値から安定度×2を引いた結果で相手影響力を除去し、余剰を自勢力に加算。実行側のMilOpsを更新し、戦場国なら`ChangeDefconCommand(-1)`をキューに積む。
+- `ActionSpaceRaceCommand`：成功時にSpaceTrackを前進し、特定マスで`ChangeVpCommand`を追加。結果に関わらず`spaceTried`で試行済み扱いとし、追加行動トラックを更新。
 
-#### メンバ変数
-- `Side side_`: 実行プレイヤー
-- `const Card& card_`: 使用カード
-- `std::unordered_map<CountryEnum, int> placements_`: 配置情報（国→配置数）
+### 状態トラック調整
+- `ChangeDefconCommand`：`DefconTrack::changeDefcon`の結果が1以下なら、現在のARプレイヤーと逆側を勝者ステートとして`pushState`。DEFCON 2時のNORAD処理はTODO。
+- `ChangeVpCommand`：`getVpMultiplier(side_)`を使ってVP符号を決定。±20到達で勝敗ステートを追加。
 
-#### apply()の処理
-1. 各国に指定された数の影響力を配置
+### カード/要求処理
+- `RequestCommand`：合法手生成コールバックを保持し、`apply()`では何もしない。Move生成側が`getSide()`で対象プレイヤーを把握する。
+- `SetHeadlineCardCommand`：手札からカードを除去し、ヘッドライン枠に登録。
+- `FinalizeCardPlayCommand`：手札からカードを抜き、イベント除去なら`Deck::getRemovedCards()`、通常は捨て札へ。
+- `LambdaCommand`：即席処理をラムダで包むユーティリティ（カード固有処理・テスト用）。
 
-### ActionRealigmentCommand
-リアライメントを実行するCommand。ダイスロールで相手の影響力削減を試みる。
+## Boardアクセスの前提
+- `getWorldMap()`, `getSpaceTrack()`, `getDefconTrack()`, `getMilopsTrack()`, `getActionRoundTrack()`などのトラック参照。
+- `getDeck()`, `getPlayerHand()`, `setHeadlineCard()`でカード在庫を管理。
+- `pushState()`, `changeVp()`, `getCurrentArPlayer()`, `getRandomizer()`を通じ、副次Commandの連鎖やダイス判定を扱う。
 
-#### メンバ変数
-- `Side side_`: 実行プレイヤー
-- `const Card& card_`: 使用カード
-- `CountryEnum targetCountry_`: 対象国
-
-#### apply()の処理
-1. 両プレイヤーのダイスロール実行
-2. 修正値の計算：
-   - 対象国での影響力差
-   - 隣接する超大国の有無
-   - 対象国の支配状態
-3. 勝者が相手の影響力を差分だけ削減
-
-### ActionCoupCommand
-クーデターを実行するCommand。Military Opsトラックを進め、成功時に影響力を変更。
-
-#### メンバ変数
-- `Side side_`: 実行プレイヤー
-- `const Card& card_`: 使用カード
-- `CountryEnum targetCountry_`: 対象国
-
-#### apply()の処理
-1. Military Opsトラックを進める（カードのOps値分）
-2. 戦場国の場合DEFCONを1低下
-3. ダイスロール + Ops値 vs 安定度×2で成否判定
-4. 成功時：
-   - 相手の影響力を成功度分削減
-   - 余剰分を自分の影響力として配置
-
-### ActionSpaceRaceCommand
-宇宙開発を実行するCommand。ダイスロールで宇宙開発トラックの前進を試みる。
-
-#### メンバ変数
-- `Side side_`: 実行プレイヤー
-- `const Card& card_`: 使用カード
-
-#### apply()の処理
-1. ダイスロール実行
-2. 現在位置に応じた必要ロール値と比較
-3. 成功時：
-   - 宇宙開発トラックを1前進
-   - 特定位置到達時の効果（VP獲得等）を適用
-4. 成否に関わらず試行回数を記録
-
-### ChangeDefconCommand
-DEFCONレベルを変更するCommand。
-
-#### メンバ変数
-- `Side side_`: 実行プレイヤー（NEUTRAL可）
-- `int delta_`: 変更量（正：改善、負：悪化）
-
-#### apply()の処理
-1. DEFCONトラックを指定量変更
-2. DEFCON 1到達時：
-   - 現在のフェイジングプレイヤーの相手が勝利
-   - ゲーム終了状態を設定
-
-### ChangeVpCommand
-勝利点を変更するCommand。
-
-#### メンバ変数
-- `Side side_`: 実行プレイヤー（NEUTRAL可）
-- `int delta_`: VP変更量（正：USSR有利、負：USA有利）
-
-#### apply()の処理
-1. `board.changeVp(delta_)`でVP変更
-2. VP ±20到達時：
-   - 該当側の勝利
-   - ゲーム終了状態を設定
-
-### RequestCommand
-プレイヤーに合法手の選択を要求するCommand。実際の状態変更は行わない。
-
-#### メンバ変数
-- `Side side_`: 要求対象プレイヤー
-- `std::function<std::vector<std::shared_ptr<Move>>(const Board&)> legalMoves;`: Requestの合法手を返すメソッド
-
-#### apply()の処理
-何もしない
-
-### DefconBasedVpChangeCommand（cards.hppに定義）
-現在のDEFCONレベルに基づいてVPを変更するCommand。特定カードで使用。
-
-#### メンバ変数
-- `Side side_`: 実行プレイヤー
-
-#### apply()の処理
-1. DEFCONレベルに応じて点数変更
-2. DEFCONレベル変更
-3. 1, 2の順番はカード依存
-
-## Boardへのアクセス権限
-
-Commandクラスは以下のBoardメソッドにアクセス可能：
-- `getWorldMap()`: 国家情報の取得・変更
-- `getSpaceTrack()`: 宇宙開発トラックの取得・変更
-- `getDefconTrack()`: DEFCONトラックの取得・変更
-- `getMilitaryOpsTrack()`: Military Opsトラックの取得・変更
-- `changeVp()`: 勝利点の変更
-- `pushState()`: ゲーム状態の追加
-- `getCurrentArPlayer()`: 現在のARプレイヤー取得
-
-## ランダム要素の扱い
-
-- `board.getRandomizer().rollDice()` を使用
-- リアライメント、クーデター、宇宙開発でダイスロールを実行
-- 結果は即座にBoardの状態に反映
-
-## 実装上の注意点
-
-1. **状態変更の原子性**
-   - 各Commandのapply()は原子的に実行される
-   - 途中で例外が発生した場合の挙動は未定義
-
-2. **イベント発動の連鎖**
-   - カードイベントはCommandを生成して実装
-   - 複雑なイベントは複数のCommandの組み合わせで表現
-
-3. **パフォーマンス考慮**
-   - MCTSでの頻繁なコピーを想定
-   - Commandオブジェクトは軽量に保つ
-
-## 将来の拡張予定
-
-- undo/redo機能の実装（MCTS最適化用）
-- より複雑なカードイベント用の特殊Command
-- 履歴記録機能の強化
+## 実装メモ
+- Command単位で処理は原子的に完結させ、中途例外時の仕様は未定義。
+- 連鎖イベントはCommandを追加で`pushState`して表現し、再帰的呼び出しによる順序ズレに注意する。
+- 専有リソースを避け、MCTS向けに軽量な状態保持を心掛ける。
+- TODO：DEFCON 2時のNORAD効果／undoサポート。

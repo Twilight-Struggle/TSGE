@@ -56,9 +56,9 @@ ctest --test-dir build --rerun-failed --output-on-failure
    - `Request` クラスはプレイヤー入力要求を処理
 
 3. **Move** (`move.hpp`): 軽量アクション表現
-   - プレイヤー-ゲーム間の通信に使用
-   - `toCommand()`メソッドを通してCommand(s)に変換
-   - 1つのMoveから複数のCommandを生成可能
+   - プレイヤーとゲーム間のメッセージレイヤ
+   - 純粋仮想`toCommand()`がカード固有処理を`CommandPtr`列に変換し、複数Commandを返せる
+   - 派生: ActionPlaceInfluence/Coup/SpaceRace/Realignment/RealignmentRequest/Event/Headline。全てカードIDとSideを不変保持し、`operator==`でパラメータ一致を確認
 
 4. **Game** (`game.hpp`): トップレベルゲーム統制者
    - BoardとPlayerの相互作用を管理
@@ -84,6 +84,10 @@ ctest --test-dir build --rerun-failed --output-on-failure
 - **Deck** (`deck.hpp`): デッキ管理（現在のデッキ、捨て札、除去されたカードを管理）
 - **Randomizer** (`randomizer.hpp`): 乱数生成管理。BoardのメンバとしてMCTS対応
 - **world_map_constants** (`world_map_constants.hpp/cpp`): ゲーム固定値初期値等。固定値はcppの5~800行目、初期値はcppの802~819行目
+
+### プレイヤーポリシー
+
+- **TsNnMctsPolicy** (`players/tsnnmcts.hpp`, `src/players/tsnnmcts.cpp`): Zero系MCTSの骨組みで、`TsNnMctsInferenceEngine`経由のpriorを`TsNnMctsController`がDirichletノイズと共に展開する。現状は最大prior手を返す最小実装で、PhaseMachine統合や温度制御はTODO。
 
 ## フォルダ構成
 
@@ -122,6 +126,10 @@ tests/              # テストファイル（機能別にサブディレクト�
 - 新しいCommand/Moveタイプについては既存パターンに従う
 - BoardコンポーネントModifying時はMCTSコピー効率を維持
 - MCTSのコピー効率を最適化するためには、Boardのデータ構造を慎重に設計する必要がある
+
+### プレイヤーポリシーに関する注意
+- `TsNnMctsConfig`の数値は暫定値。モード別チューニングや`add_dirichlet_noise`切替を行う際は設計ドキュメントとテストを同期させる。
+- `tests/players/tsnnmcts_policy_test.cpp`はDirichletノイズOFFでprior最大手を保証する骨格テスト。探索拡張時は期待挙動を保つ追加ケースを用意する。
 
 ### clang-tidy関連
 - **警告の抑制**：設計上安全が保証されている配列アクセス等には`// NOLINTNEXTLINE(warning-name)`を使用
