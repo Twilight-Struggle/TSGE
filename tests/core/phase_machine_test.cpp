@@ -65,6 +65,22 @@ class HeadlineEventCard final : public Card {
   bool canEventEnabled_;
 };
 
+class WarPeriodTaggedCard final : public Card {
+ public:
+  WarPeriodTaggedCard(CardEnum id, WarPeriod warPeriod)
+      : Card(id, "WarPeriodTagged", 2, Side::NEUTRAL, warPeriod, false) {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> event(Side /*unused*/) const override {
+    return {};
+  }
+
+  [[nodiscard]]
+  bool canEvent(const Board& /*board*/) const override {
+    return true;
+  }
+};
+
 class CardPoolGuard final {
  public:
   CardPoolGuard(std::array<std::unique_ptr<Card>, 111>& pool, CardEnum card,
@@ -579,13 +595,21 @@ TEST_F(PhaseMachineTest, ProcessesAnswerExecutesCommands) {
 TEST_F(PhaseMachineTest, TurnEndAdvancesTurnAndResetsActionRounds) {
   const int current_turn = board.getTurnTrack().getTurn();
   auto& action_track = board.getActionRoundTrack();
+  auto& milops_track = board.getMilopsTrack();
+  auto& defcon_track = board.getDefconTrack();
   for (int i = 0; i < 2; ++i) {
     action_track.advanceActionRound(Side::USSR, current_turn);
     action_track.advanceActionRound(Side::USA, current_turn);
   }
 
+  defcon_track.setDefcon(3);
+  milops_track.advanceMilopsTrack(Side::USSR, 3);
+  milops_track.advanceMilopsTrack(Side::USA, 1);
+
   board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
   board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardEffectInThisTurn(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardEffectInThisTurn(Side::USA, CardEnum::Fidel);
 
   board.pushState(StateType::USSR_WIN_END);
   board.pushState(StateType::TURN_END);
@@ -595,7 +619,119 @@ TEST_F(PhaseMachineTest, TurnEndAdvancesTurnAndResetsActionRounds) {
   EXPECT_EQ(board.getTurnTrack().getTurn(), current_turn + 1);
   EXPECT_EQ(action_track.getActionRound(Side::USSR), 0);
   EXPECT_EQ(action_track.getActionRound(Side::USA), 0);
+  EXPECT_EQ(milops_track.getMilops(Side::USSR), 0);
+  EXPECT_EQ(milops_track.getMilops(Side::USA), 0);
+  EXPECT_EQ(defcon_track.getDefcon(), 4);
+  EXPECT_TRUE(board.getCardsEffectsInThisTurn(Side::USSR).empty());
+  EXPECT_TRUE(board.getCardsEffectsInThisTurn(Side::USA).empty());
+  EXPECT_EQ(board.getVp(), 2);
   EXPECT_FALSE(std::get<0>(result).empty());
+}
+
+// MilOps差分は同時精算されるため、VPが閾値を跨いでも即時勝敗が決まらないことを確認する
+TEST_F(PhaseMachineTest, TurnEndMilopsPenaltyResolvesSimultaneously) {
+  const int current_turn = board.getTurnTrack().getTurn();
+  auto& action_track = board.getActionRoundTrack();
+  for (int i = 0; i < 2; ++i) {
+    action_track.advanceActionRound(Side::USSR, current_turn);
+    action_track.advanceActionRound(Side::USA, current_turn);
+  }
+
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  board.changeVp(19);
+  auto& defcon_track = board.getDefconTrack();
+  defcon_track.setDefcon(2);
+  // 両陣営ともMilOps=0のため不足量は同一。
+
+  board.pushState(StateType::USSR_WIN_END);
+  board.pushState(StateType::TURN_END);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(board.getVp(), 19);
+  EXPECT_FALSE(std::get<2>(result).has_value());
+}
+
+// USSRがVP19点の状態でMilOps不足差分により勝利へ到達することを検証する
+TEST_F(PhaseMachineTest, TurnEndMilopsPenaltyTriggersUssrVictory) {
+  const int current_turn = board.getTurnTrack().getTurn();
+  auto& action_track = board.getActionRoundTrack();
+  for (int i = 0; i < 2; ++i) {
+    action_track.advanceActionRound(Side::USSR, current_turn);
+    action_track.advanceActionRound(Side::USA, current_turn);
+  }
+
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  auto& milops_track = board.getMilopsTrack();
+  auto& defcon_track = board.getDefconTrack();
+  defcon_track.setDefcon(3);
+  milops_track.advanceMilopsTrack(Side::USSR, 3);
+
+  board.changeVp(19);
+
+  board.pushState(StateType::TURN_END);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  ASSERT_TRUE(std::get<2>(result).has_value());
+  EXPECT_EQ(std::get<2>(result).value(), Side::USSR);
+  EXPECT_GE(board.getVp(), 21);
+}
+
+// ターン3終了時にMid Warカードが山札へ投入されることを確認する
+TEST_F(PhaseMachineTest, TurnEndAddsMidWarCardsAtTurnThree) {
+  auto& pool = defaultCardPool();
+  CardPoolGuard mid_guard(pool, CardEnum::DuckAndCover,
+                          std::make_unique<WarPeriodTaggedCard>(
+                              CardEnum::DuckAndCover, WarPeriod::MID_WAR));
+
+  auto& deck = board.getDeck();
+  deck.getDeck().clear();
+  deck.getDiscardPile().clear();
+
+  auto& turn_track = board.getTurnTrack();
+  while (turn_track.getTurn() < 3) {
+    turn_track.nextTurn();
+  }
+
+  board.pushState(StateType::TURN_END);
+  PhaseMachine::step(board, std::nullopt);
+
+  const auto& cards = deck.getDeck();
+  ASSERT_EQ(cards.size(), 1U);
+  EXPECT_EQ(cards.front(), CardEnum::DuckAndCover);
+}
+
+// ターン7終了時にLate Warカードが山札へ投入されることを確認する
+TEST_F(PhaseMachineTest, TurnEndAddsLateWarCardsAtTurnSeven) {
+  auto& pool = defaultCardPool();
+  CardPoolGuard late_guard(pool, CardEnum::Fidel,
+                           std::make_unique<WarPeriodTaggedCard>(
+                               CardEnum::Fidel, WarPeriod::LATE_WAR));
+
+  auto& deck = board.getDeck();
+  deck.getDeck().clear();
+  deck.getDiscardPile().clear();
+
+  auto& turn_track = board.getTurnTrack();
+  while (turn_track.getTurn() < 7) {
+    turn_track.nextTurn();
+  }
+
+  board.pushState(StateType::TURN_END);
+  PhaseMachine::step(board, std::nullopt);
+
+  const auto& cards = deck.getDeck();
+  ASSERT_EQ(cards.size(), 1U);
+  EXPECT_EQ(cards.front(), CardEnum::Fidel);
 }
 
 // USAの追加ARが要求された場合に対応する分岐を通る

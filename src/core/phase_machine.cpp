@@ -76,8 +76,11 @@ MaybeStepOutput handleCommandOnTop(Board& board, StateStack& states) {
     return makeInputResult(std::move(legal_moves), request->getSide());
   }
 
-  (*command_ptr)->apply(board);
+  // RequestCommand以外は先にスタックから取り除き、派生先のState/Commandが
+  // pop_backで消えないようにする。
+  auto command = *command_ptr;
   states.pop_back();
+  command->apply(board);
   return std::nullopt;
 }
 
@@ -272,12 +275,55 @@ MaybeStepOutput handleState(Board& board, StateStack& states, StateType state) {
     case StateType::EXTRA_AR_USA:
       return handleExtraActionRound(board, states, Side::USA,
                                     StateType::AR_USA_COMPLETE);
-    case StateType::TURN_END:
-      // TODO(tsge-phase-machine): 補給・得点計算などターン終了処理を網羅する。
-      board.getTurnTrack().nextTurn();
+    case StateType::TURN_END: {
+      auto& milops_track = board.getMilopsTrack();
+      auto& defcon_track = board.getDefconTrack();
+      auto& deck = board.getDeck();
+      auto& turn_track = board.getTurnTrack();
+      const int current_turn = turn_track.getTurn();
+      // DEFCON値がそのターンに要求される最低MilOpsを表す。
+      const int required_ops = defcon_track.getDefcon();
+
+      const auto calc_deficit = [&](Side side) {
+        const int current_ops = milops_track.getMilops(side);
+        return std::max(required_ops - current_ops, 0);
+      };
+      const int ussr_deficit = calc_deficit(Side::USSR);
+      const int usa_deficit = calc_deficit(Side::USA);
+
+      // 両陣営の不足分は同時に精算されるため、差分だけを一度に得点処理する。
+      // こうすることで「VP20到達→即勝利→相殺」という誤判定を避けられる。
+      const int net_delta = usa_deficit * getVpMultiplier(Side::USSR) +
+                            ussr_deficit * getVpMultiplier(Side::USA);
+      CommandPtr milops_penalty = nullptr;
+      if (net_delta != 0) {
+        milops_penalty =
+            std::make_shared<ChangeVpCommand>(Side::USSR, net_delta);
+      }
+
+      if (current_turn == 3) {
+        // Mid War移行時は該当カードを山札に組み込み、その後の配布に備える。
+        deck.addMidWarCards();
+      }
+      if (current_turn == 7) {
+        // Late Warカードも同様にターン7終了時に投入する。
+        deck.addLateWarCards();
+      }
+
+      milops_track.resetMilopsTrack();
+      defcon_track.changeDefcon(1);
+      // TODO(tsge-phase-machine): 中国カードをTURN_ENDで表向きに戻す。
+      // ターン内で発生したカード効果記録はターン終了時に必ず破棄する。
+      board.clearCardsEffectsInThisTurn();
+
+      turn_track.nextTurn();
       board.getActionRoundTrack().resetActionRounds();
       states.emplace_back(StateType::TURN_START);
+      if (milops_penalty != nullptr) {
+        states.emplace_back(std::move(milops_penalty));
+      }
       return std::nullopt;
+    }
     case StateType::USSR_WIN_END:
       return makeTerminalResult(Side::USSR);
     case StateType::USA_WIN_END:
