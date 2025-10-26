@@ -461,6 +461,23 @@ TEST_F(ActionRealignmentLegalMovesTest, OpsValueDoesNotAffectMoveCount) {
   EXPECT_EQ(moves4ops.size(), 4);
 }
 
+TEST_F(ActionRealignmentLegalMovesTest, SingleCardHelperMatchesGeneral) {
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Fidel});
+
+  auto helper_moves = LegalMovesGenerator::actionRealignmentLegalMovesForCard(
+      board, Side::USSR, CardEnum::Fidel);
+  auto general_moves =
+      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+
+  ASSERT_EQ(helper_moves.size(), general_moves.size());
+  EXPECT_FALSE(helper_moves.empty());
+  for (const auto& move : helper_moves) {
+    ASSERT_NE(move, nullptr);
+    EXPECT_EQ(move->getCard(), CardEnum::Fidel);
+  }
+}
+
 // actionPlaceInfluenceLegalMovesのテスト
 class ActionPlaceInfluenceLegalMovesTest : public ::testing::Test {
  protected:
@@ -607,6 +624,32 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ScoringCardNoMoves) {
 
   // CLAUDE.mdの仕様：Ops0では合法手なし（実装でOps0カードは除外される）
   EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, SingleCardHelperMatchesGeneral) {
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  TestHelper::clearSuperPowerInfluence(board, Side::USSR);
+  TestHelper::clearSuperPowerInfluence(board, Side::USA);
+
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 1);
+
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Fidel});
+
+  auto helper_moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+          board, Side::USSR, CardEnum::Fidel);
+  auto general_moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+
+  ASSERT_EQ(helper_moves.size(), general_moves.size());
+  EXPECT_FALSE(helper_moves.empty());
+  for (const auto& move : helper_moves) {
+    ASSERT_NE(move, nullptr);
+    EXPECT_EQ(move->getCard(), CardEnum::Fidel);
+  }
 }
 
 // actionCoupLegalMovesのテスト
@@ -771,6 +814,96 @@ TEST_F(ActionCoupLegalMovesTest, MixedOpsValues) {
     }
   }
   EXPECT_FALSE(has_dummy_move);
+}
+
+TEST_F(ActionCoupLegalMovesTest, SingleCardHelperMatchesGeneral) {
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+  board.getDefconTrack().setDefcon(5);
+
+  auto helper_moves = LegalMovesGenerator::actionCoupLegalMovesForCard(
+      board, Side::USSR, CardEnum::DuckAndCover);
+  auto general_moves =
+      LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  ASSERT_EQ(helper_moves.size(), general_moves.size());
+  EXPECT_FALSE(helper_moves.empty());
+  for (const auto& move : helper_moves) {
+    ASSERT_NE(move, nullptr);
+    EXPECT_EQ(move->getCard(), CardEnum::DuckAndCover);
+  }
+}
+
+class ActionLegalMovesForCardTest : public ::testing::Test {
+ protected:
+  ActionLegalMovesForCardTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(ActionLegalMovesForCardTest, AggregatesPlaceRealignCoupMoves) {
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DuckAndCover});
+  board.getDefconTrack().setDefcon(5);
+
+  auto place_moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+      board, Side::USSR, CardEnum::DuckAndCover);
+  auto realign_moves = LegalMovesGenerator::actionRealignmentLegalMovesForCard(
+      board, Side::USSR, CardEnum::DuckAndCover);
+  auto coup_moves = LegalMovesGenerator::actionCoupLegalMovesForCard(
+      board, Side::USSR, CardEnum::DuckAndCover);
+
+  auto ops_moves = LegalMovesGenerator::actionLegalMovesForCard(
+      board, Side::USSR, CardEnum::DuckAndCover);
+
+  const size_t expected_size =
+      place_moves.size() + realign_moves.size() + coup_moves.size();
+  EXPECT_EQ(ops_moves.size(), expected_size);
+
+  for (const auto& move : ops_moves) {
+    ASSERT_NE(move, nullptr);
+    EXPECT_EQ(move->getCard(), CardEnum::DuckAndCover);
+    EXPECT_EQ(move->getSide(), Side::USSR);
+
+    const bool is_place =
+        dynamic_cast<ActionPlaceInfluenceMove*>(move.get()) != nullptr;
+    const bool is_realign =
+        dynamic_cast<ActionRealigmentMove*>(move.get()) != nullptr;
+    const bool is_coup = dynamic_cast<ActionCoupMove*>(move.get()) != nullptr;
+    EXPECT_TRUE(is_place || is_realign || is_coup);
+  }
+}
+
+class ExtraActionRoundLegalMovesTest : public ::testing::Test {
+ protected:
+  ExtraActionRoundLegalMovesTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(ExtraActionRoundLegalMovesTest, ProvidesPassWhenNoOtherMoves) {
+  board.clearHand(Side::USSR);
+
+  auto moves =
+      LegalMovesGenerator::extraActionRoundLegalMoves(board, Side::USSR);
+
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_NE(dynamic_cast<ExtraActionPassMove*>(moves.front().get()), nullptr);
+}
+
+TEST_F(ExtraActionRoundLegalMovesTest, PassIncludedAlongsideOpsMoves) {
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::Fidel});
+
+  auto moves =
+      LegalMovesGenerator::extraActionRoundLegalMoves(board, Side::USSR);
+
+  ASSERT_GE(moves.size(), 2);
+  const auto pass_count =
+      std::count_if(moves.begin(), moves.end(), [](const auto& move) {
+        return dynamic_cast<ExtraActionPassMove*>(move.get()) != nullptr;
+      });
+  EXPECT_EQ(pass_count, 1);
 }
 
 // actionSpaceRaceLegalMovesのテスト

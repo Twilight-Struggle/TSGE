@@ -18,6 +18,8 @@
   - 中国カード／ベトナム蜂起ボーナス用の拡張。現状は判定未実装のため結果は空。
 - `actionCoupLegalMoves` → `ActionCoupMove`
   - 全合法国×Ops>0カード。`ActionCoupCommand`が連鎖でDEFCON変更等を生成。
+- `actionLegalMovesForCard` → `ActionPlaceInfluenceMove` / `ActionRealigmentMove` / `ActionCoupMove`
+  - 指定カードのOpsを用いる通常アクション一式を連結して返す。イベント後の追加Ops選択など、`Move`合成責務を`LegalMovesGenerator`へ集約するためのユーティリティ。
 - `actionSpaceRaceLegalMoves` → `ActionSpaceRaceMove`
   - `SpaceTrack::canSpace`を満たすカードのみ。Moveは単一の`ActionSpaceRaceCommand`を返す。
 - `actionEventLegalMoves` → `ActionEventMove`

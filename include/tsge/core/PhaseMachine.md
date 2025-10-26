@@ -33,7 +33,7 @@ PhaseMachine::step(Board& board,
 - **HEADLINE_PROCESS_EVENTS**: 両陣営のヘッドラインカードを OPS 値（同値時は USSR 優先）順に解決。各カードについて `FinalizeCardPlayCommand` を先に積み、`event()` が返すコマンド列を後続投入。処理後はヘッドラインカードをクリアし `AR_USSR` を積む。
 - **AR_USSR / AR_USA**: 現在手番を設定し `AR_*_COMPLETE` を積んだ上で `LegalMovesGenerator::arLegalMoves()` を返す。合法手が空の場合は直ちに完了処理へ移行。
 - **AR_USSR_COMPLETE / AR_USA_COMPLETE**: `updateActionRoundStatus()` でARカウンタを進め、優先順位「相手通常AR → 自分通常AR → 相手追加AR → 自分追加AR → TURN_END」に従って次状態を積む。
-- **EXTRA_AR_USSR / EXTRA_AR_USA**: 追加AR権を `clearExtraActionRound()` で消費し、通常ARと同様に合法手を提示。
+- **EXTRA_AR_USSR / EXTRA_AR_USA**: 追加AR権を `clearExtraActionRound()` で消費し、`LegalMovesGenerator::extraActionRoundLegalMoves()` から取得した合法手（通常Ops手 + 追加AR専用パスムーブ）を提示。
 - **TURN_END**: `TurnTrack::nextTurn()` と `ActionRoundTrack::resetActionRounds()` を実行後に `TURN_START` を積む。
 - **USSR_WIN_END / USA_WIN_END / DRAW_END**: 空の合法手と勝者情報を返す終端結果を生成。
 
@@ -50,7 +50,7 @@ PhaseMachine::step(Board& board,
 
 ## TODO
 
-1. 追加AR専用パスムーブとテストケース整備。
+1. ~~追加AR専用パスムーブとテストケース整備。~~ ✅ `LegalMovesGenerator::extraActionRoundLegalMoves()` で実装済み。
 2. DEFCON=2・NORAD 発動タイミングの統合。
 3. ターン開始／終了時の補給・継続効果処理（North Sea Oil 等）。
 

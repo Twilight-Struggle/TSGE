@@ -33,11 +33,14 @@ class DummyCard : public Card {
 };
 
 // テスト用カードプール作成関数
-static std::array<std::unique_ptr<Card>, 111> createTestCardPool() {
-  std::array<std::unique_ptr<Card>, 111> pool{};
-  // 必要なカードのみ初期化
-  pool[static_cast<size_t>(CardEnum::Dummy)] =
-      std::make_unique<DummyCard>(3, Side::NEUTRAL);
+static const std::array<std::unique_ptr<Card>, 111>& createTestCardPool() {
+  static std::array<std::unique_ptr<Card>, 111> pool{};
+  static bool initialized = false;
+  if (!initialized) {
+    pool[static_cast<size_t>(CardEnum::Dummy)] =
+        std::make_unique<DummyCard>(3, Side::NEUTRAL);
+    initialized = true;
+  }
   return pool;
 }
 
@@ -593,6 +596,29 @@ TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
   auto legal_moves = request_cmd->legalMoves(board_);
   EXPECT_NO_THROW({ auto moves = request_cmd->legalMoves(board_); });
 
-  // TODOコメントの実装により空のvectorが返される
-  EXPECT_TRUE(legal_moves.empty());
+  // LegalMovesGeneratorの新ヘルパーと結果が一致することを確認
+  auto expected_moves = LegalMovesGenerator::actionLegalMovesForCard(
+      board_, Side::USA, CardEnum::Dummy);
+  EXPECT_EQ(legal_moves.size(), expected_moves.size());
+
+  // それぞれのMoveが正しいカードとサイドに紐づくことを確認
+  for (const auto& move_ptr : legal_moves) {
+    ASSERT_NE(move_ptr, nullptr);
+    EXPECT_EQ(move_ptr->getCard(), CardEnum::Dummy);
+    EXPECT_EQ(move_ptr->getSide(), Side::USA);
+
+    auto* place_move = dynamic_cast<ActionPlaceInfluenceMove*>(move_ptr.get());
+    auto* realign_move = dynamic_cast<ActionRealigmentMove*>(move_ptr.get());
+    auto* coup_move = dynamic_cast<ActionCoupMove*>(move_ptr.get());
+    EXPECT_TRUE(place_move != nullptr || realign_move != nullptr ||
+                coup_move != nullptr);
+  }
+}
+
+TEST_F(MoveTest, ExtraActionPassMoveReturnsNoCommands) {
+  ExtraActionPassMove move(Side::USSR);
+  auto commands = move.toCommand(dummy_card_neutral_);
+
+  EXPECT_TRUE(commands.empty());
+  EXPECT_EQ(move.getCard(), CardEnum::Dummy);
 }

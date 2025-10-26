@@ -178,12 +178,17 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
         player_side,
         [card_enum = getCard(), side = player_side](
             const Board& board) -> std::vector<std::shared_ptr<Move>> {
-          // TODO: This should be implemented in LegalMovesGenerator
-          // For now, return empty vector as placeholder
-          return {};
+          return LegalMovesGenerator::actionLegalMovesForCard(board, side,
+                                                              card_enum);
         }));
   }
 
   return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
                                     card, true);
+}
+
+std::vector<CommandPtr> ExtraActionPassMove::toCommand(
+    const std::unique_ptr<Card>& /*card*/) const {
+  // 追加ARのパスはCommandを発生させず、即座にAR完了処理へ移行させる。
+  return {};
 }

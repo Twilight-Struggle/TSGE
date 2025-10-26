@@ -5,6 +5,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -137,6 +138,82 @@ std::vector<std::pair<int, const BonusCondition*>> computeOpsVariants(
   return res;
 }
 
+void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
+                       std::map<CountryEnum, int>& placed,
+                       std::vector<std::map<CountryEnum, int>>& out,
+                       int totalOps,
+                       const std::vector<CountryEnum>& placeableVec, Side side,
+                       const BonusCondition* bonus);
+
+struct PlaceInfluenceCacheKey {
+  int ops;
+  const BonusCondition* bonus;
+};
+
+struct PlaceInfluenceCacheComparator {
+  bool operator()(const PlaceInfluenceCacheKey& lhs,
+                  const PlaceInfluenceCacheKey& rhs) const {
+    return std::tie(lhs.ops, lhs.bonus) < std::tie(rhs.ops, rhs.bonus);
+  }
+};
+
+using PlaceInfluenceCache =
+    std::map<PlaceInfluenceCacheKey, std::vector<std::map<CountryEnum, int>>,
+             PlaceInfluenceCacheComparator>;
+
+void placeInfluenceMovesForCard(const Board& board, Side side,
+                                CardEnum cardEnum,
+                                const std::vector<CountryEnum>& placeableVec,
+                                PlaceInfluenceCache& cache,
+                                std::vector<std::shared_ptr<Move>>& out) {
+  const auto& card = board.getCardpool()[static_cast<size_t>(cardEnum)];
+  if (card->getOps() == 0) {
+    return;
+  }
+
+  for (auto [totalOps, bonus] : computeOpsVariants(cardEnum, board, side)) {
+    PlaceInfluenceCacheKey key{totalOps, bonus};
+    auto [iter, inserted] = cache.try_emplace(key);
+    if (inserted) {
+      WorldMap tmp_world_map(board.getWorldMap());
+      std::map<CountryEnum, int> placed;
+      placeInfluenceDfs(0, 0, tmp_world_map, placed, iter->second, totalOps,
+                        placeableVec, side, bonus);
+    }
+
+    const auto& place_patterns = iter->second;
+    out.reserve(out.size() + place_patterns.size());
+    for (const auto& pattern : place_patterns) {
+      out.emplace_back(
+          std::make_shared<ActionPlaceInfluenceMove>(cardEnum, side, pattern));
+    }
+  }
+}
+
+std::vector<std::shared_ptr<Move>> generatePlaceInfluenceMoves(
+    const Board& board, Side side, const std::vector<CardEnum>& cards) {
+  if (cards.empty()) {
+    return {};
+  }
+
+  const auto& world_map = board.getWorldMap();
+  auto placeable = world_map.placeableCountries(side);
+  if (placeable.empty()) [[unlikely]] {
+    return {};
+  }
+
+  std::vector<CountryEnum> placeable_vec;
+  placeable_vec.assign(placeable.begin(), placeable.end());
+
+  PlaceInfluenceCache cache;
+  std::vector<std::shared_ptr<Move>> results;
+  for (CardEnum card_enum : cards) {
+    placeInfluenceMovesForCard(board, side, card_enum, placeable_vec, cache,
+                               results);
+  }
+  return results;
+}
+
 /// その国に「影響力を +1」するのに必要な OP コストを返す
 inline int costToAddOneInfluence(const WorldMap& worldMap,
                                  CountryEnum countryEnum, Side side) {
@@ -190,61 +267,15 @@ std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
                                                     Side side) {
   const auto& hands = board.getPlayerHand(side);
-  if (hands.empty()) {
-    return {};
-  }
+  return generatePlaceInfluenceMoves(board, side, hands);
+}
 
-  const auto& world_map = board.getWorldMap();
-  auto placeable = world_map.placeableCountries(side);
-  if (placeable.empty()) [[unlikely]] {
-    return {};
-  }
-
-  std::vector<CountryEnum> placeable_vec;
-  placeable_vec.assign(placeable.begin(), placeable.end());
-
-  /*----  Ops×Bonus ごとに DFS を 1 度だけ ----*/
-  struct Key {
-    int ops;
-    const BonusCondition* bonus;
-  };
-  // bonusの比較は単にポインタを比較している
-  // ポインタが同じならば同じボーナス条件とみなされるため、mapのinsertに失敗する
-  // これにより同じボーナス条件がかぶるのを防ぐ
-  auto cmp = [](Key key_a, Key key_b) {
-    return std::tie(key_a.ops, key_a.bonus) < std::tie(key_b.ops, key_b.bonus);
-  };
-  std::map<Key, std::vector<std::map<CountryEnum, int>>, decltype(cmp)> cache(
-      cmp);
-
-  std::vector<std::shared_ptr<Move>> results;
-
-  for (CardEnum card_enum : hands) {
-    // Ops 0のカードは除外（スコアカード相当）
-    const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
-    if (card->getOps() == 0) {
-      continue;
-    }
-
-    for (auto [totalOps, bonus] : computeOpsVariants(card_enum, board, side)) {
-      Key key{totalOps, bonus};
-
-      if (!cache.contains(key)) {
-        WorldMap tmp_world_map(world_map);
-        std::map<CountryEnum, int> placed;
-        cache[key] = {};
-
-        placeInfluenceDfs(0, 0, tmp_world_map, placed, cache[key], totalOps,
-                          placeable_vec, side, bonus);
-      }
-      results.reserve(results.size() + cache[key].size());
-      for (const auto& pattern : cache[key]) {
-        results.emplace_back(std::make_shared<ActionPlaceInfluenceMove>(
-            card_enum, side, pattern));
-      }
-    }
-  }
-  return results;
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(const Board& board,
+                                                           Side side,
+                                                           CardEnum cardEnum) {
+  std::vector<CardEnum> single_card = {cardEnum};
+  return generatePlaceInfluenceMoves(board, side, single_card);
 }
 
 std::vector<std::shared_ptr<Move>>
@@ -281,6 +312,30 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
       results.emplace_back(std::make_shared<ActionRealigmentMove>(
           card_enum, side, country_enum));
     }
+  }
+
+  return results;
+}
+
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::actionRealignmentLegalMovesForCard(const Board& board,
+                                                        Side side,
+                                                        CardEnum cardEnum) {
+  auto target_countries = collectOpponentInfluencedCountries(board, side);
+  if (target_countries.empty()) {
+    return {};
+  }
+
+  const auto& card = board.getCardpool()[static_cast<size_t>(cardEnum)];
+  if (card->getOps() == 0) {
+    return {};
+  }
+
+  std::vector<std::shared_ptr<Move>> results;
+  results.reserve(target_countries.size());
+  for (auto country_enum : target_countries) {
+    results.emplace_back(
+        std::make_shared<ActionRealigmentMove>(cardEnum, side, country_enum));
   }
 
   return results;
@@ -428,6 +483,54 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
 }
 
 std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::actionCoupLegalMovesForCard(const Board& board, Side side,
+                                                 CardEnum cardEnum) {
+  auto target_countries = collectOpponentInfluencedCountries(board, side);
+  if (target_countries.empty()) {
+    return {};
+  }
+
+  const auto& card = board.getCardpool()[static_cast<size_t>(cardEnum)];
+  if (card->getOps() == 0) {
+    return {};
+  }
+
+  std::vector<std::shared_ptr<Move>> results;
+  results.reserve(target_countries.size());
+  for (auto country_enum : target_countries) {
+    results.emplace_back(
+        std::make_shared<ActionCoupMove>(cardEnum, side, country_enum));
+  }
+
+  return results;
+}
+
+std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionLegalMovesForCard(
+    const Board& board, Side side, CardEnum cardEnum) {
+  auto place_moves =
+      actionPlaceInfluenceLegalMovesForCard(board, side, cardEnum);
+  auto realign_moves =
+      actionRealignmentLegalMovesForCard(board, side, cardEnum);
+  auto coup_moves = actionCoupLegalMovesForCard(board, side, cardEnum);
+
+  std::vector<std::shared_ptr<Move>> ops_moves;
+  ops_moves.reserve(place_moves.size() + realign_moves.size() +
+                    coup_moves.size());
+
+  auto append_moves = [&ops_moves](std::vector<std::shared_ptr<Move>>& moves) {
+    for (auto& move : moves) {
+      ops_moves.emplace_back(std::move(move));
+    }
+  };
+
+  append_moves(place_moves);
+  append_moves(realign_moves);
+  append_moves(coup_moves);
+
+  return ops_moves;
+}
+
+std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionSpaceRaceLegalMoves(const Board& board, Side side) {
   const auto& hands = board.getPlayerHand(side);
   if (hands.empty()) {
@@ -526,5 +629,12 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::arLegalMoves(
     legal_moves.push_back(std::move(move));
   }
 
+  return legal_moves;
+}
+
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::extraActionRoundLegalMoves(const Board& board, Side side) {
+  auto legal_moves = arLegalMoves(board, side);
+  legal_moves.emplace_back(std::make_shared<ExtraActionPassMove>(side));
   return legal_moves;
 }

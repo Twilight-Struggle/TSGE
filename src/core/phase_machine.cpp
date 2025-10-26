@@ -131,8 +131,8 @@ MaybeStepOutput handleExtraActionRound(Board& board, StateStack& states,
   board.getActionRoundTrack().clearExtraActionRound(side);
   states.emplace_back(completion_state);
 
-  // TODO(tsge-phase-machine): 追加AR専用のパスムーブを提供する。
-  auto legal_moves = LegalMovesGenerator::arLegalMoves(board, side);
+  auto legal_moves =
+      LegalMovesGenerator::extraActionRoundLegalMoves(board, side);
   if (legal_moves.empty()) {
     return std::nullopt;
   }

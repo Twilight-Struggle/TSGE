@@ -453,6 +453,38 @@ TEST_F(PhaseMachineTest, ExtraActionRoundForUssrRequestsInput) {
             StateType::AR_USSR_COMPLETE);
 }
 
+TEST_F(PhaseMachineTest, ExtraActionRoundOffersPassMove) {
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::Fidel);
+
+  auto& track = board.getActionRoundTrack();
+  const int turn = board.getTurnTrack().getTurn();
+  const int defined_rounds = track.getDefinedActionRounds(turn);
+
+  for (int i = 0; i < defined_rounds; ++i) {
+    track.advanceActionRound(Side::USSR, turn);
+    track.advanceActionRound(Side::USA, turn);
+  }
+
+  track.setExtraActionRound(Side::USSR);
+  track.clearExtraActionRound(Side::USA);
+
+  board.pushState(StateType::AR_USSR_COMPLETE);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  auto& moves = std::get<0>(result);
+  EXPECT_EQ(std::get<1>(result), Side::USSR);
+  ASSERT_FALSE(moves.empty());
+  const bool has_pass =
+      std::any_of(moves.begin(), moves.end(), [](const auto& move) {
+        return dynamic_cast<ExtraActionPassMove*>(move.get()) != nullptr;
+      });
+  EXPECT_TRUE(has_pass);
+}
+
 // RequestCommandが合法手を返さない場合でもフェーズが前進する
 TEST_F(PhaseMachineTest, RequestCommandWithNoLegalMovesIsDiscarded) {
   board.clearHand(Side::USSR);

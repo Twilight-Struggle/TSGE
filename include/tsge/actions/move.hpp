@@ -205,6 +205,22 @@ class ActionEventMove final : public Move {
   }
 };
 
+// 追加AR専用のパスムーブ。カードを消費せず即座にAR完了処理へ遷移する。
+class ExtraActionPassMove final : public Move {
+ public:
+  explicit ExtraActionPassMove(Side side) : Move{CardEnum::Dummy, side} {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> toCommand(
+      const std::unique_ptr<Card>& /*card*/) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    return this->getSide() == other.getSide() &&
+           dynamic_cast<const ExtraActionPassMove*>(&other) != nullptr;
+  }
+};
+
 class HeadlineCardSelectMove final : public Move {
  public:
   HeadlineCardSelectMove(CardEnum card, Side side) : Move{card, side} {}
