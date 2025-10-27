@@ -205,10 +205,10 @@ class ActionEventMove final : public Move {
   }
 };
 
-// 追加AR専用のパスムーブ。カードを消費せず即座にAR完了処理へ遷移する。
-class ExtraActionPassMove final : public Move {
+// 共通パスムーブ。カードを消費せず即座にフェーズ完了処理へ遷移する。
+class PassMove final : public Move {
  public:
-  explicit ExtraActionPassMove(Side side) : Move{CardEnum::Dummy, side} {}
+  explicit PassMove(Side side) : Move{CardEnum::Dummy, side} {}
 
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
@@ -217,7 +217,23 @@ class ExtraActionPassMove final : public Move {
   [[nodiscard]]
   bool operator==(const Move& other) const override {
     return this->getSide() == other.getSide() &&
-           dynamic_cast<const ExtraActionPassMove*>(&other) != nullptr;
+           dynamic_cast<const PassMove*>(&other) != nullptr;
+  }
+};
+
+class DiscardMove final : public Move {
+ public:
+  DiscardMove(CardEnum card, Side side) : Move{card, side} {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> toCommand(
+      const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    return this->getCard() == other.getCard() &&
+           this->getSide() == other.getSide() &&
+           dynamic_cast<const DiscardMove*>(&other) != nullptr;
   }
 };
 

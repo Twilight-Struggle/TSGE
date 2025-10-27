@@ -166,3 +166,13 @@ void FinalizeCardPlayCommand::apply(Board& board) const {
     deck.getDiscardPile().push_back(card_);
   }
 }
+
+void DiscardCommand::apply(Board& board) const {
+  auto& hand = board.getPlayerHand(side_);
+  const auto iter = std::find(hand.begin(), hand.end(), card_);
+  if (iter == hand.end()) {
+    return;
+  }
+  hand.erase(iter);
+  board.getDeck().getDiscardPile().push_back(card_);
+}

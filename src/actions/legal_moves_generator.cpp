@@ -635,6 +635,23 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::arLegalMoves(
 std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::extraActionRoundLegalMoves(const Board& board, Side side) {
   auto legal_moves = arLegalMoves(board, side);
-  legal_moves.emplace_back(std::make_shared<ExtraActionPassMove>(side));
+  legal_moves.emplace_back(std::make_shared<PassMove>(side));
   return legal_moves;
+}
+
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::spaceTrackDiscardLegalMoves(const Board& board,
+                                                 Side side) {
+  const auto& hand = board.getPlayerHand(side);
+  if (hand.empty()) {
+    return {};
+  }
+
+  std::vector<std::shared_ptr<Move>> moves;
+  moves.reserve(hand.size() + 1);
+  for (const auto card_enum : hand) {
+    moves.emplace_back(std::make_shared<DiscardMove>(card_enum, side));
+  }
+  moves.emplace_back(std::make_shared<PassMove>(side));
+  return moves;
 }

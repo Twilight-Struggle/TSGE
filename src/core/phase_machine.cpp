@@ -319,6 +319,23 @@ MaybeStepOutput handleState(Board& board, StateStack& states, StateType state) {
       turn_track.nextTurn();
       board.getActionRoundTrack().resetActionRounds();
       states.emplace_back(StateType::TURN_START);
+      const auto enqueue_space_track_discard = [&](Side side) {
+        auto& space_track = board.getSpaceTrack();
+        if (!space_track.effectEnabled(side, 6)) {
+          return;
+        }
+        const auto& hand = board.getPlayerHand(side);
+        if (hand.empty()) {
+          return;
+        }
+        states.emplace_back(std::make_shared<RequestCommand>(
+            side, [side](const Board& next_board) {
+              return LegalMovesGenerator::spaceTrackDiscardLegalMoves(
+                  next_board, side);
+            }));
+      };
+      enqueue_space_track_discard(Side::USSR);
+      enqueue_space_track_discard(Side::USA);
       if (milops_penalty != nullptr) {
         states.emplace_back(std::move(milops_penalty));
       }

@@ -14,6 +14,8 @@ class LegalMovesGenerator {
       const Board& board, Side side);
   static std::vector<std::shared_ptr<Move>> extraActionRoundLegalMoves(
       const Board& board, Side side);
+  static std::vector<std::shared_ptr<Move>> spaceTrackDiscardLegalMoves(
+      const Board& board, Side side);
 
   static std::vector<std::shared_ptr<Move>> realignmentRequestLegalMoves(
       const Board& board, Side side, CardEnum cardEnum,

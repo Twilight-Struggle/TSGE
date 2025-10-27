@@ -888,7 +888,7 @@ TEST_F(ExtraActionRoundLegalMovesTest, ProvidesPassWhenNoOtherMoves) {
       LegalMovesGenerator::extraActionRoundLegalMoves(board, Side::USSR);
 
   ASSERT_EQ(moves.size(), 1);
-  EXPECT_NE(dynamic_cast<ExtraActionPassMove*>(moves.front().get()), nullptr);
+  EXPECT_NE(dynamic_cast<PassMove*>(moves.front().get()), nullptr);
 }
 
 TEST_F(ExtraActionRoundLegalMovesTest, PassIncludedAlongsideOpsMoves) {
@@ -901,9 +901,56 @@ TEST_F(ExtraActionRoundLegalMovesTest, PassIncludedAlongsideOpsMoves) {
   ASSERT_GE(moves.size(), 2);
   const auto pass_count =
       std::count_if(moves.begin(), moves.end(), [](const auto& move) {
-        return dynamic_cast<ExtraActionPassMove*>(move.get()) != nullptr;
+        return dynamic_cast<PassMove*>(move.get()) != nullptr;
       });
   EXPECT_EQ(pass_count, 1);
+}
+
+class SpaceTrackDiscardLegalMovesTest : public ::testing::Test {
+ protected:
+  SpaceTrackDiscardLegalMovesTest() : board(createTestCardPool()) {}
+
+  Board board;
+};
+
+TEST_F(SpaceTrackDiscardLegalMovesTest, ListsCardsAndPassMove) {
+  TestHelper::addCardsToHand(board, Side::USSR,
+                             {CardEnum::Fidel, CardEnum::DuckAndCover});
+
+  auto moves =
+      LegalMovesGenerator::spaceTrackDiscardLegalMoves(board, Side::USSR);
+
+  ASSERT_EQ(moves.size(), 3);
+  int pass_count = 0;
+  std::vector<CardEnum> discard_candidates;
+  discard_candidates.reserve(2);
+  for (const auto& move : moves) {
+    if (dynamic_cast<PassMove*>(move.get()) != nullptr) {
+      ++pass_count;
+      continue;
+    }
+    auto* discard = dynamic_cast<DiscardMove*>(move.get());
+    ASSERT_NE(discard, nullptr);
+    discard_candidates.push_back(discard->getCard());
+  }
+
+  EXPECT_EQ(pass_count, 1);
+  ASSERT_EQ(discard_candidates.size(), 2U);
+  EXPECT_NE(std::find(discard_candidates.begin(), discard_candidates.end(),
+                      CardEnum::Fidel),
+            discard_candidates.end());
+  EXPECT_NE(std::find(discard_candidates.begin(), discard_candidates.end(),
+                      CardEnum::DuckAndCover),
+            discard_candidates.end());
+}
+
+TEST_F(SpaceTrackDiscardLegalMovesTest, ReturnsEmptyWhenHandEmpty) {
+  board.clearHand(Side::USSR);
+
+  auto moves =
+      LegalMovesGenerator::spaceTrackDiscardLegalMoves(board, Side::USSR);
+
+  EXPECT_TRUE(moves.empty());
 }
 
 // actionSpaceRaceLegalMovesのテスト

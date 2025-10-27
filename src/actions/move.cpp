@@ -187,8 +187,13 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
                                     card, true);
 }
 
-std::vector<CommandPtr> ExtraActionPassMove::toCommand(
+std::vector<CommandPtr> PassMove::toCommand(
     const std::unique_ptr<Card>& /*card*/) const {
-  // 追加ARのパスはCommandを発生させず、即座にAR完了処理へ移行させる。
+  // パスはCommandを発生させず、直後の処理へ移行させる。
   return {};
+}
+
+std::vector<CommandPtr> DiscardMove::toCommand(
+    const std::unique_ptr<Card>& /*card*/) const {
+  return {std::make_shared<DiscardCommand>(getSide(), getCard())};
 }

@@ -496,7 +496,7 @@ TEST_F(PhaseMachineTest, ExtraActionRoundOffersPassMove) {
   ASSERT_FALSE(moves.empty());
   const bool has_pass =
       std::any_of(moves.begin(), moves.end(), [](const auto& move) {
-        return dynamic_cast<ExtraActionPassMove*>(move.get()) != nullptr;
+        return dynamic_cast<PassMove*>(move.get()) != nullptr;
       });
   EXPECT_TRUE(has_pass);
 }
@@ -732,6 +732,82 @@ TEST_F(PhaseMachineTest, TurnEndAddsLateWarCardsAtTurnSeven) {
   const auto& cards = deck.getDeck();
   ASSERT_EQ(cards.size(), 1U);
   EXPECT_EQ(cards.front(), CardEnum::Fidel);
+}
+
+TEST_F(PhaseMachineTest, TurnEndRequestsSpaceTrackDiscardWhenAdvantaged) {
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+
+  board.getSpaceTrack().advanceSpaceTrack(Side::USSR, 6);
+  board.getSpaceTrack().advanceSpaceTrack(Side::USA, 3);
+
+  auto& milops_track = board.getMilopsTrack();
+  milops_track.advanceMilopsTrack(Side::USSR, 5);
+  milops_track.advanceMilopsTrack(Side::USA, 5);
+
+  board.pushState(StateType::TURN_END);
+
+  auto result = PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(std::get<1>(result), Side::USSR);
+  const auto& moves = std::get<0>(result);
+  ASSERT_EQ(moves.size(), 3);
+  const auto pass_count =
+      std::count_if(moves.begin(), moves.end(), [](const auto& move) {
+        return dynamic_cast<PassMove*>(move.get()) != nullptr;
+      });
+  EXPECT_EQ(pass_count, 1);
+  const auto discard_count =
+      std::count_if(moves.begin(), moves.end(), [](const auto& move) {
+        return dynamic_cast<DiscardMove*>(move.get()) != nullptr;
+      });
+  EXPECT_EQ(discard_count, 2);
+}
+
+TEST_F(PhaseMachineTest, SpaceTrackDiscardMoveRemovesCardAndResumesTurn) {
+  board.clearHand(Side::USSR);
+  board.clearHand(Side::USA);
+  board.addCardToHand(Side::USSR, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+
+  board.getSpaceTrack().advanceSpaceTrack(Side::USSR, 6);
+  board.getSpaceTrack().advanceSpaceTrack(Side::USA, 3);
+
+  auto& milops_track = board.getMilopsTrack();
+  milops_track.advanceMilopsTrack(Side::USSR, 5);
+  milops_track.advanceMilopsTrack(Side::USA, 5);
+
+  board.pushState(StateType::TURN_END);
+
+  auto initial_result = PhaseMachine::step(board, std::nullopt);
+  auto moves = std::get<0>(initial_result);
+
+  auto discard_it =
+      std::find_if(moves.begin(), moves.end(), [](const auto& mv) {
+        return dynamic_cast<DiscardMove*>(mv.get()) != nullptr;
+      });
+  ASSERT_NE(discard_it, moves.end());
+  const CardEnum discarded_card = (*discard_it)->getCard();
+
+  std::optional<std::shared_ptr<Move>> answer = *discard_it;
+  auto next_result = PhaseMachine::step(board, std::move(answer));
+
+  const auto& ussr_hand = board.getPlayerHand(Side::USSR);
+  EXPECT_EQ(ussr_hand.size(), 1U);
+  EXPECT_TRUE(std::none_of(
+      ussr_hand.begin(), ussr_hand.end(),
+      [discarded_card](CardEnum card) { return card == discarded_card; }));
+
+  const auto& discard_pile = board.getDeck().getDiscardPile();
+  ASSERT_EQ(discard_pile.size(), 1U);
+  EXPECT_EQ(discard_pile.front(), discarded_card);
+
+  EXPECT_EQ(std::get<1>(next_result), Side::USA);
+  EXPECT_FALSE(std::get<0>(next_result).empty());
 }
 
 // USAの追加ARが要求された場合に対応する分岐を通る

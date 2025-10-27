@@ -154,3 +154,13 @@ class FinalizeCardPlayCommand final : public Command {
   const CardEnum card_;
   const bool removeAfterEvent_;
 };
+
+class DiscardCommand final : public Command {
+ public:
+  DiscardCommand(Side side, CardEnum card) : Command{side}, card_{card} {}
+
+  void apply(Board& board) const override;
+
+ private:
+  const CardEnum card_;
+};

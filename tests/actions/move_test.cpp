@@ -615,8 +615,8 @@ TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
   }
 }
 
-TEST_F(MoveTest, ExtraActionPassMoveReturnsNoCommands) {
-  ExtraActionPassMove move(Side::USSR);
+TEST_F(MoveTest, PassMoveReturnsNoCommands) {
+  PassMove move(Side::USSR);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   EXPECT_TRUE(commands.empty());
