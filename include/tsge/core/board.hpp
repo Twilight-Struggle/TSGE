@@ -12,6 +12,11 @@
 #include "tsge/game_state/world_map.hpp"
 #include "tsge/utils/randomizer.hpp"
 
+struct ChinaCardState {
+  Side owner = Side::USSR;
+  bool faceUp = true;
+};
+
 class Board {
  public:
   Board(const std::array<std::unique_ptr<Card>, 111>& cardpool)
@@ -82,6 +87,21 @@ class Board {
   Side getCurrentArPlayer() const {
     return currentArPlayer_;
   }
+  [[nodiscard]]
+  Side getChinaCardOwner() const {
+    return chinaCard_.owner;
+  }
+  [[nodiscard]]
+  bool isChinaCardFaceUp() const {
+    return chinaCard_.faceUp;
+  }
+  [[nodiscard]]
+  bool isChinaCardAvailableFor(Side side) const {
+    return chinaCard_.owner == side && chinaCard_.faceUp;
+  }
+  void giveChinaCardTo(Side newOwner, bool faceUp);
+  void revealChinaCard();
+  void finalScoring();
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {
     states_.emplace_back(std::move(state));
@@ -145,4 +165,5 @@ class Board {
   std::array<std::vector<CardEnum>, 2> cardsEffectsInThisTurn_;
   int vp_ = 0;
   Side currentArPlayer_ = Side::NEUTRAL;
+  ChinaCardState chinaCard_;
 };

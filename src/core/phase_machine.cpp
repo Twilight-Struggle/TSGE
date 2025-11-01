@@ -312,7 +312,7 @@ MaybeStepOutput handleState(Board& board, StateStack& states, StateType state) {
 
       milops_track.resetMilopsTrack();
       defcon_track.changeDefcon(1);
-      // TODO(tsge-phase-machine): 中国カードをTURN_ENDで表向きに戻す。
+      board.revealChinaCard();
       // ターン内で発生したカード効果記録はターン終了時に必ず破棄する。
       board.clearCardsEffectsInThisTurn();
 

@@ -12,6 +12,7 @@
 #include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/game_state/card.hpp"
+#include "tsge/game_state/cards.hpp"
 
 // RequestCommandのlegalMoves戻り値を追跡するための簡易Move実装
 class StubMove final : public Move {
@@ -61,6 +62,8 @@ class CommandTest : public ::testing::Test {
     if (!pool[0]) {
       // Create a dummy card for testing
       pool[0] = std::make_unique<DummyCard>();
+      pool[static_cast<std::size_t>(CardEnum::CHINA_CARD)] =
+          std::make_unique<ChinaCard>();
     }
     return pool;
   }
@@ -140,6 +143,50 @@ TEST_F(CommandTest, CoupTest) {
   action_can_coup_usa.apply(board);
 }
 
+TEST_F(CommandTest, ChinaCardCoupAddsBonusOpsInAsia) {
+  board.getMilopsTrack().resetMilopsTrack();
+
+  auto& north_korea = board.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
+  north_korea.clearInfluence(Side::USA);
+  north_korea.clearInfluence(Side::USSR);
+  north_korea.addInfluence(Side::USA, 2);
+
+  std::mt19937_64 rng(0);
+  board.getRandomizer().setRng(&rng);
+
+  ActionCoupCommand china_coup(
+      Side::USSR,
+      board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)],
+      CountryEnum::NORTH_KOREA);
+  china_coup.apply(board);
+
+  EXPECT_EQ(board.getMilopsTrack().getMilops(Side::USSR), 5);
+
+  board.getRandomizer().setRng(nullptr);
+}
+
+TEST_F(CommandTest, ChinaCardCoupNoBonusOutsideAsia) {
+  board.getMilopsTrack().resetMilopsTrack();
+
+  auto& angola = board.getWorldMap().getCountry(CountryEnum::ANGOLA);
+  angola.clearInfluence(Side::USA);
+  angola.clearInfluence(Side::USSR);
+  angola.addInfluence(Side::USA, 2);
+
+  std::mt19937_64 rng(0);
+  board.getRandomizer().setRng(&rng);
+
+  ActionCoupCommand china_coup(
+      Side::USSR,
+      board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)],
+      CountryEnum::ANGOLA);
+  china_coup.apply(board);
+
+  EXPECT_EQ(board.getMilopsTrack().getMilops(Side::USSR), 4);
+
+  board.getRandomizer().setRng(nullptr);
+}
+
 TEST_F(CommandTest, FinalizeCardPlayCommandMovesCardToDiscard) {
   board.addCardToHand(Side::USA, CardEnum::DUMMY);
   FinalizeCardPlayCommand finalize(Side::USA, CardEnum::DUMMY, false);
@@ -164,6 +211,18 @@ TEST_F(CommandTest, FinalizeCardPlayCommandMovesCardToRemoved) {
   ASSERT_FALSE(removed.empty());
   EXPECT_EQ(removed.back(), CardEnum::DUMMY);
   EXPECT_TRUE(board.getDeck().getDiscardPile().empty());
+}
+
+TEST_F(CommandTest, FinalizeChinaCardTransfersOwnershipAndAvoidsDiscard) {
+  ASSERT_EQ(board.getChinaCardOwner(), Side::USSR);
+  FinalizeCardPlayCommand finalize(Side::USSR, CardEnum::CHINA_CARD, false);
+
+  finalize.apply(board);
+
+  EXPECT_EQ(board.getChinaCardOwner(), Side::USA);
+  EXPECT_FALSE(board.isChinaCardFaceUp());
+  EXPECT_TRUE(board.getDeck().getDiscardPile().empty());
+  EXPECT_TRUE(board.getDeck().getRemovedCards().empty());
 }
 
 TEST_F(CommandTest, SpaceRaceCommandSuccessAdvancesTrackAndAwardsVp) {

@@ -17,6 +17,14 @@ std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   return commands;
 }
 
+std::vector<CommandPtr> ChinaCard::event(Side /*side*/) const {
+  return {};
+}
+
+bool ChinaCard::canEvent(const Board& /*board*/) const {
+  return false;
+}
+
 bool DuckAndCover::canEvent(const Board& board) const {
   return true;
 }

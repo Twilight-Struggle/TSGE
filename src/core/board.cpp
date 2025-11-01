@@ -1,5 +1,26 @@
 #include "tsge/core/board.hpp"
 
+void Board::giveChinaCardTo(Side newOwner, bool faceUp) {
+  if (newOwner != Side::USSR && newOwner != Side::USA) [[unlikely]] {
+    return;
+  }
+  chinaCard_.owner = newOwner;
+  chinaCard_.faceUp = faceUp;
+}
+
+void Board::revealChinaCard() {
+  if (chinaCard_.owner == Side::NEUTRAL) [[unlikely]] {
+    return;
+  }
+  chinaCard_.faceUp = true;
+}
+
+void Board::finalScoring() {
+  int final_score = 0;
+  final_score += getVpMultiplier(chinaCard_.owner) * 1;
+  pushState(std::make_shared<ChangeVpCommand>(Side::USSR, final_score));
+}
+
 std::array<int, 2> Board::calculateDrawCount(int turn) const {
   const int required_cards = actionRoundTrack_.getDefinedActionRounds(turn) + 2;
 
