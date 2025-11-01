@@ -347,11 +347,18 @@ MaybeStepOutput handleState(Board& board, StateStack& states, StateType state) {
       return makeTerminalResult(Side::USA);
     case StateType::DRAW_END:
       return makeTerminalResult(Side::NEUTRAL);
-    case StateType::TURN_START:
+    case StateType::TURN_START: {
+      // ターン開始時に必要枚数を算出し、双方へ補充する。
+      // ヘッドライン選択や追加AR判定より前に手札を整えることで、
+      // 後続フェーズが最新の手札情報を前提に合法手を生成できる。
+      const int current_turn = board.getTurnTrack().getTurn();
+      const auto draw_counts = board.calculateDrawCount(current_turn);
+      board.drawCardsForPlayers(draw_counts[0], draw_counts[1]);
+
       board.getActionRoundTrack().updateExtraActionRound(board.getSpaceTrack());
-      // TODO(tsge-phase-machine): North Sea Oil等ターン開始時効果を評価する。
       states.emplace_back(StateType::HEADLINE_PHASE);
       return std::nullopt;
+    }
     case StateType::HEADLINE_PHASE:
       enqueueHeadlineSelections(board, states);
       return std::nullopt;
