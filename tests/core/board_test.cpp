@@ -28,7 +28,7 @@ class BoardDrawTest : public ::testing::Test {
     // テスト用のダミーカードを作成
     for (int i = 0; i < 50; ++i) {
       (*cardpool_)[i] =
-          std::make_unique<DummyCard>(CardEnum::Dummy, WarPeriod::EARLY_WAR);
+          std::make_unique<DummyCard>(CardEnum::DUMMY, WarPeriod::EARLY_WAR);
     }
     board_ = std::make_unique<Board>(*cardpool_);
 
@@ -50,9 +50,9 @@ TEST_F(BoardDrawTest, CalculateDrawCountTurn1EmptyHands) {
 
 TEST_F(BoardDrawTest, CalculateDrawCountWithExistingCards) {
   // 手札にカードを追加
-  board_->addCardToHand(Side::USSR, CardEnum::Dummy);
-  board_->addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board_->addCardToHand(Side::USA, CardEnum::Fidel);
+  board_->addCardToHand(Side::USSR, CardEnum::DUMMY);
+  board_->addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board_->addCardToHand(Side::USA, CardEnum::FIDEL);
 
   // ターン1では8枚必要、USSR:2枚持ち、USA:1枚持ち
   auto [ussr_draw, usa_draw] = board_->calculateDrawCount(1);
@@ -64,8 +64,8 @@ TEST_F(BoardDrawTest, CalculateDrawCountWithExistingCards) {
 TEST_F(BoardDrawTest, CalculateDrawCountAlreadyEnoughCards) {
   // 既に十分な手札を持っている場合
   for (int i = 0; i < 10; ++i) {
-    board_->addCardToHand(Side::USSR, CardEnum::Dummy);
-    board_->addCardToHand(Side::USA, CardEnum::DuckAndCover);
+    board_->addCardToHand(Side::USSR, CardEnum::DUMMY);
+    board_->addCardToHand(Side::USA, CardEnum::DUCK_AND_COVER);
   }
 
   auto [ussr_draw, usa_draw] = board_->calculateDrawCount(1);
@@ -89,7 +89,7 @@ TEST_F(BoardDrawTest, DrawCardsExactlyDeckSize) {
   // 捨て札にカードを追加（reshuffleのため）
   auto& discard_pile = board_->getDeck().getDiscardPile();
   for (int i = 0; i < 10; ++i) {
-    discard_pile.push_back(CardEnum::Dummy);
+    discard_pile.push_back(CardEnum::DUMMY);
   }
 
   // デッキを特定の枚数にする
@@ -112,7 +112,7 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckEvenCase) {
   // 捨て札にカードを追加（reshuffleのため）
   auto& discard_pile = board_->getDeck().getDiscardPile();
   for (int i = 0; i < 20; ++i) {
-    discard_pile.push_back(CardEnum::Dummy);
+    discard_pile.push_back(CardEnum::DUMMY);
   }
 
   // デッキを偶数枚にする
@@ -132,7 +132,7 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckOddCase) {
   // 捨て札にカードを追加（reshuffleのため）
   auto& discard_pile = board_->getDeck().getDiscardPile();
   for (int i = 0; i < 20; ++i) {
-    discard_pile.push_back(CardEnum::Dummy);
+    discard_pile.push_back(CardEnum::DUMMY);
   }
 
   // デッキを奇数枚にする
@@ -152,7 +152,7 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckRedistributesAfterCap) {
   // デッキ不足時に片側の要求枚数が少ないケース
   auto& discard_pile = board_->getDeck().getDiscardPile();
   for (int i = 0; i < 20; ++i) {
-    discard_pile.push_back(CardEnum::Dummy);
+    discard_pile.push_back(CardEnum::DUMMY);
   }
 
   auto& deck = board_->getDeck().getDeck();
@@ -193,7 +193,7 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckButUsaOnly) {
   // 捨て札にカードを追加（reshuffleのため）
   auto& discard_pile = board_->getDeck().getDiscardPile();
   for (int i = 0; i < 20; ++i) {
-    discard_pile.push_back(CardEnum::Dummy);
+    discard_pile.push_back(CardEnum::DUMMY);
   }
 
   // デッキを奇数枚にする
@@ -213,21 +213,21 @@ TEST_F(BoardDrawTest, DrawCardsMoreThanDeckButUsaOnly) {
 // ヘッドラインカード管理のテスト
 TEST_F(BoardDrawTest, HeadlineCardManagement) {
   // 初期状態はDummy
-  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::Dummy);
-  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::Dummy);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::DUMMY);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::DUMMY);
 
   // ヘッドラインカードの設定
-  board_->setHeadlineCard(Side::USSR, CardEnum::DuckAndCover);
-  board_->setHeadlineCard(Side::USA, CardEnum::Fidel);
+  board_->setHeadlineCard(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board_->setHeadlineCard(Side::USA, CardEnum::FIDEL);
 
-  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
-  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::Fidel);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::DUCK_AND_COVER);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::FIDEL);
 
   // ヘッドラインカードのクリア
   board_->clearHeadlineCards();
 
-  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::Dummy);
-  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::Dummy);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USSR), CardEnum::DUMMY);
+  EXPECT_EQ(board_->getHeadlineCard(Side::USA), CardEnum::DUMMY);
 }
 
 TEST_F(BoardDrawTest, HeadlineCardVisibility) {

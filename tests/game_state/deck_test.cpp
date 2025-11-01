@@ -36,16 +36,16 @@ class DeckTest : public ::testing::Test {
     for (int i = 0; i < 111; ++i) {
       if (i < 30) {
         cardpool_[i] =
-            std::make_unique<DummyCard>(CardEnum::Dummy, WarPeriod::EARLY_WAR);
+            std::make_unique<DummyCard>(CardEnum::DUMMY, WarPeriod::EARLY_WAR);
       } else if (i < 60) {
         cardpool_[i] =
-            std::make_unique<DummyCard>(CardEnum::Dummy, WarPeriod::MID_WAR);
+            std::make_unique<DummyCard>(CardEnum::DUMMY, WarPeriod::MID_WAR);
       } else if (i < 90) {
         cardpool_[i] =
-            std::make_unique<DummyCard>(CardEnum::Dummy, WarPeriod::LATE_WAR);
+            std::make_unique<DummyCard>(CardEnum::DUMMY, WarPeriod::LATE_WAR);
       } else {
         cardpool_[i] =
-            std::make_unique<DummyCard>(CardEnum::Dummy, WarPeriod::DUMMY);
+            std::make_unique<DummyCard>(CardEnum::DUMMY, WarPeriod::DUMMY);
       }
     }
   }
@@ -68,9 +68,9 @@ TEST_F(DeckTest, ReshuffleFromDiscardWithCards) {
   Deck deck(randomizer, cardpool_);
 
   // 捨て札にカードを追加
-  deck.getDiscardPile().push_back(CardEnum::Dummy);
-  deck.getDiscardPile().push_back(CardEnum::Dummy);
-  deck.getDiscardPile().push_back(CardEnum::Dummy);
+  deck.getDiscardPile().push_back(CardEnum::DUMMY);
+  deck.getDiscardPile().push_back(CardEnum::DUMMY);
+  deck.getDiscardPile().push_back(CardEnum::DUMMY);
 
   // 0のはず
   auto deck_size_before = deck.getDeck().size();
@@ -143,8 +143,8 @@ TEST_F(DeckTest, DiscardPileAccessorsConsistency) {
 
   // 非constアクセサを通じて捨て札にカードを積み上げる
   auto& discard_mutable = deck.getDiscardPile();
-  discard_mutable.push_back(CardEnum::Dummy);
-  discard_mutable.push_back(CardEnum::Dummy);
+  discard_mutable.push_back(CardEnum::DUMMY);
+  discard_mutable.push_back(CardEnum::DUMMY);
 
   // constアクセサが同じメモリ領域を参照し、内容も一致することを検証
   const Deck& const_deck = deck;
@@ -162,7 +162,7 @@ TEST_F(DeckTest, RemovedCardsAccessorsConsistency) {
 
   // 非constアクセサを通じて除外カードを記録する
   auto& removed_mutable = deck.getRemovedCards();
-  removed_mutable.push_back(CardEnum::Dummy);
+  removed_mutable.push_back(CardEnum::DUMMY);
 
   // constアクセサが同じコンテナを参照し、内容が共有されていることを確認
   const Deck& const_deck = deck;

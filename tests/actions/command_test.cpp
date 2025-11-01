@@ -17,7 +17,7 @@
 class StubMove final : public Move {
  public:
   StubMove(Side side, int identifier)
-      : Move(CardEnum::Dummy, side), identifier_(identifier) {}
+      : Move(CardEnum::DUMMY, side), identifier_(identifier) {}
 
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
@@ -40,7 +40,7 @@ class StubMove final : public Move {
 class DummyCard : public Card {
  public:
   DummyCard()
-      : Card(CardEnum::Dummy, "Dummy", 3, Side::NEUTRAL, WarPeriod::DUMMY,
+      : Card(CardEnum::DUMMY, "Dummy", 3, Side::NEUTRAL, WarPeriod::DUMMY,
              false) {}
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
@@ -141,28 +141,28 @@ TEST_F(CommandTest, CoupTest) {
 }
 
 TEST_F(CommandTest, FinalizeCardPlayCommandMovesCardToDiscard) {
-  board.addCardToHand(Side::USA, CardEnum::Dummy);
-  FinalizeCardPlayCommand finalize(Side::USA, CardEnum::Dummy, false);
+  board.addCardToHand(Side::USA, CardEnum::DUMMY);
+  FinalizeCardPlayCommand finalize(Side::USA, CardEnum::DUMMY, false);
 
   finalize.apply(board);
 
   EXPECT_TRUE(board.getPlayerHand(Side::USA).empty());
   const auto& discard = board.getDeck().getDiscardPile();
   ASSERT_FALSE(discard.empty());
-  EXPECT_EQ(discard.back(), CardEnum::Dummy);
+  EXPECT_EQ(discard.back(), CardEnum::DUMMY);
   EXPECT_TRUE(board.getDeck().getRemovedCards().empty());
 }
 
 TEST_F(CommandTest, FinalizeCardPlayCommandMovesCardToRemoved) {
-  board.addCardToHand(Side::USSR, CardEnum::Dummy);
-  FinalizeCardPlayCommand finalize(Side::USSR, CardEnum::Dummy, true);
+  board.addCardToHand(Side::USSR, CardEnum::DUMMY);
+  FinalizeCardPlayCommand finalize(Side::USSR, CardEnum::DUMMY, true);
 
   finalize.apply(board);
 
   EXPECT_TRUE(board.getPlayerHand(Side::USSR).empty());
   const auto& removed = board.getDeck().getRemovedCards();
   ASSERT_FALSE(removed.empty());
-  EXPECT_EQ(removed.back(), CardEnum::Dummy);
+  EXPECT_EQ(removed.back(), CardEnum::DUMMY);
   EXPECT_TRUE(board.getDeck().getDiscardPile().empty());
 }
 

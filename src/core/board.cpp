@@ -86,18 +86,18 @@ Board Board::copyForMCTS(Side viewerSide) const {
   // 手札可視性の変更に対応する（例：activeEvents_にCIA_Createdが含まれている場合は隠蔽しない）
   auto& opponent_hand = copy.playerHands_[static_cast<size_t>(opponent_side)];
   for (auto& card : opponent_hand) {
-    card = CardEnum::Dummy;
+    card = CardEnum::DUMMY;
   }
 
   // デッキは見えない
   auto& deck = copy.getDeck().getDeck();
   for (auto& card : deck) {
-    card = CardEnum::Dummy;
+    card = CardEnum::DUMMY;
   }
 
   // ヘッドラインカードの隠蔽
   if (!copy.isHeadlineCardVisible(viewerSide, opponent_side)) {
-    copy.headlineCards_[static_cast<size_t>(opponent_side)] = CardEnum::Dummy;
+    copy.headlineCards_[static_cast<size_t>(opponent_side)] = CardEnum::DUMMY;
   }
 
   // Randomizerの外部RNGポインタをリセット（MCTSで独自に設定される）

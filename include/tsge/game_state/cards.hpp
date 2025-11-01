@@ -5,7 +5,7 @@
 class DuckAndCover final : public Card {
  public:
   DuckAndCover()
-      : Card(CardEnum::DuckAndCover, "DuckAndCover", 3, Side::USA,
+      : Card(CardEnum::DUCK_AND_COVER, "DuckAndCover", 3, Side::USA,
              WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
@@ -16,7 +16,7 @@ class DuckAndCover final : public Card {
 class Fidel final : public Card {
  public:
   Fidel()
-      : Card(CardEnum::Fidel, "Fidel", 3, Side::USSR, WarPeriod::EARLY_WAR,
+      : Card(CardEnum::FIDEL, "Fidel", 3, Side::USSR, WarPeriod::EARLY_WAR,
              true) {}
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;
@@ -27,7 +27,7 @@ class Fidel final : public Card {
 class NuclearTestBan final : public Card {
  public:
   NuclearTestBan()
-      : Card(CardEnum::NuclearTestBan, "NuclearTestBan", 4, Side::NEUTRAL,
+      : Card(CardEnum::NUCLEAR_TEST_BAN, "NuclearTestBan", 4, Side::NEUTRAL,
              WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override;

@@ -15,7 +15,7 @@
 class DummyCard : public Card {
  public:
   DummyCard(int ops, Side side = Side::NEUTRAL, bool removedAfterEvent = false)
-      : Card(CardEnum::Dummy, "DummyCard", ops, side, WarPeriod::DUMMY,
+      : Card(CardEnum::DUMMY, "DummyCard", ops, side, WarPeriod::DUMMY,
              removedAfterEvent) {}
 
   [[nodiscard]]
@@ -37,7 +37,7 @@ static const std::array<std::unique_ptr<Card>, 111>& createTestCardPool() {
   static std::array<std::unique_ptr<Card>, 111> pool{};
   static bool initialized = false;
   if (!initialized) {
-    pool[static_cast<size_t>(CardEnum::Dummy)] =
+    pool[static_cast<size_t>(CardEnum::DUMMY)] =
         std::make_unique<DummyCard>(3, Side::NEUTRAL);
     initialized = true;
   }
@@ -79,7 +79,7 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_BasicCommand) {
   targets[CountryEnum::FRANCE] = 2;
   targets[CountryEnum::ITALY] = 1;
 
-  ActionPlaceInfluenceMove move(CardEnum::Dummy, Side::USA, targets);
+  ActionPlaceInfluenceMove move(CardEnum::DUMMY, Side::USA, targets);
 
   // toCommandの実行
   auto commands = move.toCommand(dummy_card_neutral_);
@@ -102,7 +102,7 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_OpponentEvent) {
   targets[CountryEnum::FRANCE] = 2;
 
   // USAプレイヤーがUSSRカードを使用
-  ActionPlaceInfluenceMove move(CardEnum::Dummy, Side::USA, targets);
+  ActionPlaceInfluenceMove move(CardEnum::DUMMY, Side::USA, targets);
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // コマンド数の確認（PlaceInfluenceCommand + イベント）
@@ -122,7 +122,7 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_OwnEvent) {
   targets[CountryEnum::FRANCE] = 2;
 
   // USAプレイヤーがUSAカードを使用
-  ActionPlaceInfluenceMove move(CardEnum::Dummy, Side::USA, targets);
+  ActionPlaceInfluenceMove move(CardEnum::DUMMY, Side::USA, targets);
   auto commands = move.toCommand(dummy_card_usa_);
 
   // コマンド数の確認（PlaceInfluenceCommandのみ）
@@ -135,7 +135,7 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_OwnEvent) {
 
 // ActionCoupMoveのテスト
 TEST_F(MoveTest, ActionCoupMove_BasicCommand) {
-  ActionCoupMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
+  ActionCoupMove move(CardEnum::DUMMY, Side::USSR, CountryEnum::ITALY);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   ASSERT_EQ(commands.size(), 2);
@@ -149,7 +149,7 @@ TEST_F(MoveTest, ActionCoupMove_BasicCommand) {
 
 TEST_F(MoveTest, ActionCoupMove_OpponentEvent) {
   // USSRプレイヤーがUSAカードを使用
-  ActionCoupMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
+  ActionCoupMove move(CardEnum::DUMMY, Side::USSR, CountryEnum::ITALY);
   auto commands = move.toCommand(dummy_card_usa_);
 
   ASSERT_EQ(commands.size(), 3);
@@ -164,7 +164,7 @@ TEST_F(MoveTest, ActionCoupMove_OpponentEvent) {
 // ActionSpaceRaceMoveのテスト
 TEST_F(MoveTest, ActionSpaceRaceMove_NoOpponentEvent) {
   // USSRプレイヤーがUSAカードを使用
-  ActionSpaceRaceMove move(CardEnum::Dummy, Side::USSR);
+  ActionSpaceRaceMove move(CardEnum::DUMMY, Side::USSR);
   auto commands = move.toCommand(dummy_card_usa_);
 
   // SpaceRaceでは相手イベントが発動しない
@@ -178,7 +178,7 @@ TEST_F(MoveTest, ActionSpaceRaceMove_NoOpponentEvent) {
 }
 
 TEST_F(MoveTest, ActionSpaceRaceMove_NeutralCard) {
-  ActionSpaceRaceMove move(CardEnum::Dummy, Side::USA);
+  ActionSpaceRaceMove move(CardEnum::DUMMY, Side::USA);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   ASSERT_EQ(commands.size(), 2);
@@ -193,7 +193,7 @@ TEST_F(MoveTest, ActionSpaceRaceMove_NeutralCard) {
 // ActionRealigmentMoveのテスト
 TEST_F(MoveTest, ActionRealigmentMove_MultipleOps) {
   // 3 Opsカード使用
-  ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
+  ActionRealigmentMove move(CardEnum::DUMMY, Side::USA, CountryEnum::FRANCE);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   // ActionRealigmentCommand + RequestCommand
@@ -212,7 +212,7 @@ TEST_F(MoveTest, ActionRealigmentMove_MultipleOps) {
 
 TEST_F(MoveTest, ActionRealigmentMove_SingleOp) {
   // 1 Opsカード使用
-  ActionRealigmentMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
+  ActionRealigmentMove move(CardEnum::DUMMY, Side::USSR, CountryEnum::ITALY);
   auto commands = move.toCommand(dummy_card_1_ops_);
 
   // ActionRealigmentCommand + RequestCommand（additionalOps用）
@@ -231,7 +231,7 @@ TEST_F(MoveTest, ActionRealigmentMove_SingleOp) {
 
 TEST_F(MoveTest, ActionRealigmentMove_OpponentEvent) {
   // USAプレイヤーがUSSRカードを使用
-  ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
+  ActionRealigmentMove move(CardEnum::DUMMY, Side::USA, CountryEnum::FRANCE);
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // ActionRealigmentCommand + RequestCommand + イベント
@@ -248,7 +248,7 @@ TEST_F(MoveTest, ActionRealigmentMove_OpponentEvent) {
 // RealignmentRequestMoveのテスト
 TEST_F(MoveTest, RealignmentRequestMove_Pass) {
   std::vector<CountryEnum> history = {CountryEnum::FRANCE};
-  RealignmentRequestMove move(CardEnum::Dummy, Side::USA, CountryEnum::USSR,
+  RealignmentRequestMove move(CardEnum::DUMMY, Side::USA, CountryEnum::USSR,
                               history, 2, AdditionalOpsType::NONE);
 
   auto commands = move.toCommand(dummy_card_neutral_);
@@ -259,7 +259,7 @@ TEST_F(MoveTest, RealignmentRequestMove_Pass) {
 
 TEST_F(MoveTest, RealignmentRequestMove_Continue) {
   std::vector<CountryEnum> history = {CountryEnum::FRANCE};
-  RealignmentRequestMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY,
+  RealignmentRequestMove move(CardEnum::DUMMY, Side::USSR, CountryEnum::ITALY,
                               history, 2, AdditionalOpsType::NONE);
 
   auto commands = move.toCommand(dummy_card_neutral_);
@@ -276,7 +276,7 @@ TEST_F(MoveTest, RealignmentRequestMove_Continue) {
 
 TEST_F(MoveTest, RealignmentRequestMove_LastOp) {
   std::vector<CountryEnum> history = {CountryEnum::FRANCE, CountryEnum::ITALY};
-  RealignmentRequestMove move(CardEnum::Dummy, Side::USA,
+  RealignmentRequestMove move(CardEnum::DUMMY, Side::USA,
                               CountryEnum::WEST_GERMANY, history, 1,
                               AdditionalOpsType::NONE);
 
@@ -288,8 +288,8 @@ TEST_F(MoveTest, RealignmentRequestMove_LastOp) {
 
 TEST_F(MoveTest, RealignmentRequestMove_WithAdditionalOps) {
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
-  // TODO: CardEnumをChinaCardへ
-  RealignmentRequestMove move(CardEnum::Dummy, Side::USSR,
+  // TODO: CardEnumをCHINA_CARDへ
+  RealignmentRequestMove move(CardEnum::DUMMY, Side::USSR,
                               CountryEnum::SOUTH_KOREA, history, 1,
                               AdditionalOpsType::CHINA_CARD);
 
@@ -302,7 +302,7 @@ TEST_F(MoveTest, RealignmentRequestMove_WithAdditionalOps) {
 // ActionEventMoveのテスト
 TEST_F(MoveTest, ActionEventMove_OwnSideEvent) {
   // USAプレイヤーがUSAカードのイベントを実行
-  ActionEventMove move(CardEnum::Dummy, Side::USA);
+  ActionEventMove move(CardEnum::DUMMY, Side::USA);
   auto commands = move.toCommand(dummy_card_usa_);
 
   // イベントコマンドのみ（追加アクションなし）
@@ -317,7 +317,7 @@ TEST_F(MoveTest, ActionEventMove_OwnSideEvent) {
 
 TEST_F(MoveTest, ActionEventMove_OpponentSideEvent) {
   // USAプレイヤーがUSSRカードのイベントを実行
-  ActionEventMove move(CardEnum::Dummy, Side::USA);
+  ActionEventMove move(CardEnum::DUMMY, Side::USA);
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // イベントコマンド + RequestCommand（追加アクション用）
@@ -335,7 +335,7 @@ TEST_F(MoveTest, ActionEventMove_OpponentSideEvent) {
 }
 
 TEST_F(MoveTest, ActionEventMove_NeutralEvent) {
-  ActionEventMove move(CardEnum::Dummy, Side::USSR);
+  ActionEventMove move(CardEnum::DUMMY, Side::USSR);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   // 中立イベントは追加アクションなし
@@ -349,7 +349,7 @@ TEST_F(MoveTest, ActionEventMove_NeutralEvent) {
 }
 
 TEST_F(MoveTest, HeadlineCardSelectMove) {
-  HeadlineCardSelectMove move(CardEnum::Dummy, Side::USA);
+  HeadlineCardSelectMove move(CardEnum::DUMMY, Side::USA);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   ASSERT_EQ(commands.size(), 1);
@@ -359,7 +359,7 @@ TEST_F(MoveTest, HeadlineCardSelectMove) {
 
 // RequestCommandのラムダ関数テスト（間接的な検証アプローチ）
 TEST_F(MoveTest, ActionRealigmentMove_RequestCommandLambda) {
-  ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
+  ActionRealigmentMove move(CardEnum::DUMMY, Side::USA, CountryEnum::FRANCE);
   auto commands = move.toCommand(dummy_card_4_ops_);
 
   ASSERT_EQ(commands.size(), 3);
@@ -381,7 +381,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommandLambda) {
   // ラムダ関数のキャプチャ値が正しいことを間接的に検証
   std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE};
   auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-      board_, Side::USA, CardEnum::Dummy, expected_history, 3,
+      board_, Side::USA, CardEnum::DUMMY, expected_history, 3,
       AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
@@ -394,7 +394,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommandLambda) {
     auto* realignment_move = dynamic_cast<RealignmentRequestMove*>(move.get());
     if (realignment_move != nullptr) {
       // 期待される値を確認
-      EXPECT_EQ(realignment_move->getCard(), CardEnum::Dummy);
+      EXPECT_EQ(realignment_move->getCard(), CardEnum::DUMMY);
       EXPECT_EQ(realignment_move->getSide(), Side::USA);
     }
   }
@@ -404,7 +404,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommandLambda) {
 TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_IntegrationTest) {
   // テストの目的：ラムダ関数が正しいパラメータで作成されていることを確認
 
-  ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
+  ActionRealigmentMove move(CardEnum::DUMMY, Side::USA, CountryEnum::FRANCE);
   auto commands = move.toCommand(dummy_card_4_ops_);
 
   ASSERT_EQ(commands.size(), 3);
@@ -422,7 +422,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_IntegrationTest) {
   // 期待される引数で直接呼び出した結果と比較
   std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE};
   auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-      board_, Side::USA, CardEnum::Dummy, expected_history, 3,
+      board_, Side::USA, CardEnum::DUMMY, expected_history, 3,
       AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
@@ -443,7 +443,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_IntegrationTest) {
 TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
   // 1 Opsカードの場合
   {
-    ActionRealigmentMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY);
+    ActionRealigmentMove move(CardEnum::DUMMY, Side::USSR, CountryEnum::ITALY);
     auto commands = move.toCommand(dummy_card_1_ops_);
 
     ASSERT_EQ(commands.size(), 3);
@@ -463,7 +463,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
     std::vector<CountryEnum> expected_history = {CountryEnum::ITALY};
     auto expected_moves =
         LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-            board_, Side::USSR, CardEnum::Dummy, expected_history,
+            board_, Side::USSR, CardEnum::DUMMY, expected_history,
             AdditionalOpsType::NONE);
 
     // 結果が同じであることを確認（引数が正しく渡されている証拠）
@@ -472,7 +472,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
 
   // 3 Opsカードの場合
   {
-    ActionRealigmentMove move(CardEnum::Dummy, Side::USA, CountryEnum::FRANCE);
+    ActionRealigmentMove move(CardEnum::DUMMY, Side::USA, CountryEnum::FRANCE);
     auto commands = move.toCommand(dummy_card_neutral_);
 
     ASSERT_EQ(commands.size(), 3);
@@ -489,7 +489,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
     // 期待される引数で直接呼び出した結果と比較
     std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE};
     auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-        board_, Side::USA, CardEnum::Dummy, expected_history, 2,
+        board_, Side::USA, CardEnum::DUMMY, expected_history, 2,
         AdditionalOpsType::NONE);
 
     // 結果が同じであることを確認（引数が正しく渡されている証拠）
@@ -501,7 +501,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
 TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithRemainingOps) {
   // remainingOps > 0の場合のテスト（109-111行のカバレッジ）
   std::vector<CountryEnum> history = {CountryEnum::FRANCE};
-  RealignmentRequestMove move(CardEnum::Dummy, Side::USSR, CountryEnum::ITALY,
+  RealignmentRequestMove move(CardEnum::DUMMY, Side::USSR, CountryEnum::ITALY,
                               history, 2, AdditionalOpsType::NONE);
 
   auto commands = move.toCommand(dummy_card_neutral_);
@@ -518,7 +518,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithRemainingOps) {
   std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE,
                                                CountryEnum::ITALY};
   auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-      board_, Side::USSR, CardEnum::Dummy, expected_history, 1,
+      board_, Side::USSR, CardEnum::DUMMY, expected_history, 1,
       AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
@@ -531,7 +531,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithRemainingOps) {
     auto* realignment_move = dynamic_cast<RealignmentRequestMove*>(move.get());
     if (realignment_move != nullptr) {
       // 期待される値を確認
-      EXPECT_EQ(realignment_move->getCard(), CardEnum::Dummy);
+      EXPECT_EQ(realignment_move->getCard(), CardEnum::DUMMY);
       EXPECT_EQ(realignment_move->getSide(), Side::USSR);
     }
   }
@@ -540,7 +540,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithRemainingOps) {
 TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithoutRemainingOps) {
   // remainingOps = 0の場合のテスト（121-123行のカバレッジ）
   std::vector<CountryEnum> history = {CountryEnum::FRANCE, CountryEnum::ITALY};
-  RealignmentRequestMove move(CardEnum::Dummy, Side::USA,
+  RealignmentRequestMove move(CardEnum::DUMMY, Side::USA,
                               CountryEnum::WEST_GERMANY, history, 1,
                               AdditionalOpsType::NONE);
 
@@ -558,7 +558,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithoutRemainingOps) {
   std::vector<CountryEnum> expected_history = {
       CountryEnum::FRANCE, CountryEnum::ITALY, CountryEnum::WEST_GERMANY};
   auto expected_moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board_, Side::USA, CardEnum::Dummy, expected_history,
+      board_, Side::USA, CardEnum::DUMMY, expected_history,
       AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
@@ -571,7 +571,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithoutRemainingOps) {
     auto* realignment_move = dynamic_cast<RealignmentRequestMove*>(move.get());
     if (realignment_move != nullptr) {
       // 期待される値を確認
-      EXPECT_EQ(realignment_move->getCard(), CardEnum::Dummy);
+      EXPECT_EQ(realignment_move->getCard(), CardEnum::DUMMY);
       EXPECT_EQ(realignment_move->getSide(), Side::USA);
     }
   }
@@ -580,7 +580,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithoutRemainingOps) {
 // ActionEventMoveのラムダ関数内部実行テスト
 TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
   // 相手側イベントカードを使用した場合のテスト（154行のカバレッジ）
-  ActionEventMove move(CardEnum::Dummy, Side::USA);
+  ActionEventMove move(CardEnum::DUMMY, Side::USA);
   auto commands = move.toCommand(dummy_card_ussr_);
 
   ASSERT_EQ(commands.size(), 3);
@@ -598,13 +598,13 @@ TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
 
   // LegalMovesGeneratorの新ヘルパーと結果が一致することを確認
   auto expected_moves = LegalMovesGenerator::actionLegalMovesForCard(
-      board_, Side::USA, CardEnum::Dummy);
+      board_, Side::USA, CardEnum::DUMMY);
   EXPECT_EQ(legal_moves.size(), expected_moves.size());
 
   // それぞれのMoveが正しいカードとサイドに紐づくことを確認
   for (const auto& move_ptr : legal_moves) {
     ASSERT_NE(move_ptr, nullptr);
-    EXPECT_EQ(move_ptr->getCard(), CardEnum::Dummy);
+    EXPECT_EQ(move_ptr->getCard(), CardEnum::DUMMY);
     EXPECT_EQ(move_ptr->getSide(), Side::USA);
 
     auto* place_move = dynamic_cast<ActionPlaceInfluenceMove*>(move_ptr.get());
@@ -620,5 +620,5 @@ TEST_F(MoveTest, PassMoveReturnsNoCommands) {
   auto commands = move.toCommand(dummy_card_neutral_);
 
   EXPECT_TRUE(commands.empty());
-  EXPECT_EQ(move.getCard(), CardEnum::Dummy);
+  EXPECT_EQ(move.getCard(), CardEnum::DUMMY);
 }

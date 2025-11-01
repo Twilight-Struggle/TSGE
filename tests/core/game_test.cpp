@@ -15,7 +15,7 @@
 class DummyCard : public Card {
  public:
   DummyCard(int ops, Side side = Side::NEUTRAL)
-      : Card(CardEnum::Dummy, "DummyCard", ops, side, WarPeriod::DUMMY, false) {
+      : Card(CardEnum::DUMMY, "DummyCard", ops, side, WarPeriod::DUMMY, false) {
   }
 
   [[nodiscard]]
@@ -46,7 +46,7 @@ class IllegalMovePolicy {
       std::map<CountryEnum, int> illegal_countries;
       illegal_countries[static_cast<CountryEnum>(999)] = 1;  // 存在しない国
       return std::make_shared<ActionPlaceInfluenceMove>(
-          CardEnum::Dummy, Side::USSR, illegal_countries);
+          CardEnum::DUMMY, Side::USSR, illegal_countries);
     }
     // 3回目以降は合法手を返す
     if (!legalMoves.empty()) {
@@ -65,11 +65,11 @@ class IllegalMovePolicy {
       }
 
       // 他の型の場合も同様に対応が必要だが、テストでは単純化
-      return std::make_shared<ActionEventMove>(CardEnum::Dummy, Side::USSR);
+      return std::make_shared<ActionEventMove>(CardEnum::DUMMY, Side::USSR);
     }
 
     // フォールバック
-    return std::make_shared<ActionEventMove>(CardEnum::Dummy, Side::USSR);
+    return std::make_shared<ActionEventMove>(CardEnum::DUMMY, Side::USSR);
   }
 
   [[nodiscard]]

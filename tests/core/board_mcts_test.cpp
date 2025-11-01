@@ -40,36 +40,36 @@ class BoardMCTSTest : public ::testing::Test {
 
 TEST_F(BoardMCTSTest, CopyForMCTS_HidesOpponentHand) {
   // 両プレイヤーに手札を配る
-  board_.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board_.addCardToHand(Side::USSR, CardEnum::Fidel);
-  board_.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
-  board_.addCardToHand(Side::USA, CardEnum::DuckAndCover);
+  board_.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board_.addCardToHand(Side::USSR, CardEnum::FIDEL);
+  board_.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
+  board_.addCardToHand(Side::USA, CardEnum::DUCK_AND_COVER);
 
   // USSRの視点でコピーを作成
   Board ussr_copy = board_.copyForMCTS(Side::USSR);
 
   // USSRの手札は見える
   EXPECT_EQ(ussr_copy.getPlayerHand(Side::USSR).size(), 2);
-  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USSR)[0], CardEnum::DuckAndCover);
-  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USSR)[1], CardEnum::Fidel);
+  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USSR)[0], CardEnum::DUCK_AND_COVER);
+  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USSR)[1], CardEnum::FIDEL);
 
   // USAの手札は隠蔽される（枚数は保持、内容はDummy）
   EXPECT_EQ(ussr_copy.getPlayerHand(Side::USA).size(), 2);
-  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USA)[0], CardEnum::Dummy);
-  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USA)[1], CardEnum::Dummy);
+  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USA)[0], CardEnum::DUMMY);
+  EXPECT_EQ(ussr_copy.getPlayerHand(Side::USA)[1], CardEnum::DUMMY);
 
   // USAの視点でコピーを作成
   Board usa_copy = board_.copyForMCTS(Side::USA);
 
   // USAの手札は見える
   EXPECT_EQ(usa_copy.getPlayerHand(Side::USA).size(), 2);
-  EXPECT_EQ(usa_copy.getPlayerHand(Side::USA)[0], CardEnum::NuclearTestBan);
-  EXPECT_EQ(usa_copy.getPlayerHand(Side::USA)[1], CardEnum::DuckAndCover);
+  EXPECT_EQ(usa_copy.getPlayerHand(Side::USA)[0], CardEnum::NUCLEAR_TEST_BAN);
+  EXPECT_EQ(usa_copy.getPlayerHand(Side::USA)[1], CardEnum::DUCK_AND_COVER);
 
   // USSRの手札は隠蔽される
   EXPECT_EQ(usa_copy.getPlayerHand(Side::USSR).size(), 2);
-  EXPECT_EQ(usa_copy.getPlayerHand(Side::USSR)[0], CardEnum::Dummy);
-  EXPECT_EQ(usa_copy.getPlayerHand(Side::USSR)[1], CardEnum::Dummy);
+  EXPECT_EQ(usa_copy.getPlayerHand(Side::USSR)[0], CardEnum::DUMMY);
+  EXPECT_EQ(usa_copy.getPlayerHand(Side::USSR)[1], CardEnum::DUMMY);
 }
 
 TEST_F(BoardMCTSTest, CopyForMCTS_HandlesEmptyHands) {
@@ -82,23 +82,23 @@ TEST_F(BoardMCTSTest, CopyForMCTS_HandlesEmptyHands) {
 
 TEST_F(BoardMCTSTest, CopyForMCTS_HidesHeadlineCards) {
   // ヘッドラインカードを設定
-  board_.setHeadlineCard(Side::USSR, CardEnum::DuckAndCover);
-  board_.setHeadlineCard(Side::USA, CardEnum::Fidel);
+  board_.setHeadlineCard(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board_.setHeadlineCard(Side::USA, CardEnum::FIDEL);
 
   // USSRの視点でコピー（宇宙開発トラック4の優位性なし）
   Board ussr_copy = board_.copyForMCTS(Side::USSR);
 
   // 自分のヘッドラインカードは見える
-  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
+  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USSR), CardEnum::DUCK_AND_COVER);
 
   // 相手のヘッドラインカードは隠蔽される
-  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USA), CardEnum::Dummy);
+  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USA), CardEnum::DUMMY);
 }
 
 TEST_F(BoardMCTSTest, CopyForMCTS_SpaceTrackVisibility) {
   // ヘッドラインカードを設定
-  board_.setHeadlineCard(Side::USSR, CardEnum::DuckAndCover);
-  board_.setHeadlineCard(Side::USA, CardEnum::Fidel);
+  board_.setHeadlineCard(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board_.setHeadlineCard(Side::USA, CardEnum::FIDEL);
 
   // USSRに宇宙開発トラック4の優位性を与える
   auto& space_track = board_.getSpaceTrack();
@@ -108,8 +108,8 @@ TEST_F(BoardMCTSTest, CopyForMCTS_SpaceTrackVisibility) {
   Board ussr_copy = board_.copyForMCTS(Side::USSR);
 
   // 宇宙開発トラック4の優位性があるため、相手のヘッドラインカードも見える
-  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
-  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USA), CardEnum::Fidel);
+  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USSR), CardEnum::DUCK_AND_COVER);
+  EXPECT_EQ(ussr_copy.getHeadlineCard(Side::USA), CardEnum::FIDEL);
 }
 
 TEST_F(BoardMCTSTest, CopyForMCTS_PreservesOtherData) {
@@ -213,6 +213,6 @@ TEST_F(BoardMCTSTest, CopyForMCTS_HidesDeck) {
   // Deckは隠蔽される
   EXPECT_EQ(ussr_copy.getDeck().getDeck().size(),
             board_.getDeck().getDeck().size());
-  EXPECT_EQ(ussr_copy.getDeck().getDeck()[0], CardEnum::Dummy);
-  EXPECT_EQ(ussr_copy.getDeck().getDeck()[1], CardEnum::Dummy);
+  EXPECT_EQ(ussr_copy.getDeck().getDeck()[0], CardEnum::DUMMY);
+  EXPECT_EQ(ussr_copy.getDeck().getDeck()[1], CardEnum::DUMMY);
 }

@@ -24,7 +24,7 @@
 class DummyCard : public Card {
  public:
   DummyCard()
-      : Card(CardEnum::Dummy, "Dummy", 3, Side::NEUTRAL, WarPeriod::DUMMY,
+      : Card(CardEnum::DUMMY, "Dummy", 3, Side::NEUTRAL, WarPeriod::DUMMY,
              false) {}
   [[nodiscard]]
   std::vector<CommandPtr> event(Side side) const override {
@@ -144,7 +144,7 @@ class PhaseMachineTest : public ::testing::Test {
     draw_pile.clear();
     draw_pile.reserve(card_count);
     for (int i = 0; i < card_count; ++i) {
-      draw_pile.push_back(CardEnum::Dummy);
+      draw_pile.push_back(CardEnum::DUMMY);
     }
 
     // 余計な副作用を避けるため、捨て札と除外山も都度リセットする。
@@ -191,19 +191,19 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
   auto execution_log =
       std::make_shared<std::vector<std::pair<Side, CardEnum>>>();
   auto& pool = defaultCardPool();
-  CardPoolGuard ussr_guard(pool, CardEnum::DuckAndCover,
+  CardPoolGuard ussr_guard(pool, CardEnum::DUCK_AND_COVER,
                            std::make_unique<HeadlineEventCard>(
-                               CardEnum::DuckAndCover, "USSR Headline", 2,
+                               CardEnum::DUCK_AND_COVER, "USSR Headline", 2,
                                Side::USSR, execution_log));
   CardPoolGuard usa_guard(
-      pool, CardEnum::Fidel,
-      std::make_unique<HeadlineEventCard>(CardEnum::Fidel, "USA Headline", 4,
+      pool, CardEnum::FIDEL,
+      std::make_unique<HeadlineEventCard>(CardEnum::FIDEL, "USA Headline", 4,
                                           Side::USA, execution_log));
 
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USSR, CardEnum::NuclearTestBan);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
-  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
+  board.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
 
   prepareDeckWithDummyCards(40);
   const int current_turn = board.getTurnTrack().getTurn();
@@ -223,7 +223,7 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
   ASSERT_EQ(ussr_moves.size(), expected_ussr_after_draw);
   auto ussr_move_it =
       std::find_if(ussr_moves.begin(), ussr_moves.end(), [](const auto& move) {
-        return move->getCard() == CardEnum::DuckAndCover;
+        return move->getCard() == CardEnum::DUCK_AND_COVER;
       });
   ASSERT_NE(ussr_move_it, ussr_moves.end());
   auto ussr_move = *ussr_move_it;
@@ -239,13 +239,13 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
 
   EXPECT_EQ(board.getPlayerHand(Side::USSR).size(),
             expected_ussr_after_draw - 1);
-  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
+  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DUCK_AND_COVER);
 
   auto& usa_moves = std::get<0>(second_result);
   ASSERT_EQ(usa_moves.size(), expected_usa_after_draw);
   auto usa_move_it = std::find_if(
       usa_moves.begin(), usa_moves.end(),
-      [](const auto& move) { return move->getCard() == CardEnum::Fidel; });
+      [](const auto& move) { return move->getCard() == CardEnum::FIDEL; });
   ASSERT_NE(usa_move_it, usa_moves.end());
   auto usa_move = *usa_move_it;
   EXPECT_EQ(std::get<1>(second_result), Side::USA);
@@ -263,15 +263,15 @@ TEST_F(PhaseMachineTest, HeadlinePhaseBasicFlow) {
   ASSERT_FALSE(ar_moves.empty());
   EXPECT_TRUE(
       std::any_of(ar_moves.begin(), ar_moves.end(), [](const auto& move) {
-        return move->getCard() == CardEnum::NuclearTestBan &&
+        return move->getCard() == CardEnum::NUCLEAR_TEST_BAN &&
                move->getSide() == Side::USSR;
       }));
   EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
-  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::Dummy);
-  EXPECT_EQ(board.getHeadlineCard(Side::USA), CardEnum::Dummy);
+  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DUMMY);
+  EXPECT_EQ(board.getHeadlineCard(Side::USA), CardEnum::DUMMY);
 
   const std::vector<std::pair<Side, CardEnum>> expected_log = {
-      {Side::USA, CardEnum::Fidel}, {Side::USSR, CardEnum::DuckAndCover}};
+      {Side::USA, CardEnum::FIDEL}, {Side::USSR, CardEnum::DUCK_AND_COVER}};
   ASSERT_EQ(execution_log->size(), expected_log.size());
   EXPECT_EQ(*execution_log, expected_log);
 
@@ -288,21 +288,21 @@ TEST_F(PhaseMachineTest, HeadlineCardsMoveToCorrectPiles) {
   auto execution_log =
       std::make_shared<std::vector<std::pair<Side, CardEnum>>>();
   auto& pool = defaultCardPool();
-  CardPoolGuard ussr_guard(pool, CardEnum::DuckAndCover,
+  CardPoolGuard ussr_guard(pool, CardEnum::DUCK_AND_COVER,
                            std::make_unique<HeadlineEventCard>(
-                               CardEnum::DuckAndCover, "USSR Headline", 2,
+                               CardEnum::DUCK_AND_COVER, "USSR Headline", 2,
                                Side::USSR, execution_log, false));
   CardPoolGuard usa_guard(
-      pool, CardEnum::Fidel,
-      std::make_unique<HeadlineEventCard>(CardEnum::Fidel, "USA Headline", 4,
+      pool, CardEnum::FIDEL,
+      std::make_unique<HeadlineEventCard>(CardEnum::FIDEL, "USA Headline", 4,
                                           Side::USA, execution_log, true));
 
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USSR, CardEnum::NuclearTestBan);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
-  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
+  board.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
 
   prepareDeckWithDummyCards(40);
   const int current_turn = board.getTurnTrack().getTurn();
@@ -319,7 +319,7 @@ TEST_F(PhaseMachineTest, HeadlineCardsMoveToCorrectPiles) {
   ASSERT_EQ(ussr_moves.size(), expected_ussr_after_draw);
   auto ussr_move_it =
       std::find_if(ussr_moves.begin(), ussr_moves.end(), [](const auto& move) {
-        return move->getCard() == CardEnum::DuckAndCover;
+        return move->getCard() == CardEnum::DUCK_AND_COVER;
       });
   ASSERT_NE(ussr_move_it, ussr_moves.end());
   auto ussr_move = *ussr_move_it;
@@ -335,11 +335,11 @@ TEST_F(PhaseMachineTest, HeadlineCardsMoveToCorrectPiles) {
   ASSERT_EQ(usa_moves.size(), expected_usa_after_draw);
   auto usa_move_it = std::find_if(
       usa_moves.begin(), usa_moves.end(),
-      [](const auto& move) { return move->getCard() == CardEnum::Fidel; });
+      [](const auto& move) { return move->getCard() == CardEnum::FIDEL; });
   ASSERT_NE(usa_move_it, usa_moves.end());
   auto usa_move = *usa_move_it;
 
-  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DuckAndCover);
+  EXPECT_EQ(board.getHeadlineCard(Side::USSR), CardEnum::DUCK_AND_COVER);
   EXPECT_EQ(board.getPlayerHand(Side::USA).size(), expected_usa_after_draw);
 
   auto third_result = PhaseMachine::step(
@@ -352,11 +352,11 @@ TEST_F(PhaseMachineTest, HeadlineCardsMoveToCorrectPiles) {
 
   const auto& discard = board.getDeck().getDiscardPile();
   ASSERT_EQ(discard.size(), 1);
-  EXPECT_EQ(discard.front(), CardEnum::DuckAndCover);
+  EXPECT_EQ(discard.front(), CardEnum::DUCK_AND_COVER);
 
   const auto& removed = board.getDeck().getRemovedCards();
   ASSERT_EQ(removed.size(), 1);
-  EXPECT_EQ(removed.front(), CardEnum::Fidel);
+  EXPECT_EQ(removed.front(), CardEnum::FIDEL);
 
   // AR入力を要求する状態へ遷移し、USSRが行動待ちになる
   EXPECT_EQ(std::get<1>(third_result), Side::USSR);
@@ -365,7 +365,7 @@ TEST_F(PhaseMachineTest, HeadlineCardsMoveToCorrectPiles) {
   EXPECT_TRUE(std::any_of(ar_moves_for_guard.begin(), ar_moves_for_guard.end(),
                           [](const auto& move) {
                             return move->getCard() ==
-                                       CardEnum::NuclearTestBan &&
+                                       CardEnum::NUCLEAR_TEST_BAN &&
                                    move->getSide() == Side::USSR;
                           }));
   EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
@@ -376,21 +376,21 @@ TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
   auto execution_log =
       std::make_shared<std::vector<std::pair<Side, CardEnum>>>();
   auto& pool = defaultCardPool();
-  CardPoolGuard ussr_guard(pool, CardEnum::DuckAndCover,
+  CardPoolGuard ussr_guard(pool, CardEnum::DUCK_AND_COVER,
                            std::make_unique<HeadlineEventCard>(
-                               CardEnum::DuckAndCover, "USSR Headline", 2,
+                               CardEnum::DUCK_AND_COVER, "USSR Headline", 2,
                                Side::USSR, execution_log, true, false));
-  CardPoolGuard usa_guard(pool, CardEnum::Fidel,
+  CardPoolGuard usa_guard(pool, CardEnum::FIDEL,
                           std::make_unique<HeadlineEventCard>(
-                              CardEnum::Fidel, "USA Headline", 4, Side::USA,
+                              CardEnum::FIDEL, "USA Headline", 4, Side::USA,
                               execution_log, false, true));
 
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USSR, CardEnum::NuclearTestBan);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
-  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
+  board.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
 
   prepareDeckWithDummyCards(40);
   const int current_turn = board.getTurnTrack().getTurn();
@@ -407,7 +407,7 @@ TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
   ASSERT_EQ(ussr_moves.size(), expected_ussr_after_draw);
   auto ussr_move_it =
       std::find_if(ussr_moves.begin(), ussr_moves.end(), [](const auto& move) {
-        return move->getCard() == CardEnum::DuckAndCover;
+        return move->getCard() == CardEnum::DUCK_AND_COVER;
       });
   ASSERT_NE(ussr_move_it, ussr_moves.end());
   auto ussr_move = *ussr_move_it;
@@ -423,7 +423,7 @@ TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
   ASSERT_EQ(usa_moves.size(), expected_usa_after_draw);
   auto usa_move_it = std::find_if(
       usa_moves.begin(), usa_moves.end(),
-      [](const auto& move) { return move->getCard() == CardEnum::Fidel; });
+      [](const auto& move) { return move->getCard() == CardEnum::FIDEL; });
   ASSERT_NE(usa_move_it, usa_moves.end());
   auto usa_move = *usa_move_it;
 
@@ -436,16 +436,16 @@ TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
 
   const auto& discard = board.getDeck().getDiscardPile();
   ASSERT_EQ(discard.size(), 2);
-  EXPECT_EQ(std::count(discard.begin(), discard.end(), CardEnum::DuckAndCover),
-            1);
-  EXPECT_EQ(std::count(discard.begin(), discard.end(), CardEnum::Fidel), 1);
+  EXPECT_EQ(
+      std::count(discard.begin(), discard.end(), CardEnum::DUCK_AND_COVER), 1);
+  EXPECT_EQ(std::count(discard.begin(), discard.end(), CardEnum::FIDEL), 1);
 
   const auto& removed = board.getDeck().getRemovedCards();
   EXPECT_TRUE(removed.empty());
 
   // USSRカードは発動していないためログにはUSAカードのみ記録される
   ASSERT_EQ(execution_log->size(), 1);
-  EXPECT_EQ(execution_log->front(), std::make_pair(Side::USA, CardEnum::Fidel));
+  EXPECT_EQ(execution_log->front(), std::make_pair(Side::USA, CardEnum::FIDEL));
 
   EXPECT_EQ(std::get<1>(third_result), Side::USSR);
   const auto& ar_moves_without_event = std::get<0>(third_result);
@@ -453,7 +453,7 @@ TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
   EXPECT_TRUE(std::any_of(ar_moves_without_event.begin(),
                           ar_moves_without_event.end(), [](const auto& move) {
                             return move->getCard() ==
-                                       CardEnum::NuclearTestBan &&
+                                       CardEnum::NUCLEAR_TEST_BAN &&
                                    move->getSide() == Side::USSR;
                           }));
   EXPECT_EQ(board.getCurrentArPlayer(), Side::USSR);
@@ -463,9 +463,9 @@ TEST_F(PhaseMachineTest, HeadlineCardsWithoutEventGoToDiscard) {
 TEST_F(PhaseMachineTest, TurnStartDealsCardsToBothPlayers) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
-  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
+  board.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
 
   prepareDeckWithDummyCards(60);
   const int current_turn = board.getTurnTrack().getTurn();
@@ -490,8 +490,8 @@ TEST_F(PhaseMachineTest, TurnStartDealsCardsToBothPlayers) {
 // 宇宙開発トラック優位性があるケースのテスト
 TEST_F(PhaseMachineTest, HeadlinePhaseSpaceAdvantage) {
   // プレイヤーに手札を追加
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
 
   // USSRが宇宙開発トラック4に到達
   board.getSpaceTrack().advanceSpaceTrack(Side::USSR, 4);
@@ -510,7 +510,7 @@ TEST_F(PhaseMachineTest, HeadlinePhaseSpaceAdvantage) {
 TEST_F(PhaseMachineTest, ActionRoundSkipsWhenNoLegalMoves) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USA, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USA, CardEnum::DUCK_AND_COVER);
 
   board.pushState(StateType::AR_USSR);
 
@@ -525,7 +525,7 @@ TEST_F(PhaseMachineTest, ActionRoundSkipsWhenNoLegalMoves) {
 // USSRが追加ARを保持している場合にEXTRA_AR_USSRステートを経由して入力待ちになることを検証する
 TEST_F(PhaseMachineTest, ExtraActionRoundForUssrRequestsInput) {
   board.clearHand(Side::USSR);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
 
   auto& track = board.getActionRoundTrack();
   const int turn = board.getTurnTrack().getTurn();
@@ -557,8 +557,8 @@ TEST_F(PhaseMachineTest, ExtraActionRoundForUssrRequestsInput) {
 TEST_F(PhaseMachineTest, ExtraActionRoundOffersPassMove) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
 
   auto& track = board.getActionRoundTrack();
   const int turn = board.getTurnTrack().getTurn();
@@ -589,7 +589,7 @@ TEST_F(PhaseMachineTest, ExtraActionRoundOffersPassMove) {
 // RequestCommandが合法手を返さない場合でもフェーズが前進する
 TEST_F(PhaseMachineTest, RequestCommandWithNoLegalMovesIsDiscarded) {
   board.clearHand(Side::USSR);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
 
   board.pushState(StateType::AR_USSR);
   board.pushState(std::make_shared<RequestCommand>(
@@ -605,7 +605,7 @@ TEST_F(PhaseMachineTest, RequestCommandWithNoLegalMovesIsDiscarded) {
 // RequestCommandが合法手を返した場合に入力要求が返される
 TEST_F(PhaseMachineTest, RequestCommandWithLegalMovesReturnsInput) {
   auto executed = std::make_shared<bool>(false);
-  auto tracking_move = std::make_shared<TrackingMove>(CardEnum::DuckAndCover,
+  auto tracking_move = std::make_shared<TrackingMove>(CardEnum::DUCK_AND_COVER,
                                                       Side::USSR, executed);
 
   board.pushState(std::make_shared<RequestCommand>(
@@ -640,8 +640,8 @@ TEST_F(PhaseMachineTest, TerminalStateReturnsWinner) {
 TEST_F(PhaseMachineTest, ArUsaCompleteSchedulesUssrActionRound) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
 
   board.pushState(StateType::AR_USA_COMPLETE);
 
@@ -659,7 +659,7 @@ TEST_F(PhaseMachineTest, ArUsaCompleteSchedulesUssrActionRound) {
 // 回答済みMoveがCommandに変換され実行されることを検証する
 TEST_F(PhaseMachineTest, ProcessesAnswerExecutesCommands) {
   auto executed = std::make_shared<bool>(false);
-  auto tracking_move = std::make_shared<TrackingMove>(CardEnum::DuckAndCover,
+  auto tracking_move = std::make_shared<TrackingMove>(CardEnum::DUCK_AND_COVER,
                                                       Side::USSR, executed);
 
   board.pushState(StateType::USSR_WIN_END);
@@ -691,10 +691,10 @@ TEST_F(PhaseMachineTest, TurnEndAdvancesTurnAndResetsActionRounds) {
   milops_track.advanceMilopsTrack(Side::USSR, 3);
   milops_track.advanceMilopsTrack(Side::USA, 1);
 
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
-  board.addCardEffectInThisTurn(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardEffectInThisTurn(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
+  board.addCardEffectInThisTurn(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardEffectInThisTurn(Side::USA, CardEnum::FIDEL);
 
   board.pushState(StateType::USSR_WIN_END);
   board.pushState(StateType::TURN_END);
@@ -724,8 +724,8 @@ TEST_F(PhaseMachineTest, TurnEndMilopsPenaltyResolvesSimultaneously) {
 
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
 
   board.changeVp(19);
   auto& defcon_track = board.getDefconTrack();
@@ -752,8 +752,8 @@ TEST_F(PhaseMachineTest, TurnEndMilopsPenaltyTriggersUssrVictory) {
 
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
 
   auto& milops_track = board.getMilopsTrack();
   auto& defcon_track = board.getDefconTrack();
@@ -774,9 +774,9 @@ TEST_F(PhaseMachineTest, TurnEndMilopsPenaltyTriggersUssrVictory) {
 // ターン3終了時にMid Warカードが山札へ投入されることを確認する
 TEST_F(PhaseMachineTest, TurnEndAddsMidWarCardsAtTurnThree) {
   auto& pool = defaultCardPool();
-  CardPoolGuard mid_guard(pool, CardEnum::DuckAndCover,
+  CardPoolGuard mid_guard(pool, CardEnum::DUCK_AND_COVER,
                           std::make_unique<WarPeriodTaggedCard>(
-                              CardEnum::DuckAndCover, WarPeriod::MID_WAR));
+                              CardEnum::DUCK_AND_COVER, WarPeriod::MID_WAR));
 
   auto& deck = board.getDeck();
   deck.getDeck().clear();
@@ -793,8 +793,8 @@ TEST_F(PhaseMachineTest, TurnEndAddsMidWarCardsAtTurnThree) {
   const int next_turn = std::min(turn_track.getTurn() + 1, 10);
   const int required_cards = action_track.getDefinedActionRounds(next_turn) + 2;
   for (int i = 0; i < required_cards; ++i) {
-    board.addCardToHand(Side::USSR, CardEnum::Dummy);
-    board.addCardToHand(Side::USA, CardEnum::Dummy);
+    board.addCardToHand(Side::USSR, CardEnum::DUMMY);
+    board.addCardToHand(Side::USA, CardEnum::DUMMY);
   }
 
   board.pushState(StateType::TURN_END);
@@ -802,15 +802,15 @@ TEST_F(PhaseMachineTest, TurnEndAddsMidWarCardsAtTurnThree) {
 
   const auto& cards = deck.getDeck();
   ASSERT_EQ(cards.size(), 1U);
-  EXPECT_EQ(cards.front(), CardEnum::DuckAndCover);
+  EXPECT_EQ(cards.front(), CardEnum::DUCK_AND_COVER);
 }
 
 // ターン7終了時にLate Warカードが山札へ投入されることを確認する
 TEST_F(PhaseMachineTest, TurnEndAddsLateWarCardsAtTurnSeven) {
   auto& pool = defaultCardPool();
-  CardPoolGuard late_guard(pool, CardEnum::Fidel,
+  CardPoolGuard late_guard(pool, CardEnum::FIDEL,
                            std::make_unique<WarPeriodTaggedCard>(
-                               CardEnum::Fidel, WarPeriod::LATE_WAR));
+                               CardEnum::FIDEL, WarPeriod::LATE_WAR));
 
   auto& deck = board.getDeck();
   deck.getDeck().clear();
@@ -827,8 +827,8 @@ TEST_F(PhaseMachineTest, TurnEndAddsLateWarCardsAtTurnSeven) {
   const int next_turn = std::min(turn_track.getTurn() + 1, 10);
   const int required_cards = action_track.getDefinedActionRounds(next_turn) + 2;
   for (int i = 0; i < required_cards; ++i) {
-    board.addCardToHand(Side::USSR, CardEnum::Dummy);
-    board.addCardToHand(Side::USA, CardEnum::Dummy);
+    board.addCardToHand(Side::USSR, CardEnum::DUMMY);
+    board.addCardToHand(Side::USA, CardEnum::DUMMY);
   }
 
   board.pushState(StateType::TURN_END);
@@ -836,15 +836,15 @@ TEST_F(PhaseMachineTest, TurnEndAddsLateWarCardsAtTurnSeven) {
 
   const auto& cards = deck.getDeck();
   ASSERT_EQ(cards.size(), 1U);
-  EXPECT_EQ(cards.front(), CardEnum::Fidel);
+  EXPECT_EQ(cards.front(), CardEnum::FIDEL);
 }
 
 TEST_F(PhaseMachineTest, TurnEndRequestsSpaceTrackDiscardWhenAdvantaged) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::Fidel);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USSR, CardEnum::FIDEL);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
 
   prepareDeckWithDummyCards(60);
 
@@ -873,20 +873,20 @@ TEST_F(PhaseMachineTest, TurnEndRequestsSpaceTrackDiscardWhenAdvantaged) {
   EXPECT_GE(discard_count, 2);
   EXPECT_TRUE(std::any_of(moves.begin(), moves.end(), [](const auto& move) {
     const auto* discard = dynamic_cast<DiscardMove*>(move.get());
-    return discard != nullptr && discard->getCard() == CardEnum::Fidel;
+    return discard != nullptr && discard->getCard() == CardEnum::FIDEL;
   }));
   EXPECT_TRUE(std::any_of(moves.begin(), moves.end(), [](const auto& move) {
     const auto* discard = dynamic_cast<DiscardMove*>(move.get());
-    return discard != nullptr && discard->getCard() == CardEnum::DuckAndCover;
+    return discard != nullptr && discard->getCard() == CardEnum::DUCK_AND_COVER;
   }));
 }
 
 TEST_F(PhaseMachineTest, SpaceTrackDiscardMoveRemovesCardAndResumesTurn) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USSR, CardEnum::Fidel);
-  board.addCardToHand(Side::USSR, CardEnum::DuckAndCover);
-  board.addCardToHand(Side::USA, CardEnum::NuclearTestBan);
+  board.addCardToHand(Side::USSR, CardEnum::FIDEL);
+  board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+  board.addCardToHand(Side::USA, CardEnum::NUCLEAR_TEST_BAN);
 
   prepareDeckWithDummyCards(60);
   const int current_turn = board.getTurnTrack().getTurn();
@@ -940,7 +940,7 @@ TEST_F(PhaseMachineTest, SpaceTrackDiscardMoveRemovesCardAndResumesTurn) {
 TEST_F(PhaseMachineTest, ExtraActionRoundForUsaRequestsInput) {
   board.clearHand(Side::USSR);
   board.clearHand(Side::USA);
-  board.addCardToHand(Side::USA, CardEnum::Fidel);
+  board.addCardToHand(Side::USA, CardEnum::FIDEL);
 
   auto& track = board.getActionRoundTrack();
   const int turn = board.getTurnTrack().getTurn();

@@ -208,7 +208,7 @@ class ActionEventMove final : public Move {
 // 共通パスムーブ。カードを消費せず即座にフェーズ完了処理へ遷移する。
 class PassMove final : public Move {
  public:
-  explicit PassMove(Side side) : Move{CardEnum::Dummy, side} {}
+  explicit PassMove(Side side) : Move{CardEnum::DUMMY, side} {}
 
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(

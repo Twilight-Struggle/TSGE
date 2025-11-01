@@ -232,7 +232,7 @@ MaybeStepOutput handleHeadlineProcess(Board& board, StateStack& states) {
 
   states.emplace_back(StateType::AR_USSR);
 
-  if (ussr_card_id != CardEnum::Dummy && usa_card_id != CardEnum::Dummy) {
+  if (ussr_card_id != CardEnum::DUMMY && usa_card_id != CardEnum::DUMMY) {
     const auto& card_pool = board.getCardpool();
     const auto& ussr_card = card_pool[static_cast<std::size_t>(ussr_card_id)];
     const auto& usa_card = card_pool[static_cast<std::size_t>(usa_card_id)];

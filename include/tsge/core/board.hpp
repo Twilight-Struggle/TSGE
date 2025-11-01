@@ -91,8 +91,8 @@ class Board {
     headlineCards_[static_cast<size_t>(side)] = card;
   }
   void clearHeadlineCards() {
-    headlineCards_[static_cast<size_t>(Side::USSR)] = CardEnum::Dummy;
-    headlineCards_[static_cast<size_t>(Side::USA)] = CardEnum::Dummy;
+    headlineCards_[static_cast<size_t>(Side::USSR)] = CardEnum::DUMMY;
+    headlineCards_[static_cast<size_t>(Side::USA)] = CardEnum::DUMMY;
   }
   [[nodiscard]]
   bool isHeadlineCardVisible(Side viewer, Side target) const;
@@ -140,7 +140,7 @@ class Board {
   Randomizer randomizer_;
   Deck deck_;
   std::array<std::vector<CardEnum>, 2> playerHands_;
-  std::array<CardEnum, 2> headlineCards_ = {CardEnum::Dummy, CardEnum::Dummy};
+  std::array<CardEnum, 2> headlineCards_ = {CardEnum::DUMMY, CardEnum::DUMMY};
   std::set<CardEnum> cardEffectsInProgress_;
   std::array<std::vector<CardEnum>, 2> cardsEffectsInThisTurn_;
   int vp_ = 0;
