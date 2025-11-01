@@ -135,6 +135,8 @@ class PhaseMachineTest : public ::testing::Test {
  protected:
   PhaseMachineTest() : board(defaultCardPool()) {}
 
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
+
   // デッキはデフォルトで空のため、テストごとに明示的に初期化する。
   // TURN_STARTでの配布処理が空デッキにアクセスしないよう、十分な枚数の
   // Dummyカードを積み上げてから検証を実施する。
@@ -711,6 +713,17 @@ TEST_F(PhaseMachineTest, TurnEndAdvancesTurnAndResetsActionRounds) {
   EXPECT_TRUE(board.getCardsEffectsInThisTurn(Side::USA).empty());
   EXPECT_EQ(board.getVp(), 2);
   EXPECT_FALSE(std::get<0>(result).empty());
+}
+
+TEST_F(PhaseMachineTest, TurnEndRevealsChinaCard) {
+  board.giveChinaCardTo(Side::USA, false);
+  board.pushState(StateType::USSR_WIN_END);
+  board.pushState(StateType::TURN_END);
+
+  PhaseMachine::step(board, std::nullopt);
+
+  EXPECT_EQ(board.getChinaCardOwner(), Side::USA);
+  EXPECT_TRUE(board.isChinaCardFaceUp());
 }
 
 // MilOps差分は同時精算されるため、VPが閾値を跨いでも即時勝敗が決まらないことを確認する

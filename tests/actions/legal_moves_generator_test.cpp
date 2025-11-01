@@ -41,6 +41,8 @@ static const std::array<std::unique_ptr<Card>, 111>& createTestCardPool() {
     // DummyカードをOps0として設定（スコアカード相当）
     pool[static_cast<size_t>(CardEnum::DUMMY)] = std::make_unique<DummyCard>(0);
     // その他の既存カード
+    pool[static_cast<size_t>(CardEnum::CHINA_CARD)] =
+        std::make_unique<DummyCard>(4);
     pool[static_cast<size_t>(CardEnum::DUCK_AND_COVER)] =
         std::make_unique<DummyCard>(3);
     pool[static_cast<size_t>(CardEnum::FIDEL)] = std::make_unique<DummyCard>(2);
@@ -123,6 +125,8 @@ class TestHelper {
 class RealignmentRequestLegalMovesTest : public ::testing::Test {
  protected:
   RealignmentRequestLegalMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override { board.giveChinaCardTo(Side::USA, false); }
 
   Board board;
 };
@@ -243,6 +247,8 @@ class AdditionalOpsRealignmentLegalMovesTest : public ::testing::Test {
  protected:
   AdditionalOpsRealignmentLegalMovesTest() : board(createTestCardPool()) {}
 
+  void SetUp() override { board.giveChinaCardTo(Side::USA, false); }
+
   Board board;
 };
 
@@ -250,13 +256,35 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, ChinaCardBonusAsiaOnly) {
   // 中国カードボーナステスト（アジア限定）
   TestHelper::setupBoardWithInfluence(board);
 
-  std::vector<CountryEnum> history = {CountryEnum::JAPAN,
-                                      CountryEnum::SOUTH_KOREA};
+  std::vector<CountryEnum> history = {
+      CountryEnum::JAPAN, CountryEnum::SOUTH_KOREA, CountryEnum::SOUTH_KOREA,
+      CountryEnum::SOUTH_KOREA};
 
   auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board, Side::USSR, CardEnum::DUMMY, history, AdditionalOpsType::NONE);
+      board, Side::USSR, CardEnum::CHINA_CARD, history,
+      AdditionalOpsType::NONE);
 
-  EXPECT_EQ(moves.size(), 0);
+  ASSERT_EQ(moves.size(), 2);
+
+  RealignmentRequestMove expected_bonus(CardEnum::CHINA_CARD, Side::USSR,
+                                        CountryEnum::JAPAN, history, 1,
+                                        AdditionalOpsType::CHINA_CARD);
+  const bool has_bonus_move =
+      std::any_of(moves.begin(), moves.end(),
+                  [&expected_bonus](const std::shared_ptr<Move>& move) {
+                    return move != nullptr && *move == expected_bonus;
+                  });
+  EXPECT_TRUE(has_bonus_move);
+
+  RealignmentRequestMove expected_pass(CardEnum::CHINA_CARD, Side::USSR,
+                                       CountryEnum::USSR, history, 1,
+                                       AdditionalOpsType::NONE);
+  const bool has_pass_move =
+      std::any_of(moves.begin(), moves.end(),
+                  [&expected_pass](const std::shared_ptr<Move>& move) {
+                    return move != nullptr && *move == expected_pass;
+                  });
+  EXPECT_TRUE(has_pass_move);
 }
 
 TEST_F(AdditionalOpsRealignmentLegalMovesTest, VietnamRevoltsBonus) {
@@ -284,7 +312,8 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, RegionConditionNotSatisfied) {
                                       CountryEnum::WEST_GERMANY};
 
   auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board, Side::USSR, CardEnum::DUMMY, history, AdditionalOpsType::NONE);
+      board, Side::USSR, CardEnum::CHINA_CARD, history,
+      AdditionalOpsType::NONE);
 
   // 地域条件を満たさないため、結果は空
   EXPECT_EQ(moves.size(), 0);
@@ -297,7 +326,8 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, NoTargetCountries) {
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
 
   auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board, Side::USSR, CardEnum::DUMMY, history, AdditionalOpsType::NONE);
+      board, Side::USSR, CardEnum::CHINA_CARD, history,
+      AdditionalOpsType::NONE);
 
   // 対象国がないため、結果は空
   EXPECT_EQ(moves.size(), 0);
@@ -310,7 +340,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, AlreadyUsedChinaCardBonus) {
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
 
   auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board, Side::USSR, CardEnum::DUMMY, history,
+      board, Side::USSR, CardEnum::CHINA_CARD, history,
       AdditionalOpsType::CHINA_CARD);
 
   // 既に使用済みのため、結果は空
@@ -339,7 +369,8 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, BothBonusesAlreadyUsed) {
   std::vector<CountryEnum> history = {CountryEnum::THAILAND};
 
   auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board, Side::USSR, CardEnum::DUMMY, history, AdditionalOpsType::BOTH);
+      board, Side::USSR, CardEnum::CHINA_CARD, history,
+      AdditionalOpsType::BOTH);
 
   // 両方使用済みのため、結果は空
   EXPECT_EQ(moves.size(), 0);
@@ -349,6 +380,8 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, BothBonusesAlreadyUsed) {
 class ActionRealignmentLegalMovesTest : public ::testing::Test {
  protected:
   ActionRealignmentLegalMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
 
   Board board;
 };
@@ -462,6 +495,23 @@ TEST_F(ActionRealignmentLegalMovesTest, OpsValueDoesNotAffectMoveCount) {
   EXPECT_EQ(moves4ops.size(), 4);
 }
 
+TEST_F(ActionRealignmentLegalMovesTest, ChinaCardAddsLegalMovesWhenFaceUp) {
+  board.giveChinaCardTo(Side::USSR, true);
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
+
+  auto moves =
+      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+
+  // 手札1枚 + 中国カードで 2 枚分のムーブが生成される
+  EXPECT_EQ(moves.size(), 8);
+  const bool has_china_card_move =
+      std::any_of(moves.begin(), moves.end(), [](const auto& move) {
+        return move != nullptr && move->getCard() == CardEnum::CHINA_CARD;
+      });
+  EXPECT_TRUE(has_china_card_move);
+}
+
 TEST_F(ActionRealignmentLegalMovesTest, SingleCardHelperMatchesGeneral) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
@@ -483,6 +533,8 @@ TEST_F(ActionRealignmentLegalMovesTest, SingleCardHelperMatchesGeneral) {
 class ActionPlaceInfluenceLegalMovesTest : public ::testing::Test {
  protected:
   ActionPlaceInfluenceLegalMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
 
   Board board;
 };
@@ -517,6 +569,9 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, SimpleCase2OpsOneCountry) {
 TEST_F(ActionPlaceInfluenceLegalMovesTest, EmptyHand) {
   // 手札なしテスト
   TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto placeable = board.getWorldMap().placeableCountries(Side::USSR);
+  ASSERT_FALSE(placeable.empty());
 
   auto moves =
       LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
@@ -605,6 +660,307 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, MultipleCardsWithSameOps) {
   EXPECT_EQ(card_count[CardEnum::FIDEL], card_count[CardEnum::FIDEL]);
 }
 
+TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardProvidesAsiaBonus) {
+  const auto configure_board = [](Board& target) {
+    TestHelper::clearAllOpponentInfluence(target, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(target, Side::USA);
+    TestHelper::clearSuperPowerInfluence(target, Side::USSR);
+    TestHelper::clearSuperPowerInfluence(target, Side::USA);
+
+    auto& north_korea =
+        target.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
+    north_korea.clearInfluence(Side::USA);
+    north_korea.clearInfluence(Side::USSR);
+    north_korea.addInfluence(Side::USSR, 1);
+  };
+
+  configure_board(board);
+  board.giveChinaCardTo(Side::USSR, true);
+
+  const auto& china_card =
+      board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)];
+
+  auto china_moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+      board, Side::USSR, CardEnum::CHINA_CARD);
+  auto neutral_moves =
+      LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+          board, Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
+
+  ASSERT_FALSE(china_moves.empty());
+  EXPECT_GT(china_moves.size(), neutral_moves.size());
+
+  const auto total_influence = [](const Board& target, Side side) {
+    int total = 0;
+    const auto& world_map = target.getWorldMap();
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < world_map.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      total += world_map.getCountry(country_enum).getInfluence(side);
+    }
+    return total;
+  };
+
+  bool has_bonus_pattern = false;
+  for (const auto& move : china_moves) {
+    ASSERT_NE(move, nullptr);
+
+    auto commands = move->toCommand(china_card);
+    ASSERT_FALSE(commands.empty());
+    auto* place_cmd =
+        dynamic_cast<ActionPlaceInfluenceCommand*>(commands.front().get());
+    ASSERT_NE(place_cmd, nullptr);
+
+    Board eval_board(createTestCardPool());
+    configure_board(eval_board);
+
+    const int before_total = total_influence(eval_board, Side::USSR);
+
+    std::map<CountryEnum, int> before_influence;
+    auto& eval_world = eval_board.getWorldMap();
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < eval_world.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      before_influence[country_enum] =
+          eval_world.getCountry(country_enum).getInfluence(Side::USSR);
+    }
+
+    place_cmd->apply(eval_board);
+
+    const int after_total = total_influence(eval_board, Side::USSR);
+    const int delta = after_total - before_total;
+
+    EXPECT_EQ(delta, 5);
+
+    bool used_only_asia = true;
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < eval_world.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      const int before = before_influence[country_enum];
+      const int after =
+          eval_world.getCountry(country_enum).getInfluence(Side::USSR);
+      if (after > before &&
+          !eval_world.getCountry(country_enum).hasRegion(Region::ASIA)) {
+        used_only_asia = false;
+        break;
+      }
+    }
+    EXPECT_TRUE(used_only_asia);
+
+    has_bonus_pattern = true;
+  }
+
+  EXPECT_TRUE(has_bonus_pattern);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardBaseOpsNeedsNonAsia) {
+  const auto configure_board = [](Board& target) {
+    TestHelper::clearAllOpponentInfluence(target, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(target, Side::USA);
+    TestHelper::clearSuperPowerInfluence(target, Side::USSR);
+    TestHelper::clearSuperPowerInfluence(target, Side::USA);
+
+    auto& north_korea =
+        target.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
+    north_korea.clearInfluence(Side::USA);
+    north_korea.clearInfluence(Side::USSR);
+    north_korea.addInfluence(Side::USSR, 1);
+
+    auto& east_germany =
+        target.getWorldMap().getCountry(CountryEnum::EAST_GERMANY);
+    east_germany.clearInfluence(Side::USA);
+    east_germany.clearInfluence(Side::USSR);
+    east_germany.addInfluence(Side::USSR, 1);
+  };
+
+  configure_board(board);
+  board.giveChinaCardTo(Side::USSR, true);
+
+  const auto& china_card =
+      board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)];
+
+  auto moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+      board, Side::USSR, CardEnum::CHINA_CARD);
+
+  ASSERT_FALSE(moves.empty());
+  EXPECT_EQ(moves.front()->getSide(), Side::USSR);
+
+  bool found_non_asia_base = false;
+  bool found_asia_bonus = false;
+
+  for (const auto& move : moves) {
+    ASSERT_NE(move, nullptr);
+
+    auto commands = move->toCommand(china_card);
+    ASSERT_FALSE(commands.empty());
+    auto* place_cmd =
+        dynamic_cast<ActionPlaceInfluenceCommand*>(commands.front().get());
+    ASSERT_NE(place_cmd, nullptr);
+
+    Board eval_board(createTestCardPool());
+    configure_board(eval_board);
+
+    std::map<CountryEnum, int> before_influence;
+    auto& eval_world = eval_board.getWorldMap();
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < eval_world.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      before_influence[country_enum] =
+          eval_world.getCountry(country_enum).getInfluence(Side::USSR);
+    }
+
+    place_cmd->apply(eval_board);
+
+    int delta = 0;
+    bool all_asia = true;
+    bool includes_non_asia = false;
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < eval_world.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      const int before = before_influence[country_enum];
+      const int after =
+          eval_world.getCountry(country_enum).getInfluence(Side::USSR);
+      if (after > before) {
+        const int diff = after - before;
+        delta += diff;
+        const auto& country = eval_world.getCountry(country_enum);
+        if (!country.hasRegion(Region::ASIA)) {
+          all_asia = false;
+          includes_non_asia = true;
+        }
+      }
+    }
+
+    if (delta == 4) {
+      EXPECT_TRUE(includes_non_asia);
+      EXPECT_FALSE(all_asia);
+      found_non_asia_base = true;
+    } else if (delta == 5) {
+      EXPECT_TRUE(all_asia);
+      found_asia_bonus = true;
+    } else {
+      ADD_FAILURE() << "Unexpected delta: " << delta;
+    }
+  }
+
+  EXPECT_TRUE(found_non_asia_base);
+  EXPECT_TRUE(found_asia_bonus);
+}
+
+TEST_F(ActionPlaceInfluenceLegalMovesTest,
+       ChinaCardVietnamRevoltsSplitsBonuses) {
+  const auto configure_board = [](Board& target) {
+    TestHelper::clearAllOpponentInfluence(target, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(target, Side::USA);
+    TestHelper::clearSuperPowerInfluence(target, Side::USSR);
+    TestHelper::clearSuperPowerInfluence(target, Side::USA);
+
+    auto& north_korea =
+        target.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
+    north_korea.clearInfluence(Side::USA);
+    north_korea.clearInfluence(Side::USSR);
+    north_korea.addInfluence(Side::USSR, 1);
+
+    auto& vietnam = target.getWorldMap().getCountry(CountryEnum::VIETNAM);
+    vietnam.clearInfluence(Side::USA);
+    vietnam.clearInfluence(Side::USSR);
+    vietnam.addInfluence(Side::USSR, 1);
+
+    auto& east_germany =
+        target.getWorldMap().getCountry(CountryEnum::EAST_GERMANY);
+    east_germany.clearInfluence(Side::USA);
+    east_germany.clearInfluence(Side::USSR);
+    east_germany.addInfluence(Side::USSR, 1);
+
+    target.clearCardsEffectsInThisTurn();
+    target.addCardEffectInThisTurn(Side::USSR, CardEnum::VIETNAM_REVOLTS);
+  };
+
+  configure_board(board);
+  board.giveChinaCardTo(Side::USSR, true);
+
+  const auto& china_card =
+      board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)];
+
+  auto moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+      board, Side::USSR, CardEnum::CHINA_CARD);
+
+  bool found_non_asia_base = false;
+  bool found_asia_without_se_bonus = false;
+  bool found_se_asia_bonus = false;
+  bool found_invalid_se_asia_five = false;
+
+  for (const auto& move : moves) {
+    ASSERT_NE(move, nullptr);
+
+    auto commands = move->toCommand(china_card);
+    ASSERT_FALSE(commands.empty());
+    auto* place_cmd =
+        dynamic_cast<ActionPlaceInfluenceCommand*>(commands.front().get());
+    ASSERT_NE(place_cmd, nullptr);
+
+    Board eval_board(createTestCardPool());
+    configure_board(eval_board);
+
+    std::map<CountryEnum, int> before_influence;
+    auto& eval_world = eval_board.getWorldMap();
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < eval_world.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      before_influence[country_enum] =
+          eval_world.getCountry(country_enum).getInfluence(Side::USSR);
+    }
+
+    place_cmd->apply(eval_board);
+
+    int delta = 0;
+    bool all_asia = true;
+    bool all_se_asia = true;
+    bool includes_non_asia = false;
+    for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+         i < eval_world.getCountriesCount(); ++i) {
+      auto country_enum = static_cast<CountryEnum>(i);
+      const int before = before_influence[country_enum];
+      const int after =
+          eval_world.getCountry(country_enum).getInfluence(Side::USSR);
+      if (after > before) {
+        const int diff = after - before;
+        delta += diff;
+        const auto& country = eval_world.getCountry(country_enum);
+        if (!country.hasRegion(Region::ASIA)) {
+          all_asia = false;
+          includes_non_asia = true;
+        }
+        if (!country.hasRegion(Region::SOUTH_EAST_ASIA)) {
+          all_se_asia = false;
+        }
+      }
+    }
+
+    if (delta == 4) {
+      EXPECT_TRUE(includes_non_asia);
+      EXPECT_FALSE(all_asia);
+      found_non_asia_base = true;
+    } else if (delta == 5) {
+      EXPECT_TRUE(all_asia);
+      if (all_se_asia) {
+        found_invalid_se_asia_five = true;
+      } else {
+        found_asia_without_se_bonus = true;
+      }
+    } else if (delta == 6) {
+      EXPECT_TRUE(all_se_asia);
+      found_se_asia_bonus = true;
+    } else {
+      ADD_FAILURE() << "Unexpected delta: " << delta;
+    }
+  }
+
+  EXPECT_TRUE(found_non_asia_base);
+  EXPECT_TRUE(found_asia_without_se_bonus);
+  EXPECT_TRUE(found_se_asia_bonus);
+  EXPECT_FALSE(found_invalid_se_asia_five);
+}
+
 TEST_F(ActionPlaceInfluenceLegalMovesTest, ScoringCardNoMoves) {
   // スコアカード（Ops0）では配置不可
   // 状態をクリアして制御された環境でテスト
@@ -657,6 +1013,8 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, SingleCardHelperMatchesGeneral) {
 class ActionCoupLegalMovesTest : public ::testing::Test {
  protected:
   ActionCoupLegalMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
 
   Board board;
 };
@@ -738,6 +1096,21 @@ TEST_F(ActionCoupLegalMovesTest, EmptyHand) {
   auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionCoupLegalMovesTest, ChinaCardAddsMovesWhenFaceUp) {
+  board.giveChinaCardTo(Side::USSR, true);
+  TestHelper::setupBoardWithInfluence(board);
+  TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+
+  EXPECT_EQ(moves.size(), 4);
+  const bool has_china_card_move =
+      std::any_of(moves.begin(), moves.end(), [](const auto& move) {
+        return move != nullptr && move->getCard() == CardEnum::CHINA_CARD;
+      });
+  EXPECT_TRUE(has_china_card_move);
 }
 
 TEST_F(ActionCoupLegalMovesTest, NoOpponentInfluence) {
@@ -879,11 +1252,15 @@ class ExtraActionRoundLegalMovesTest : public ::testing::Test {
  protected:
   ExtraActionRoundLegalMovesTest() : board(createTestCardPool()) {}
 
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
+
   Board board;
 };
 
 TEST_F(ExtraActionRoundLegalMovesTest, ProvidesPassWhenNoOtherMoves) {
   board.clearHand(Side::USSR);
+  ASSERT_FALSE(board.isChinaCardAvailableFor(Side::USSR));
+  EXPECT_TRUE(board.getPlayerHand(Side::USSR).empty());
 
   auto moves =
       LegalMovesGenerator::extraActionRoundLegalMoves(board, Side::USSR);
@@ -910,6 +1287,8 @@ TEST_F(ExtraActionRoundLegalMovesTest, PassIncludedAlongsideOpsMoves) {
 class SpaceTrackDiscardLegalMovesTest : public ::testing::Test {
  protected:
   SpaceTrackDiscardLegalMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
 
   Board board;
 };
@@ -958,6 +1337,8 @@ TEST_F(SpaceTrackDiscardLegalMovesTest, ReturnsEmptyWhenHandEmpty) {
 class ActionSpaceRaceLegalMovesTest : public ::testing::Test {
  protected:
   ActionSpaceRaceLegalMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override { board.giveChinaCardTo(Side::USSR, false); }
 
   Board board;
 };
@@ -1010,6 +1391,19 @@ TEST_F(ActionSpaceRaceLegalMovesTest, EmptyHand) {
       LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionSpaceRaceLegalMovesTest, ChinaCardEnablesSpaceRaceWhenFaceUp) {
+  board.giveChinaCardTo(Side::USSR, true);
+  TestHelper::setSpaceTrackPosition(board, Side::USSR, 1);
+  TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
+  TestHelper::addCardsToHand(board, Side::USSR, {});
+
+  auto moves =
+      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_EQ(moves.front()->getCard(), CardEnum::CHINA_CARD);
 }
 
 TEST_F(ActionSpaceRaceLegalMovesTest, TrialLimitReached) {

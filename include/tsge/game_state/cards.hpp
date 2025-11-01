@@ -13,6 +13,17 @@ class DuckAndCover final : public Card {
   bool canEvent(const Board& board) const override;
 };
 
+class ChinaCard final : public Card {
+ public:
+  ChinaCard()
+      : Card(CardEnum::CHINA_CARD, "ChinaCard", 4, Side::NEUTRAL,
+             WarPeriod::EARLY_WAR, false) {}
+  [[nodiscard]]
+  std::vector<CommandPtr> event(Side side) const override;
+  [[nodiscard]]
+  bool canEvent(const Board& board) const override;
+};
+
 class Fidel final : public Card {
  public:
   Fidel()

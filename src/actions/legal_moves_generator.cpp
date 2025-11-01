@@ -16,6 +16,17 @@
 
 namespace {
 
+std::vector<CardEnum> gatherOpsPlayableCards(const Board& board, Side side) {
+  const auto& hand = board.getPlayerHand(side);
+  std::vector<CardEnum> cards;
+  cards.reserve(hand.size() + 1);
+  cards.insert(cards.end(), hand.begin(), hand.end());
+  if (board.isChinaCardAvailableFor(side)) {
+    cards.push_back(CardEnum::CHINA_CARD);
+  }
+  return cards;
+}
+
 // CountryEnum抽出用のヘルパー
 template <typename T>
 struct CountryExtractor {
@@ -120,30 +131,89 @@ std::vector<std::pair<int, const BonusCondition*>> computeOpsVariants(
       [&board](const std::map<CountryEnum, int>& placed) {
         return isAllInRegion<Region::SOUTH_EAST_ASIA>(placed, board);
       }};
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static const BonusCondition not_asia_only{
+      [&board](const std::map<CountryEnum, int>& placed) {
+        return !isAllInRegion<Region::ASIA>(placed, board);
+      }};
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  static const BonusCondition asia_only_without_se_asia{
+      [&board](const std::map<CountryEnum, int>& placed) {
+        if (!isAllInRegion<Region::ASIA>(placed, board)) {
+          return false;
+        }
+        return !isAllInRegion<Region::SOUTH_EAST_ASIA>(placed, board);
+      }};
+
+  const bool is_china_card = cardId == CardEnum::CHINA_CARD;
+  const auto& effect_of_side = board.getCardsEffectsInThisTurn(side);
+  const bool vietnam_revolts_active =
+      std::find(effect_of_side.begin(), effect_of_side.end(),
+                CardEnum::VIETNAM_REVOLTS) != effect_of_side.end();
 
   std::vector<std::pair<int, const BonusCondition*>> res;
   /* ---- 基本 Ops は必ず存在 ---- */
-  res.push_back({base_ops, nullptr});
+  res.emplace_back(base_ops, is_china_card ? &not_asia_only : nullptr);
 
-  // /* ---- 中国カードの +1 ---- */
-  // if (cardId == CardEnum::CHINA_CARD) res.push_back({base_ops + 1,
-  // &asia_only});
-
-  // /* ---- ベトナム蜂起が効いていれば +1 ---- */
-  // if (board.isVietnamRevoltsActive(side))
-  //   res.push_back({base_ops + 1, &se_asia_only});
-
-  /* ---- ベトナム蜂起 + 中国カード → +2 ---- */
+  /* ---- 中国カードの +1 ---- */
+  if (is_china_card) {
+    if (vietnam_revolts_active) {
+      res.emplace_back(base_ops + 1, &asia_only_without_se_asia);
+      res.emplace_back(base_ops + 2, &se_asia_only);
+    } else {
+      res.emplace_back(base_ops + 1, &asia_only);
+    }
+  }
 
   return res;
 }
 
+/// その国に「影響力を +1」するのに必要な OP コストを返す
+inline int costToAddOneInfluence(const WorldMap& worldMap,
+                                 CountryEnum countryEnum, Side side) {
+  Side opponent_side = getOpponentSide(side);
+
+  // 相手が現在その国を支配しているか？
+  const bool opponent_controls =
+      worldMap.getCountry(countryEnum).getControlSide() == opponent_side;
+
+  return opponent_controls ? 2 : 1;
+}
+
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
                        std::map<CountryEnum, int>& placed,
                        std::vector<std::map<CountryEnum, int>>& out,
                        int totalOps,
                        const std::vector<CountryEnum>& placeableVec, Side side,
-                       const BonusCondition* bonus);
+                       const BonusCondition* bonus) {
+  if (usedOps == totalOps) {
+    if (bonus == nullptr || bonus->isSatisfied(placed)) {
+      out.emplace_back(placed);
+    }
+    return;
+  }
+  for (size_t i = startIdx; i < placeableVec.size(); ++i) {
+    auto country_enum = placeableVec[i];
+    int cost = costToAddOneInfluence(tmpWorldMap, country_enum, side);
+    if (usedOps + cost > totalOps) {
+      continue;
+    }
+
+    // 影響力を１追加して再帰
+    placed[country_enum] += 1;
+    tmpWorldMap.getCountry(country_enum)
+        .addInfluence(side, 1);  // 軽量盤面を更新
+    placeInfluenceDfs(usedOps + cost, i, tmpWorldMap, placed, out, totalOps,
+                      placeableVec, side, bonus);
+    tmpWorldMap.getCountry(country_enum)
+        .removeInfluence(side, 1);  // バックトラック
+    placed[country_enum] -= 1;
+    if (placed[country_enum] == 0) {
+      placed.erase(country_enum);
+    }
+  }
+}
 
 struct PlaceInfluenceCacheKey {
   int ops;
@@ -214,60 +284,13 @@ std::vector<std::shared_ptr<Move>> generatePlaceInfluenceMoves(
   return results;
 }
 
-/// その国に「影響力を +1」するのに必要な OP コストを返す
-inline int costToAddOneInfluence(const WorldMap& worldMap,
-                                 CountryEnum countryEnum, Side side) {
-  Side opponent_side = getOpponentSide(side);
-
-  // 相手が現在その国を支配しているか？
-  const bool opponent_controls =
-      worldMap.getCountry(countryEnum).getControlSide() == opponent_side;
-
-  return opponent_controls ? 2 : 1;
-}
-
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-void placeInfluenceDfs(int usedOps, size_t startIdx, WorldMap& tmpWorldMap,
-                       std::map<CountryEnum, int>& placed,
-                       std::vector<std::map<CountryEnum, int>>& out,
-                       int totalOps,
-                       const std::vector<CountryEnum>& placeableVec, Side side,
-                       const BonusCondition* bonus) {
-  if (usedOps == totalOps) {
-    if (bonus == nullptr || bonus->isSatisfied(placed)) {
-      out.emplace_back(placed);
-    }
-    return;
-  }
-  for (size_t i = startIdx; i < placeableVec.size(); ++i) {
-    auto country_enum = placeableVec[i];
-    int cost = costToAddOneInfluence(tmpWorldMap, country_enum, side);
-    if (usedOps + cost > totalOps) {
-      continue;
-    }
-
-    // 影響力を１追加して再帰
-    placed[country_enum] += 1;
-    tmpWorldMap.getCountry(country_enum)
-        .addInfluence(side, 1);  // 軽量盤面を更新
-    placeInfluenceDfs(usedOps + cost, i, tmpWorldMap, placed, out, totalOps,
-                      placeableVec, side, bonus);
-    tmpWorldMap.getCountry(country_enum)
-        .removeInfluence(side, 1);  // バックトラック
-    placed[country_enum] -= 1;
-    if (placed[country_enum] == 0) {
-      placed.erase(country_enum);
-    }
-  }
-}
-
 }  // namespace
 
 std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionPlaceInfluenceLegalMoves(const Board& board,
                                                     Side side) {
-  const auto& hands = board.getPlayerHand(side);
-  return generatePlaceInfluenceMoves(board, side, hands);
+  auto cards = gatherOpsPlayableCards(board, side);
+  return generatePlaceInfluenceMoves(board, side, cards);
 }
 
 std::vector<std::shared_ptr<Move>>
@@ -281,8 +304,8 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(const Board& board,
 std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
                                                  Side side) {
-  const auto& hands = board.getPlayerHand(side);
-  if (hands.empty()) {
+  auto cards = gatherOpsPlayableCards(board, side);
+  if (cards.empty()) {
     return {};
   }
 
@@ -292,7 +315,7 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
   }
 
   size_t playable_cards =
-      std::count_if(hands.begin(), hands.end(), [&](auto card_enum) {
+      std::count_if(cards.begin(), cards.end(), [&](auto card_enum) {
         const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
         return card->getOps() > 0;
       });
@@ -303,7 +326,7 @@ LegalMovesGenerator::actionRealignmentLegalMoves(const Board& board,
   std::vector<std::shared_ptr<Move>> results;
   results.reserve(playable_cards * target_countries.size());
 
-  for (CardEnum card_enum : hands) {
+  for (CardEnum card_enum : cards) {
     const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
     if (card->getOps() == 0) {
       continue;
@@ -380,12 +403,9 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
   if ((static_cast<uint8_t>(appliedAdditionalOps) &
        static_cast<uint8_t>(AdditionalOpsType::CHINA_CARD)) != 0) {
     // 既に中国カードボーナスが適用されている
-  } else {
-    // TODO: カードが中国カードかどうかの判定が必要
-    // if (cardEnum == CHINA_CARD && isAllInRegion<Region::ASIA>(history,
-    // board)) {
-    //   chinaCardBonus = true;
-    // }
+  } else if (cardEnum == CardEnum::CHINA_CARD && !history.empty() &&
+             isAllInRegion<Region::ASIA>(history, board)) {
+    china_card_bonus = true;
   }
 
   // ベトナム蜂起の追加Opsチェック
@@ -446,8 +466,8 @@ LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
 
 std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
     const Board& board, Side side) {
-  const auto& hands = board.getPlayerHand(side);
-  if (hands.empty()) {
+  auto cards = gatherOpsPlayableCards(board, side);
+  if (cards.empty()) {
     return {};
   }
 
@@ -457,7 +477,7 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
   }
 
   size_t playable_cards =
-      std::count_if(hands.begin(), hands.end(), [&](auto card_enum) {
+      std::count_if(cards.begin(), cards.end(), [&](auto card_enum) {
         const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
         return card->getOps() > 0;
       });
@@ -468,7 +488,7 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionCoupLegalMoves(
   std::vector<std::shared_ptr<Move>> results;
   results.reserve(playable_cards * target_countries.size());
 
-  for (CardEnum card_enum : hands) {
+  for (CardEnum card_enum : cards) {
     const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
     if (card->getOps() == 0) {
       continue;
@@ -532,15 +552,15 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionLegalMovesForCard(
 
 std::vector<std::shared_ptr<Move>>
 LegalMovesGenerator::actionSpaceRaceLegalMoves(const Board& board, Side side) {
-  const auto& hands = board.getPlayerHand(side);
-  if (hands.empty()) {
+  auto cards = gatherOpsPlayableCards(board, side);
+  if (cards.empty()) {
     return {};
   }
 
   std::vector<std::shared_ptr<Move>> results;
-  results.reserve(hands.size());
+  results.reserve(cards.size());
 
-  for (CardEnum card_enum : hands) {
+  for (CardEnum card_enum : cards) {
     const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
 
     // スコアリングカード除外（Ops=0）

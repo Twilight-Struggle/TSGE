@@ -38,6 +38,10 @@ class Card {
     return side_;
   }
   [[nodiscard]]
+  CardEnum getId() const {
+    return id_;
+  }
+  [[nodiscard]]
   WarPeriod getWarPeriod() const {
     return warPeriod_;
   }

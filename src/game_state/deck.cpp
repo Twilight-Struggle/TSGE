@@ -15,6 +15,9 @@ void Deck::addCardsByWarPeriod(WarPeriod warPeriod) {
   for (size_t i = 0; i < cardpool_.size(); ++i) {
     if (cardpool_[i] && cardpool_[i]->getWarPeriod() == warPeriod) {
       auto card_enum = static_cast<CardEnum>(i);
+      if (card_enum == CardEnum::CHINA_CARD) {
+        continue;
+      }
       new_cards.push_back(card_enum);
     }
   }

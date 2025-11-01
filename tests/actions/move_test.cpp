@@ -39,6 +39,8 @@ static const std::array<std::unique_ptr<Card>, 111>& createTestCardPool() {
   if (!initialized) {
     pool[static_cast<size_t>(CardEnum::DUMMY)] =
         std::make_unique<DummyCard>(3, Side::NEUTRAL);
+    pool[static_cast<size_t>(CardEnum::CHINA_CARD)] =
+        std::make_unique<DummyCard>(4, Side::NEUTRAL);
     initialized = true;
   }
   return pool;

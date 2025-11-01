@@ -54,9 +54,15 @@ void ActionCoupCommand::apply(Board& board) const {
   auto& worldmap = board.getWorldMap();
   auto& target_country = worldmap.getCountry(targetCountry_);
 
+  int ops_value = card_->getOps();
+  if (card_->getId() == CardEnum::CHINA_CARD &&
+      target_country.hasRegion(Region::ASIA)) {
+    ops_value += 1;
+  }
+
   auto coup_dice = board.getRandomizer().rollDice();
-  coup_dice += card_->getOps();
-  board.getMilopsTrack().advanceMilopsTrack(side_, card_->getOps());
+  coup_dice += ops_value;
+  board.getMilopsTrack().advanceMilopsTrack(side_, ops_value);
 
   const auto defence_value = target_country.getStability() * 2;
   coup_dice = std::max(coup_dice - defence_value, 0);
@@ -153,6 +159,11 @@ void SetHeadlineCardCommand::apply(Board& board) const {
 }
 
 void FinalizeCardPlayCommand::apply(Board& board) const {
+  if (card_ == CardEnum::CHINA_CARD) {
+    board.giveChinaCardTo(getOpponentSide(side_), false);
+    return;
+  }
+
   auto& hand = board.getPlayerHand(side_);
   if (auto iter = std::find(hand.begin(), hand.end(), card_);
       iter != hand.end()) {

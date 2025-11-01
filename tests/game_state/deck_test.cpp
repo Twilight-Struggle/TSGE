@@ -89,8 +89,8 @@ TEST_F(DeckTest, AddEarlyWarCards) {
   auto deck_size_before = deck.getDeck().size();
   deck.addEarlyWarCards();
 
-  // EARLY_WARカードが追加されているはず（30枚）
-  EXPECT_EQ(deck_size_before + 30, deck.getDeck().size());
+  // EARLY_WARカードが追加されているはず（中国カードを除く29枚）
+  EXPECT_EQ(deck_size_before + 29, deck.getDeck().size());
 }
 
 TEST_F(DeckTest, AddMidWarCards) {
@@ -129,12 +129,12 @@ TEST_F(DeckTest, BoardIntegration) {
   auto& deck = board.getDeck();
   deck.addEarlyWarCards();
 
-  EXPECT_EQ(30, deck.getDeck().size());
+  EXPECT_EQ(29, deck.getDeck().size());
 
   // const版のアクセスも確認
   const Board& const_board = board;
   const auto& const_deck = const_board.getDeck();
-  EXPECT_EQ(30, const_deck.getDeck().size());
+  EXPECT_EQ(29, const_deck.getDeck().size());
 }
 
 TEST_F(DeckTest, DiscardPileAccessorsConsistency) {
