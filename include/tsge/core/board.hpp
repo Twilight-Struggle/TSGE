@@ -1,3 +1,6 @@
+// core/board.hpp
+// TSGE全体のボード状態を定義し、状態遷移と最終得点計算の中枢を担う。
+// プレイアウトやMCTSコピーの正確さを維持するため、ここでの更新は常に一元管理する。
 #pragma once
 
 #include <array>
@@ -102,6 +105,8 @@ class Board {
   void giveChinaCardTo(Side newOwner, bool faceUp);
   void revealChinaCard();
   void finalScoring();
+  [[nodiscard]]
+  int scoreRegion(Region region, bool isFinalScoring) const;
 
   void pushState(std::variant<StateType, CommandPtr>&& state) {
     states_.emplace_back(std::move(state));

@@ -1,3 +1,5 @@
+// enums/game_enums.hpp
+// ゲーム全体で共有する列挙体とVP係数ユーティリティを定義し、配列インデックスの基準を統一する。
 #pragma once
 
 #include <array>
@@ -93,16 +95,16 @@ enum class CountryEnum : uint8_t {
 };
 
 enum class Region : uint8_t {
-  CENTRAL_AMERICA,
-  SOUTH_AMERICA,
-  AFRICA,
-  MIDDLE_EAST,
-  ASIA,
-  EUROPE,
-  EAST_EUROPE,
-  WEST_EUROPE,
-  SOUTH_EAST_ASIA,
-  SPECIAL,
+  EUROPE = 0,
+  ASIA = 1,
+  MIDDLE_EAST = 2,
+  AFRICA = 3,
+  SOUTH_AMERICA = 4,
+  CENTRAL_AMERICA = 5,
+  EAST_EUROPE = 6,
+  WEST_EUROPE = 7,
+  SOUTH_EAST_ASIA = 8,
+  SPECIAL = 9,
 };
 
 enum class StateType : uint8_t {
@@ -124,9 +126,9 @@ enum class StateType : uint8_t {
 };
 
 enum class Side : uint8_t {
-  USSR,
-  USA,
-  NEUTRAL,
+  USSR = 0,
+  USA = 1,
+  NEUTRAL = 2,
 };
 
 enum class WarPeriod : uint8_t {
