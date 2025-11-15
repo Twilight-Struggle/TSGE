@@ -1,3 +1,7 @@
+// どこで: include/tsge/actions/command.hpp
+// 何を: Board状態を更新するすべてのCommand定義を集約し、再利用を容易にする
+// なぜ:
+// 単一の責務点から副作用を管理し、MCTSやPhaseMachineが期待する契約を守るため
 #pragma once
 
 #include <functional>
@@ -163,4 +167,22 @@ class DiscardCommand final : public Command {
 
  private:
   const CardEnum card_;
+};
+
+class ScoreRegionCommand final : public Command {
+ public:
+  explicit ScoreRegionCommand(Region region)
+      : Command(Side::NEUTRAL), region_{region} {}
+
+  void apply(Board& board) const override;
+
+ private:
+  const Region region_;
+};
+
+class SoutheastAsiaScoringCommand final : public Command {
+ public:
+  SoutheastAsiaScoringCommand() : Command(Side::NEUTRAL) {}
+
+  void apply(Board& board) const override;
 };

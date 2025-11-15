@@ -1,3 +1,6 @@
+// どこで: src/game_state/cards.cpp
+// 何を: CARD.mdの仕様に沿ってカードイベントを実装し、Boardコマンド列を構築する
+// なぜ: イベント効果を一元化し、テスト容易性と再利用性を確保するため
 #include "tsge/game_state/cards.hpp"
 
 #include <memory>
@@ -5,6 +8,26 @@
 #include "tsge/actions/command.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
+
+std::vector<CommandPtr> RegionScoringCard::event(Side /*side*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<ScoreRegionCommand>(region_));
+  return commands;
+}
+
+bool RegionScoringCard::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> SoutheastAsiaScoring::event(Side /*side*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<SoutheastAsiaScoringCommand>());
+  return commands;
+}
+
+bool SoutheastAsiaScoring::canEvent(const Board& /*board*/) const {
+  return true;
+}
 
 std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   std::vector<CommandPtr> commands;

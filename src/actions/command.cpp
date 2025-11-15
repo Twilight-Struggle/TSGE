@@ -1,11 +1,29 @@
+// どこで: src/actions/command.cpp
+// 何を: Command派生クラスのapplyロジックを実装し、副作用を安全に適用する
+// なぜ: Board状態遷移と得点処理を集中管理し、ドキュメントと挙動の乖離を防ぐため
 #include "tsge/actions/command.hpp"
 
 #include <algorithm>
+#include <array>
 
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 #include "tsge/game_state/card.hpp"
 #include "tsge/game_state/country.hpp"
+
+namespace {
+
+// CARD.mdの「東南アジアの得点」仕様を正規化した重み付きテーブル。
+constexpr std::array<std::pair<CountryEnum, int>, 7>
+    SOUTHEAST_ASIA_SCORE_TABLE = {{{CountryEnum::BURMA, 1},
+                                   {CountryEnum::LAOS, 1},
+                                   {CountryEnum::VIETNAM, 1},
+                                   {CountryEnum::MALAYSIA, 1},
+                                   {CountryEnum::INDONESIA, 1},
+                                   {CountryEnum::PHILIPPINES, 1},
+                                   {CountryEnum::THAILAND, 2}}};
+
+}  // namespace
 
 void ActionPlaceInfluenceCommand::apply(Board& board) const {
   for (const auto& target_country : targetCountries_) {
@@ -186,4 +204,22 @@ void DiscardCommand::apply(Board& board) const {
   }
   hand.erase(iter);
   board.getDeck().getDiscardPile().push_back(card_);
+}
+
+void ScoreRegionCommand::apply(Board& board) const {
+  const int delta = board.scoreRegion(region_, false);
+  board.pushState(std::make_shared<ChangeVpCommand>(Side::USSR, delta));
+}
+
+void SoutheastAsiaScoringCommand::apply(Board& board) const {
+  const auto& world_map = board.getWorldMap();
+  int delta = 0;
+  for (const auto& [country, weight] : SOUTHEAST_ASIA_SCORE_TABLE) {
+    const Side controller = world_map.getCountry(country).getControlSide();
+    if (controller == Side::NEUTRAL) {
+      continue;
+    }
+    delta += weight * getVpMultiplier(controller);
+  }
+  board.pushState(std::make_shared<ChangeVpCommand>(Side::USSR, delta));
 }
