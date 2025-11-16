@@ -74,6 +74,34 @@ class ActionPlaceInfluenceMove final : public Move {
   const std::map<CountryEnum, int> targetCountries_;
 };
 
+class EventPlaceInfluenceMove final : public Move {
+ public:
+  EventPlaceInfluenceMove(CardEnum card, Side side,
+                          const std::map<CountryEnum, int>& targetCountries)
+      : Move{card, side}, targetCountries_{targetCountries} {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> toCommand(
+      const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool operator==(const Move& other) const override {
+    if (this->getCard() != other.getCard() ||
+        this->getSide() != other.getSide()) {
+      return false;
+    }
+    const auto* other_cast =
+        dynamic_cast<const EventPlaceInfluenceMove*>(&other);
+    if (other_cast == nullptr) {
+      return false;
+    }
+    return targetCountries_ == other_cast->targetCountries_;
+  }
+
+ private:
+  const std::map<CountryEnum, int> targetCountries_;
+};
+
 class ActionCoupMove final : public Move {
  public:
   ActionCoupMove(CardEnum card, Side side, CountryEnum targetCountry)

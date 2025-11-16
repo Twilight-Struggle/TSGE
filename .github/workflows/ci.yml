@@ -104,9 +104,11 @@ jobs:
           -object ./build/cards_test \
           -object ./build/deck_test \
           -object ./build/tsnnmcts_policy_test \
+          -object ./build/special_cards_test \
+          -object ./build/special_place_influence_test \
           > coverage.lcov
 
-        # lcovファイルの内容を確認（デバッグ用）
+        # lcovファイルの内容を確認(デバッグ用)
         echo "=== LCOV file first 100 lines ==="
         head -n 100 coverage.lcov || true
     

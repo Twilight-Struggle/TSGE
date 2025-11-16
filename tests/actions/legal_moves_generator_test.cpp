@@ -707,7 +707,7 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardProvidesAsiaBonus) {
     auto commands = move->toCommand(china_card);
     ASSERT_FALSE(commands.empty());
     auto* place_cmd =
-        dynamic_cast<ActionPlaceInfluenceCommand*>(commands.front().get());
+        dynamic_cast<PlaceInfluenceCommand*>(commands.front().get());
     ASSERT_NE(place_cmd, nullptr);
 
     Board eval_board(createTestCardPool());
@@ -793,7 +793,7 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardBaseOpsNeedsNonAsia) {
     auto commands = move->toCommand(china_card);
     ASSERT_FALSE(commands.empty());
     auto* place_cmd =
-        dynamic_cast<ActionPlaceInfluenceCommand*>(commands.front().get());
+        dynamic_cast<PlaceInfluenceCommand*>(commands.front().get());
     ASSERT_NE(place_cmd, nullptr);
 
     Board eval_board(createTestCardPool());
@@ -895,7 +895,7 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest,
     auto commands = move->toCommand(china_card);
     ASSERT_FALSE(commands.empty());
     auto* place_cmd =
-        dynamic_cast<ActionPlaceInfluenceCommand*>(commands.front().get());
+        dynamic_cast<PlaceInfluenceCommand*>(commands.front().get());
     ASSERT_NE(place_cmd, nullptr);
 
     Board eval_board(createTestCardPool());

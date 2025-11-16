@@ -1,8 +1,21 @@
 #pragma once
 
+#include <optional>
+#include <vector>
+
 #include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
+#include "tsge/enums/game_enums.hpp"
+
+// カード固有の影響力配置設定
+struct CardSpecialPlaceInfluenceConfig {
+  int totalInfluence;  // 配置する総影響力数
+  int maxPerCountry;   // 一カ国あたりの最大配置数（0=無制限）
+  std::optional<std::vector<Region>> allowedRegions;  // 許可される地域
+  bool excludeOpponentControlled;  // 相手支配国を除外するか
+  bool onlyEmptyCountries;         // 影響力のない国のみか
+};
 
 class LegalMovesGenerator {
  public:
@@ -42,4 +55,10 @@ class LegalMovesGenerator {
       const Board& board, Side side);
   static std::vector<std::shared_ptr<Move>> actionSpaceRaceLegalMoves(
       const Board& board, Side side);
+
+  // カード固有の影響力配置Moveを生成
+  static std::vector<std::shared_ptr<Move>>
+  generateCardSpecificPlaceInfluenceMoves(
+      const Board& board, Side side, CardEnum cardEnum,
+      const CardSpecialPlaceInfluenceConfig& config);
 };

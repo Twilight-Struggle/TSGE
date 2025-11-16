@@ -25,7 +25,7 @@ constexpr std::array<std::pair<CountryEnum, int>, 7>
 
 }  // namespace
 
-void ActionPlaceInfluenceCommand::apply(Board& board) const {
+void PlaceInfluenceCommand::apply(Board& board) const {
   for (const auto& target_country : targetCountries_) {
     board.getWorldMap()
         .getCountry(target_country.first)

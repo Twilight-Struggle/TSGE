@@ -284,6 +284,91 @@ std::vector<std::shared_ptr<Move>> generatePlaceInfluenceMoves(
   return results;
 }
 
+// カード固有の影響力配置の候補国を抽出
+std::vector<CountryEnum> collectCardSpecialPlaceInfluenceCandidates(
+    const WorldMap& world_map, Side side,
+    const CardSpecialPlaceInfluenceConfig& config) {
+  std::vector<CountryEnum> candidates;
+  candidates.reserve(world_map.getCountriesCount());
+
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+    const auto& country = world_map.getCountry(country_enum);
+
+    // 地域フィルタ
+    if (config.allowedRegions.has_value() &&
+        !std::ranges::any_of(*config.allowedRegions, [&country](Region region) {
+          return country.hasRegion(region);
+        })) {
+      continue;
+    }
+
+    // 相手支配国を除外
+    if (config.excludeOpponentControlled &&
+        country.getControlSide() == getOpponentSide(side)) {
+      continue;
+    }
+
+    // 影響力のない国のみ
+    if (config.onlyEmptyCountries && (country.getInfluence(Side::USA) > 0 ||
+                                      country.getInfluence(Side::USSR) > 0)) {
+      continue;
+    }
+
+    candidates.push_back(country_enum);
+  }
+
+  return candidates;
+}
+
+// 配置パターンをDFSで生成する再帰関数
+void generateCardSpecificPlacementPatternsDfs(
+    const std::vector<CountryEnum>& candidates,
+    const CardSpecialPlaceInfluenceConfig& config, size_t idx, int remaining,
+    std::map<CountryEnum, int>& current,
+    std::vector<std::map<CountryEnum, int>>& patterns) {
+  if (remaining == 0) {
+    if (!current.empty()) {
+      patterns.push_back(current);
+    }
+    return;
+  }
+
+  if (idx >= candidates.size()) {
+    return;
+  }
+
+  // この国をスキップ
+  generateCardSpecificPlacementPatternsDfs(candidates, config, idx + 1,
+                                           remaining, current, patterns);
+
+  // この国に配置
+  auto country = candidates[idx];
+  int max_place = config.maxPerCountry > 0
+                      ? std::min(config.maxPerCountry, remaining)
+                      : remaining;
+
+  for (int amount = 1; amount <= max_place; ++amount) {
+    current[country] = amount;
+    generateCardSpecificPlacementPatternsDfs(
+        candidates, config, idx + 1, remaining - amount, current, patterns);
+    current.erase(country);
+  }
+}
+
+// 配置パターンを生成
+std::vector<std::map<CountryEnum, int>>
+generateCardSpecificInfluencePlacementPatterns(
+    const std::vector<CountryEnum>& candidates,
+    const CardSpecialPlaceInfluenceConfig& config) {
+  std::vector<std::map<CountryEnum, int>> patterns;
+  std::map<CountryEnum, int> current_pattern;
+  generateCardSpecificPlacementPatternsDfs(
+      candidates, config, 0, config.totalInfluence, current_pattern, patterns);
+  return patterns;
+}
+
 }  // namespace
 
 std::vector<std::shared_ptr<Move>>
@@ -299,6 +384,32 @@ LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(const Board& board,
                                                            CardEnum cardEnum) {
   std::vector<CardEnum> single_card = {cardEnum};
   return generatePlaceInfluenceMoves(board, side, single_card);
+}
+
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
+    const Board& board, Side side, CardEnum cardEnum,
+    const CardSpecialPlaceInfluenceConfig& config) {
+  // 候補国を抽出
+  auto candidates = collectCardSpecialPlaceInfluenceCandidates(
+      board.getWorldMap(), side, config);
+  if (candidates.empty()) {
+    return {};
+  }
+
+  // 配置パターンを生成
+  auto patterns =
+      generateCardSpecificInfluencePlacementPatterns(candidates, config);
+
+  // Moveオブジェクトに変換
+  std::vector<std::shared_ptr<Move>> results;
+  results.reserve(patterns.size());
+  for (const auto& pattern : patterns) {
+    results.emplace_back(
+        std::make_shared<EventPlaceInfluenceMove>(cardEnum, side, pattern));
+  }
+
+  return results;
 }
 
 std::vector<std::shared_ptr<Move>>

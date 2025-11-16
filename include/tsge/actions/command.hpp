@@ -35,10 +35,10 @@ class Command {
 
 using CommandPtr = std::shared_ptr<Command>;
 
-class ActionPlaceInfluenceCommand final : public Command {
+class PlaceInfluenceCommand final : public Command {
  public:
-  ActionPlaceInfluenceCommand(Side side, const std::unique_ptr<Card>& card,
-                              const std::map<CountryEnum, int>& targetCountries)
+  PlaceInfluenceCommand(Side side, const std::unique_ptr<Card>& card,
+                        const std::map<CountryEnum, int>& targetCountries)
       : Command{side}, card_{card}, targetCountries_{targetCountries} {};
 
   void apply(Board& board) const override;

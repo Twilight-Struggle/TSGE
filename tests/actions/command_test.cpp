@@ -76,8 +76,8 @@ TEST_F(CommandTest, PlaceTest) {
   auto& north_korea = board.getWorldMap().getCountry(CountryEnum::NORTH_KOREA);
   EXPECT_EQ(north_korea.getInfluence(Side::USA), 0);  // 初期状態確認
 
-  ActionPlaceInfluenceCommand action_single_country(
-      Side::USA, board.getCardpool()[0], {{CountryEnum::NORTH_KOREA, 2}});
+  PlaceInfluenceCommand action_single_country(Side::USA, board.getCardpool()[0],
+                                              {{CountryEnum::NORTH_KOREA, 2}});
   action_single_country.apply(board);
   EXPECT_EQ(north_korea.getInfluence(Side::USA),
             2);  // 影響力が正しく配置されたか確認
@@ -88,7 +88,7 @@ TEST_F(CommandTest, PlaceTest) {
   EXPECT_EQ(south_korea.getInfluence(Side::USSR), 0);  // 初期状態確認
   EXPECT_EQ(japan.getInfluence(Side::USSR), 0);
 
-  ActionPlaceInfluenceCommand action_multiple_countries(
+  PlaceInfluenceCommand action_multiple_countries(
       Side::USSR, board.getCardpool()[0],
       {{CountryEnum::SOUTH_KOREA, 3}, {CountryEnum::JAPAN, 2}});
   action_multiple_countries.apply(board);
@@ -97,8 +97,8 @@ TEST_F(CommandTest, PlaceTest) {
   EXPECT_EQ(japan.getInfluence(Side::USSR), 2);
 
   // 累積的な影響力配置テスト（同じ国に追加配置）
-  ActionPlaceInfluenceCommand action_cumulative(
-      Side::USSR, board.getCardpool()[0], {{CountryEnum::JAPAN, 1}});
+  PlaceInfluenceCommand action_cumulative(Side::USSR, board.getCardpool()[0],
+                                          {{CountryEnum::JAPAN, 1}});
   action_cumulative.apply(board);
   EXPECT_EQ(japan.getInfluence(Side::USSR), 3);  // 2 + 1 = 3になっているか確認
 

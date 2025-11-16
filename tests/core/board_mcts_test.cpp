@@ -130,7 +130,7 @@ TEST_F(BoardMCTSTest, CopyForMCTS_CopiesStatesCorrectly) {
 
   // statesにCommandPtrを追加
   std::map<CountryEnum, int> targets{{CountryEnum::JAPAN, 3}};
-  auto command_ptr = std::make_shared<ActionPlaceInfluenceCommand>(
+  auto command_ptr = std::make_shared<PlaceInfluenceCommand>(
       Side::USSR, cardpool_[0], targets);
   board_.pushState(command_ptr);
 

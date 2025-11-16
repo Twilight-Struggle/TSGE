@@ -46,11 +46,19 @@ std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
 std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
     const std::unique_ptr<Card>& card) const {
   std::vector<CommandPtr> commands;
-  commands.emplace_back(std::make_shared<ActionPlaceInfluenceCommand>(
+  commands.emplace_back(std::make_shared<PlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
   const bool event_triggered = addEventAfterAction(commands, card, getSide());
   return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
                                     card, event_triggered);
+}
+
+std::vector<CommandPtr> EventPlaceInfluenceMove::toCommand(
+    const std::unique_ptr<Card>& card) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<PlaceInfluenceCommand>(
+      getSide(), card, targetCountries_));
+  return commands;
 }
 
 std::vector<CommandPtr> ActionCoupMove::toCommand(

@@ -109,6 +109,8 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:phase_machine_test>
                 -object $<TARGET_FILE:world_map_test>
                 -object $<TARGET_FILE:cards_test>
+                -object $<TARGET_FILE:special_cards_test>
+                -object $<TARGET_FILE:special_place_influence_test>
                 -object $<TARGET_FILE:deck_test>
                 -object $<TARGET_FILE:tsnnmcts_policy_test>
                 
@@ -131,6 +133,8 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:phase_machine_test>
                 -object $<TARGET_FILE:world_map_test>
                 -object $<TARGET_FILE:cards_test>
+                -object $<TARGET_FILE:special_cards_test>
+                -object $<TARGET_FILE:special_place_influence_test>
                 -object $<TARGET_FILE:deck_test>
                 -object $<TARGET_FILE:tsnnmcts_policy_test>
 
@@ -139,7 +143,7 @@ if(ENABLE_COVERAGE)
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS board_test board_scoring_test board_mcts_test command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test deck_test
+            DEPENDS board_test board_scoring_test board_mcts_test command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test cards_test special_cards_test special_place_influence_test deck_test
         )
     endif()
 endif()
@@ -200,6 +204,8 @@ if(ENABLE_TESTING)
     add_test_with_path(country_test tests/game_state/country_test.cpp)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
     add_test_with_path(cards_test tests/game_state/cards_test.cpp)
+    add_test_with_path(special_cards_test tests/game_state/special_cards_test.cpp)
+    add_test_with_path(special_place_influence_test tests/actions/special_place_influence_test.cpp)
     add_test_with_path(deck_test tests/game_state/deck_test.cpp)
     add_test_with_path(tsnnmcts_policy_test tests/players/tsnnmcts_policy_test.cpp)
 endif()

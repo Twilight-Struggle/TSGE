@@ -89,9 +89,8 @@ TEST_F(MoveTest, ActionPlaceInfluenceMove_BasicCommand) {
   // コマンド数の確認（PlaceInfluenceCommand + イベントなし）
   ASSERT_EQ(commands.size(), 2);
 
-  // 最初のコマンドがActionPlaceInfluenceCommandであることを確認
-  auto* place_cmd =
-      dynamic_cast<ActionPlaceInfluenceCommand*>(commands[0].get());
+  // 最初のコマンドがPlaceInfluenceCommandであることを確認
+  auto* place_cmd = dynamic_cast<PlaceInfluenceCommand*>(commands[0].get());
   ASSERT_NE(place_cmd, nullptr);
 
   auto* finalize_cmd =
