@@ -346,3 +346,83 @@ std::vector<CommandPtr> TheReformer::event(Side side) const {
 bool TheReformer::canEvent(const Board& /*board*/) const {
   return true;
 }
+
+std::vector<CommandPtr> SpecialRelationship::event(Side side) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USA,
+      [card_enum = getId(), side = Side::USA](
+          const Board& /*board*/) -> std::vector<std::shared_ptr<Move>> {
+        std::vector<std::shared_ptr<Move>> moves;
+        moves.reserve(4);
+
+        // France に +1
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::FRANCE, 1}}));
+
+        // Benelux に +1
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::BENELUX, 1}}));
+
+        // Canada に +1
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::CANADA, 1}}));
+
+        // Norway に +1
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::NORWAY, 1}}));
+
+        return moves;
+      }));
+  return commands;
+}
+
+bool SpecialRelationship::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> SouthAfricanUnrest::event(Side side) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [card_enum = getId(), side = Side::USSR](
+          const Board& /*board*/) -> std::vector<std::shared_ptr<Move>> {
+        std::vector<std::shared_ptr<Move>> moves;
+        moves.reserve(4);
+
+        // 1. South Africa に +2
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::SOUTH_AFRICA, 2}}));
+
+        // 2. South Africa +1, Angola +1, Botswana +1
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::SOUTH_AFRICA, 1},
+                                       {CountryEnum::ANGOLA, 1},
+                                       {CountryEnum::BOTSWANA, 1}}));
+
+        // 3. South Africa +1, Angola +2
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::SOUTH_AFRICA, 1},
+                                       {CountryEnum::ANGOLA, 2}}));
+
+        // 4. South Africa +1, Botswana +2
+        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+            card_enum, side,
+            std::map<CountryEnum, int>{{CountryEnum::SOUTH_AFRICA, 1},
+                                       {CountryEnum::BOTSWANA, 2}}));
+
+        return moves;
+      }));
+  return commands;
+}
+
+bool SouthAfricanUnrest::canEvent(const Board& /*board*/) const {
+  return true;
+}

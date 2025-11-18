@@ -244,3 +244,25 @@ class TheReformer final : public Card {
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
+
+class SpecialRelationship final : public Card {
+ public:
+  SpecialRelationship()
+      : Card(CardEnum::SPECIAL_RELATIONSHIP, "Special Relationship", 2,
+             Side::USA, WarPeriod::EARLY_WAR, false) {}
+  [[nodiscard]]
+  std::vector<CommandPtr> event(Side side) const override;
+  [[nodiscard]]
+  bool canEvent(const Board& board) const override;
+};
+
+class SouthAfricanUnrest final : public Card {
+ public:
+  SouthAfricanUnrest()
+      : Card(CardEnum::SOUTH_AFRICAN_UNREST, "South African Unrest", 2,
+             Side::USSR, WarPeriod::MID_WAR, false) {}
+  [[nodiscard]]
+  std::vector<CommandPtr> event(Side side) const override;
+  [[nodiscard]]
+  bool canEvent(const Board& board) const override;
+};

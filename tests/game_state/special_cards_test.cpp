@@ -4,7 +4,10 @@
 
 #include <gtest/gtest.h>
 
+#include <set>
+
 #include "tsge/actions/command.hpp"
+#include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/game_state/cards.hpp"
 
@@ -164,4 +167,52 @@ TEST_F(SpecialCardsTest, TheReformerEventTest) {
   const auto* request_cmd =
       dynamic_cast<const RequestCommand*>(commands[0].get());
   EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(SpecialCardsTest, SpecialRelationshipEventTest) {
+  SpecialRelationship special_relationship;
+
+  EXPECT_TRUE(special_relationship.canEvent(board));
+
+  auto commands = special_relationship.event(Side::USA);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  ASSERT_NE(request_cmd, nullptr);
+
+  // RequestCommandからMoveを取得
+  auto moves = request_cmd->legalMoves(board);
+  EXPECT_EQ(moves.size(), 4);
+
+  // 各Moveが正しい型であることを確認
+  for (const auto& move : moves) {
+    const auto* event_move =
+        dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+    EXPECT_NE(event_move, nullptr);
+  }
+}
+
+TEST_F(SpecialCardsTest, SouthAfricanUnrestEventTest) {
+  SouthAfricanUnrest south_african_unrest;
+
+  EXPECT_TRUE(south_african_unrest.canEvent(board));
+
+  auto commands = south_african_unrest.event(Side::USSR);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  ASSERT_NE(request_cmd, nullptr);
+
+  // RequestCommandからMoveを取得
+  auto moves = request_cmd->legalMoves(board);
+  EXPECT_EQ(moves.size(), 4);
+
+  // 各Moveが正しい型であることを確認
+  for (const auto& move : moves) {
+    const auto* event_move =
+        dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+    EXPECT_NE(event_move, nullptr);
+  }
 }
