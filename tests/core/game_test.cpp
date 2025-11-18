@@ -65,11 +65,12 @@ class IllegalMovePolicy {
       }
 
       // 他の型の場合も同様に対応が必要だが、テストでは単純化
-      return std::make_shared<ActionEventMove>(CardEnum::DUMMY, Side::USSR);
+      return std::make_shared<ActionEventMove>(CardEnum::DUMMY, Side::USSR,
+                                               true);
     }
 
     // フォールバック
-    return std::make_shared<ActionEventMove>(CardEnum::DUMMY, Side::USSR);
+    return std::make_shared<ActionEventMove>(CardEnum::DUMMY, Side::USSR, true);
   }
 
   [[nodiscard]]

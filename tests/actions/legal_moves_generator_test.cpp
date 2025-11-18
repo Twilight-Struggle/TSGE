@@ -32,6 +32,29 @@ class DummyCard : public Card {
   }
 };
 
+// テスト用MockEventCardクラス（canEventとgetSideを制御可能）
+class MockEventCard : public Card {
+ public:
+  // NOLINTNEXTLINE(readability-identifier-length)
+  MockEventCard(CardEnum id, Side side, bool can_event)
+      : Card(id, "MockEventCard", 3, side, WarPeriod::EARLY_WAR, false),
+        can_event_{can_event} {}
+
+  [[nodiscard]]
+  std::vector<CommandPtr> event(Side side) const override {
+    // 空実装
+    return {};
+  }
+
+  [[nodiscard]]
+  bool canEvent(const Board& board) const override {
+    return can_event_;
+  }
+
+ private:
+  const bool can_event_;
+};
+
 // テスト用のカードプール作成関数
 static const std::array<std::unique_ptr<Card>, 111>& createTestCardPool() {
   static std::array<std::unique_ptr<Card>, 111> pool{};
@@ -1567,4 +1590,151 @@ TEST_F(ActionEventLegalMovesTest, MixedCardTypes) {
   EXPECT_EQ(card_count[CardEnum::DUMMY], 1);
   EXPECT_EQ(card_count[CardEnum::DUCK_AND_COVER], 1);
   EXPECT_EQ(card_count[CardEnum::FIDEL], 1);
+}
+
+// ActionEventLegalMoves（canEventフラグ制御）のテスト
+class ActionEventLegalMovesCanEventTest : public ::testing::Test {
+ protected:
+  ActionEventLegalMovesCanEventTest() : board_(getMockCardPool()) {}
+
+  static const std::array<std::unique_ptr<Card>, 111>& getMockCardPool() {
+    static std::array<std::unique_ptr<Card>, 111> pool;
+    static bool initialized = false;
+
+    if (!initialized) {
+      // モックカードを作成
+      // DUCK_AND_COVER: USSR側、canEvent=true
+      pool[static_cast<size_t>(CardEnum::DUCK_AND_COVER)] =
+          std::make_unique<MockEventCard>(CardEnum::DUCK_AND_COVER, Side::USSR,
+                                          true);
+      // FIDEL: USSR側、canEvent=false
+      pool[static_cast<size_t>(CardEnum::FIDEL)] =
+          std::make_unique<MockEventCard>(CardEnum::FIDEL, Side::USSR, false);
+      // NUCLEAR_TEST_BAN: USA側、canEvent=true
+      pool[static_cast<size_t>(CardEnum::NUCLEAR_TEST_BAN)] =
+          std::make_unique<MockEventCard>(CardEnum::NUCLEAR_TEST_BAN, Side::USA,
+                                          true);
+      // COMECON: USA側、canEvent=false
+      pool[static_cast<size_t>(CardEnum::COMECON)] =
+          std::make_unique<MockEventCard>(CardEnum::COMECON, Side::USA, false);
+      // DUMMY: NEUTRAL、canEvent=true
+      pool[static_cast<size_t>(CardEnum::DUMMY)] =
+          std::make_unique<MockEventCard>(CardEnum::DUMMY, Side::NEUTRAL, true);
+      // ASIA_SCORING: NEUTRAL、canEvent=false
+      pool[static_cast<size_t>(CardEnum::ASIA_SCORING)] =
+          std::make_unique<MockEventCard>(CardEnum::ASIA_SCORING, Side::NEUTRAL,
+                                          false);
+      initialized = true;
+    }
+    return pool;
+  }
+
+  Board board_;
+};
+
+TEST_F(ActionEventLegalMovesCanEventTest, OwnSideCardWithCanEventTrue) {
+  // USSR手札: DUCK_AND_COVER (USSR側、canEvent=true)
+  board_.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+
+  // 含まれる
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_EQ(moves[0]->getCard(), CardEnum::DUCK_AND_COVER);
+  auto* event_move = dynamic_cast<ActionEventMove*>(moves[0].get());
+  ASSERT_NE(event_move, nullptr);
+  EXPECT_TRUE(event_move->shouldTriggerEvent());
+}
+
+TEST_F(ActionEventLegalMovesCanEventTest, OwnSideCardWithCanEventFalse) {
+  // USSR手札: FIDEL (USSR側、canEvent=false)
+  board_.addCardToHand(Side::USSR, CardEnum::FIDEL);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+
+  // 含まれない
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionEventLegalMovesCanEventTest, OpponentSideCardWithCanEventTrue) {
+  // USSR手札: NUCLEAR_TEST_BAN (USA側、canEvent=true)
+  board_.addCardToHand(Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+
+  // 含まれる
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_EQ(moves[0]->getCard(), CardEnum::NUCLEAR_TEST_BAN);
+  auto* event_move = dynamic_cast<ActionEventMove*>(moves[0].get());
+  ASSERT_NE(event_move, nullptr);
+  EXPECT_TRUE(event_move->shouldTriggerEvent());
+}
+
+TEST_F(ActionEventLegalMovesCanEventTest, OpponentSideCardWithCanEventFalse) {
+  // USSR手札: COMECON (USA側、canEvent=false)
+  board_.addCardToHand(Side::USSR, CardEnum::COMECON);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+
+  // 含まれる（★重要：canEventがfalseでも敵陣営カードは含まれる）
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_EQ(moves[0]->getCard(), CardEnum::COMECON);
+  auto* event_move = dynamic_cast<ActionEventMove*>(moves[0].get());
+  ASSERT_NE(event_move, nullptr);
+  EXPECT_FALSE(event_move->shouldTriggerEvent());  // イベントはスキップ
+}
+
+TEST_F(ActionEventLegalMovesCanEventTest, NeutralCardWithCanEventTrue) {
+  // USSR手札: DUMMY (NEUTRAL、canEvent=true)
+  board_.addCardToHand(Side::USSR, CardEnum::DUMMY);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+
+  // 含まれる
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_EQ(moves[0]->getCard(), CardEnum::DUMMY);
+  auto* event_move = dynamic_cast<ActionEventMove*>(moves[0].get());
+  ASSERT_NE(event_move, nullptr);
+  EXPECT_TRUE(event_move->shouldTriggerEvent());
+}
+
+TEST_F(ActionEventLegalMovesCanEventTest, NeutralCardWithCanEventFalse) {
+  // USSR手札: ASIA_SCORING (NEUTRAL、canEvent=false)
+  board_.addCardToHand(Side::USSR, CardEnum::ASIA_SCORING);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+
+  // 含まれない
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(ActionEventLegalMovesCanEventTest,
+       OpponentCardCanEventFalse_EventIsSkipped) {
+  // USSR手札: COMECON (USA側、canEvent=false)
+  board_.addCardToHand(Side::USSR, CardEnum::COMECON);
+
+  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  ASSERT_EQ(moves.size(), 1);
+
+  auto* event_move = dynamic_cast<ActionEventMove*>(moves[0].get());
+  ASSERT_NE(event_move, nullptr);
+  EXPECT_FALSE(event_move->shouldTriggerEvent());
+
+  // toCommandを呼び出して、イベントコマンドが生成されないことを確認
+  const auto& cardpool = board_.getCardpool();
+  auto commands =
+      event_move->toCommand(cardpool[static_cast<size_t>(CardEnum::COMECON)]);
+
+  // イベントコマンドはスキップされ、RequestCommand +
+  // FinalizeCardPlayCommandのみ
+  ASSERT_EQ(commands.size(), 2);
+
+  // RequestCommandが含まれる（敵陣営カードなので追加アクション可能）
+  auto* request_cmd = dynamic_cast<RequestCommand*>(commands[0].get());
+  ASSERT_NE(request_cmd, nullptr);
+
+  // FinalizeCardPlayCommandが含まれる
+  auto* finalize_cmd =
+      dynamic_cast<FinalizeCardPlayCommand*>(commands[1].get());
+  ASSERT_NE(finalize_cmd, nullptr);
 }

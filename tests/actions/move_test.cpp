@@ -303,7 +303,7 @@ TEST_F(MoveTest, RealignmentRequestMove_WithAdditionalOps) {
 // ActionEventMoveのテスト
 TEST_F(MoveTest, ActionEventMove_OwnSideEvent) {
   // USAプレイヤーがUSAカードのイベントを実行
-  ActionEventMove move(CardEnum::DUMMY, Side::USA);
+  ActionEventMove move(CardEnum::DUMMY, Side::USA, true);
   auto commands = move.toCommand(dummy_card_usa_);
 
   // イベントコマンドのみ（追加アクションなし）
@@ -318,7 +318,7 @@ TEST_F(MoveTest, ActionEventMove_OwnSideEvent) {
 
 TEST_F(MoveTest, ActionEventMove_OpponentSideEvent) {
   // USAプレイヤーがUSSRカードのイベントを実行
-  ActionEventMove move(CardEnum::DUMMY, Side::USA);
+  ActionEventMove move(CardEnum::DUMMY, Side::USA, true);
   auto commands = move.toCommand(dummy_card_ussr_);
 
   // イベントコマンド + RequestCommand（追加アクション用）
@@ -336,7 +336,7 @@ TEST_F(MoveTest, ActionEventMove_OpponentSideEvent) {
 }
 
 TEST_F(MoveTest, ActionEventMove_NeutralEvent) {
-  ActionEventMove move(CardEnum::DUMMY, Side::USSR);
+  ActionEventMove move(CardEnum::DUMMY, Side::USSR, true);
   auto commands = move.toCommand(dummy_card_neutral_);
 
   // 中立イベントは追加アクションなし
@@ -581,7 +581,7 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithoutRemainingOps) {
 // ActionEventMoveのラムダ関数内部実行テスト
 TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
   // 相手側イベントカードを使用した場合のテスト（154行のカバレッジ）
-  ActionEventMove move(CardEnum::DUMMY, Side::USA);
+  ActionEventMove move(CardEnum::DUMMY, Side::USA, true);
   auto commands = move.toCommand(dummy_card_ussr_);
 
   ASSERT_EQ(commands.size(), 3);

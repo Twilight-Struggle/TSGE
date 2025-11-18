@@ -171,16 +171,18 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
   const Side card_side = card->getSide();
   const Side player_side = getSide();
 
-  // Execute the event
-  auto event_commands = card->event(player_side);
-  commands.reserve(event_commands.size() + 1);
-  for (auto& cmd : event_commands) {
-    commands.emplace_back(std::move(cmd));
+  // Execute the event only if shouldTriggerEvent_ is true
+  if (shouldTriggerEvent_) {
+    auto event_commands = card->event(player_side);
+    commands.reserve(event_commands.size() + 1);
+    for (auto& cmd : event_commands) {
+      commands.emplace_back(std::move(cmd));
+    }
   }
 
   // If the card is of the opponent's side, allow the player to perform a
   // non-event action
-  if (card_side != player_side && card_side != Side::NEUTRAL) {
+  if (card_side == getOpponentSide(player_side)) {
     // Add a RequestCommand for the player to choose Place/Realign/Coup action
     commands.emplace_back(std::make_shared<RequestCommand>(
         player_side,

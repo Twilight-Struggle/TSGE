@@ -216,11 +216,17 @@ class RealignmentRequestMove final : public Move {
 
 class ActionEventMove final : public Move {
  public:
-  ActionEventMove(CardEnum card, Side side) : Move{card, side} {}
+  ActionEventMove(CardEnum card, Side side, bool shouldTriggerEvent)
+      : Move{card, side}, shouldTriggerEvent_{shouldTriggerEvent} {}
 
   [[nodiscard]]
   std::vector<CommandPtr> toCommand(
       const std::unique_ptr<Card>& card) const override;
+
+  [[nodiscard]]
+  bool shouldTriggerEvent() const {
+    return shouldTriggerEvent_;
+  }
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -231,6 +237,9 @@ class ActionEventMove final : public Move {
     const auto* other_cast = dynamic_cast<const ActionEventMove*>(&other);
     return other_cast != nullptr;
   }
+
+ private:
+  const bool shouldTriggerEvent_;
 };
 
 // 共通パスムーブ。カードを消費せず即座にフェーズ完了処理へ遷移する。

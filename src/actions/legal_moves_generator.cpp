@@ -702,9 +702,16 @@ std::vector<std::shared_ptr<Move>> LegalMovesGenerator::actionEventLegalMoves(
   for (CardEnum card_enum : hands) {
     const auto& card = board.getCardpool()[static_cast<size_t>(card_enum)];
 
-    // canEventチェック（中国カードは自動的にfalseで除外される）
-    if (card->canEvent(board)) {
-      results.emplace_back(std::make_shared<ActionEventMove>(card_enum, side));
+    const Side card_side = card->getSide();
+    const bool can_event = card->canEvent(board);
+
+    // 条件：
+    // 1. canEventがtrueの場合は常に含める
+    // 2.
+    // canEventがfalseでも、敵陣営カードなら含める（中国カードは自動的に除外される）
+    if (can_event || card_side == getOpponentSide(side)) {
+      results.emplace_back(
+          std::make_shared<ActionEventMove>(card_enum, side, can_event));
     }
   }
 

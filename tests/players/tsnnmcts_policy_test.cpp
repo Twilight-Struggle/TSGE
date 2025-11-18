@@ -69,10 +69,10 @@ TEST(TsNnMctsPolicySkeletonTest, PicksMoveWithHighestPrior) {
   board.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
 
   std::vector<std::shared_ptr<Move>> legal_moves;
+  legal_moves.push_back(std::make_shared<ActionEventMove>(
+      CardEnum::DUCK_AND_COVER, Side::USSR, true));
   legal_moves.push_back(
-      std::make_shared<ActionEventMove>(CardEnum::DUCK_AND_COVER, Side::USSR));
-  legal_moves.push_back(
-      std::make_shared<ActionEventMove>(CardEnum::FIDEL, Side::USSR));
+      std::make_shared<ActionEventMove>(CardEnum::FIDEL, Side::USSR, true));
 
   auto inference = std::make_shared<DummyInference>(0.9);
   TsNnMctsConfig config;
