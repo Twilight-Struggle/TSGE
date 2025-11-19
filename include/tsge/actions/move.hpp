@@ -35,8 +35,8 @@ class Move {
     return side_;
   }
   [[nodiscard]]
-  virtual std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const = 0;
+  virtual std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                            const Board& board) const = 0;
 
   [[nodiscard]]
   virtual bool operator==(const Move& other) const = 0;
@@ -53,8 +53,8 @@ class ActionPlaceInfluenceMove final : public Move {
       : Move{card, side}, targetCountries_{targetCountries} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -81,8 +81,8 @@ class EventPlaceInfluenceMove final : public Move {
       : Move{card, side}, targetCountries_{targetCountries} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -108,8 +108,8 @@ class ActionCoupMove final : public Move {
       : Move{card, side}, targetCountry_{targetCountry} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -133,8 +133,8 @@ class ActionSpaceRaceMove final : public Move {
   ActionSpaceRaceMove(CardEnum card, Side side) : Move{card, side} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -153,8 +153,8 @@ class ActionRealigmentMove final : public Move {
       : Move{card, side}, targetCountry_{targetCountry} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -187,8 +187,8 @@ class RealignmentRequestMove final : public Move {
         appliedAdditionalOps_{appliedAdditionalOps} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -220,8 +220,8 @@ class ActionEventMove final : public Move {
       : Move{card, side}, shouldTriggerEvent_{shouldTriggerEvent} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool shouldTriggerEvent() const {
@@ -248,8 +248,8 @@ class PassMove final : public Move {
   explicit PassMove(Side side) : Move{CardEnum::DUMMY, side} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& /*card*/) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& /*card*/,
+                                    const Board& /*board*/) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -263,8 +263,8 @@ class DiscardMove final : public Move {
   DiscardMove(CardEnum card, Side side) : Move{card, side} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {
@@ -279,8 +279,8 @@ class HeadlineCardSelectMove final : public Move {
   HeadlineCardSelectMove(CardEnum card, Side side) : Move{card, side} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override;
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& board) const override;
 
   [[nodiscard]]
   bool operator==(const Move& other) const override {

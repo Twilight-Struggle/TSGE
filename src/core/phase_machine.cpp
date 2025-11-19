@@ -33,8 +33,8 @@ MaybeStepOutput makeInputResult(LegalMoves moves, Side side) {
 void pushCommandsForAnswer(Board& board, StateStack& states,
                            const std::shared_ptr<Move>& move) {
   const auto& card_pool = board.getCardpool();
-  auto commands =
-      move->toCommand(card_pool[static_cast<std::size_t>(move->getCard())]);
+  auto commands = move->toCommand(
+      card_pool[static_cast<std::size_t>(move->getCard())], board);
   for (auto& command : std::ranges::reverse_view(commands)) {
     states.emplace_back(std::move(command));
   }
@@ -220,7 +220,7 @@ void enqueueHeadlineEvents(Board& board, StateStack& states, CardEnum cardEnum,
     return;
   }
 
-  auto events = card->event(side);
+  auto events = card->event(side, board);
   for (auto& event : std::ranges::reverse_view(events)) {
     states.emplace_back(std::move(event));
   }

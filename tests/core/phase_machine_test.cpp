@@ -27,7 +27,8 @@ class DummyCard : public Card {
       : Card(CardEnum::DUMMY, "Dummy", 3, Side::NEUTRAL, WarPeriod::DUMMY,
              false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override {
+  std::vector<CommandPtr> event(Side /*side*/,
+                                const Board& /*board*/) const override {
     return {};
   }
   [[nodiscard]]
@@ -48,7 +49,8 @@ class HeadlineEventCard final : public Card {
         canEventEnabled_(canEventValue) {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override {
+  std::vector<CommandPtr> event(Side side,
+                                const Board& /*board*/) const override {
     auto log = executionLog_;
     const auto card_id = id_;
     return {std::make_shared<LambdaCommand>(
@@ -71,7 +73,8 @@ class WarPeriodTaggedCard final : public Card {
       : Card(id, "WarPeriodTagged", 2, Side::NEUTRAL, warPeriod, false) {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side /*unused*/) const override {
+  std::vector<CommandPtr> event(Side /*unused*/,
+                                const Board& /*board*/) const override {
     return {};
   }
 
@@ -111,8 +114,8 @@ class TrackingMove final : public Move {
       : Move(cardEnum, side), executedFlag_(std::move(executed)) {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& card) const override {
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
+                                    const Board& /*board*/) const override {
     auto flag = executedFlag_;
     return {std::make_shared<LambdaCommand>([flag](Board&) { *flag = true; })};
   }

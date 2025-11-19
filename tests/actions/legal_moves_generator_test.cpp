@@ -20,7 +20,8 @@ class DummyCard : public Card {
   }
 
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override {
+  std::vector<CommandPtr> event(Side /*side*/,
+                                const Board& /*board*/) const override {
     // 空実装
     return {};
   }
@@ -41,7 +42,8 @@ class MockEventCard : public Card {
         can_event_{can_event} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override {
+  std::vector<CommandPtr> event(Side /*side*/,
+                                const Board& /*board*/) const override {
     // 空実装
     return {};
   }
@@ -176,7 +178,8 @@ TEST_F(RealignmentRequestLegalMovesTest, BasicCaseWithOpponentInfluence) {
     if (req_move != nullptr) {
       // CountryEnum::USSRがパスとして使われる仕様
       auto cmds = move->toCommand(
-          board.getCardpool()[static_cast<size_t>(CardEnum::DUCK_AND_COVER)]);
+          board.getCardpool()[static_cast<size_t>(CardEnum::DUCK_AND_COVER)],
+          board);
       if (cmds.empty()) {
         has_pass_option = true;
       }
@@ -727,7 +730,7 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardProvidesAsiaBonus) {
   for (const auto& move : china_moves) {
     ASSERT_NE(move, nullptr);
 
-    auto commands = move->toCommand(china_card);
+    auto commands = move->toCommand(china_card, board);
     ASSERT_FALSE(commands.empty());
     auto* place_cmd =
         dynamic_cast<PlaceInfluenceCommand*>(commands.front().get());
@@ -813,7 +816,7 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardBaseOpsNeedsNonAsia) {
   for (const auto& move : moves) {
     ASSERT_NE(move, nullptr);
 
-    auto commands = move->toCommand(china_card);
+    auto commands = move->toCommand(china_card, board);
     ASSERT_FALSE(commands.empty());
     auto* place_cmd =
         dynamic_cast<PlaceInfluenceCommand*>(commands.front().get());
@@ -915,7 +918,7 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest,
   for (const auto& move : moves) {
     ASSERT_NE(move, nullptr);
 
-    auto commands = move->toCommand(china_card);
+    auto commands = move->toCommand(china_card, board);
     ASSERT_FALSE(commands.empty());
     auto* place_cmd =
         dynamic_cast<PlaceInfluenceCommand*>(commands.front().get());
@@ -1722,8 +1725,8 @@ TEST_F(ActionEventLegalMovesCanEventTest,
 
   // toCommandを呼び出して、イベントコマンドが生成されないことを確認
   const auto& cardpool = board_.getCardpool();
-  auto commands =
-      event_move->toCommand(cardpool[static_cast<size_t>(CardEnum::COMECON)]);
+  auto commands = event_move->toCommand(
+      cardpool[static_cast<size_t>(CardEnum::COMECON)], board_);
 
   // イベントコマンドはスキップされ、RequestCommand +
   // FinalizeCardPlayCommandのみ

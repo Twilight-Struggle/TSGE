@@ -26,7 +26,8 @@ class Card {
   Card& operator=(Card&&) = delete;
 
   [[nodiscard]]
-  virtual std::vector<CommandPtr> event(Side side) const = 0;
+  virtual std::vector<CommandPtr> event(Side side,
+                                        const Board& board) const = 0;
   [[nodiscard]]
   virtual bool canEvent(const Board& board) const = 0;
   [[nodiscard]]

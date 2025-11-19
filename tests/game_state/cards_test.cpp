@@ -22,7 +22,7 @@ class DuckAndCoverTest : public ::testing::Test {
 };
 
 TEST_F(DuckAndCoverTest, DuckAndCoverTest) {
-  auto commands = sut.event(Side::USA);
+  auto commands = sut.event(Side::USA, board);
   EXPECT_FALSE(commands.empty());
 
   // 初期状態確認
@@ -66,7 +66,7 @@ class FidelTest : public ::testing::Test {
 
 TEST_F(FidelTest, FidelTest) {
   board.getWorldMap().getCountry(CountryEnum::CUBA).addInfluence(Side::USA, 1);
-  auto commands = sut.event(Side::USSR);
+  auto commands = sut.event(Side::USSR, board);
   // Fidel is commented out for now as per task requirements
   EXPECT_TRUE(commands.empty());
   // Test expectations are temporarily disabled since Fidel event is not
@@ -93,7 +93,7 @@ class NuclearTestBanTest : public ::testing::Test {
 
 TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
   // Test USSR playing Nuclear Test Ban from DEFCON 5
-  auto commands = sut.event(Side::USSR);
+  auto commands = sut.event(Side::USSR, board);
   EXPECT_FALSE(commands.empty());
 
   // 初期状態確認
@@ -125,7 +125,7 @@ TEST_F(NuclearTestBanTest, NuclearTestBanTest) {
   board.getDefconTrack().setDefcon(2);
 
   // Test USA playing Nuclear Test Ban from DEFCON 2
-  auto commands2 = sut.event(Side::USA);
+  auto commands2 = sut.event(Side::USA, board);
   EXPECT_FALSE(commands2.empty());
   for (const auto& command : commands2) {
     command->apply(board);
@@ -180,7 +180,7 @@ TEST_F(ScoringCardTest, AsiaScoringReflectsBoardScoreRegion) {
 
   AsiaScoring sut;
   const int expected = board.scoreRegion(Region::ASIA, false);
-  auto commands = sut.event(Side::USSR);
+  auto commands = sut.event(Side::USSR, board);
   ASSERT_EQ(commands.size(), 1);
   commands.front()->apply(board);
 
@@ -202,7 +202,7 @@ TEST_F(ScoringCardTest, SoutheastAsiaScoringUsesCountryWeights) {
   setControl(CountryEnum::LAOS, Side::NEUTRAL);       // 0 VP
 
   SoutheastAsiaScoring sut;
-  auto commands = sut.event(Side::USSR);
+  auto commands = sut.event(Side::USSR, board);
   ASSERT_EQ(commands.size(), 1);
   commands.front()->apply(board);
 

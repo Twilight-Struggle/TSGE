@@ -22,7 +22,8 @@ class DummyCard final : public Card {
   DummyCard(CardEnum id, WarPeriod war_period)
       : Card(id, "Dummy", 2, Side::NEUTRAL, war_period, false) {}
 
-  [[nodiscard]] std::vector<CommandPtr> event(Side side) const override {
+  [[nodiscard]] std::vector<CommandPtr> event(
+      Side /*side*/, const Board& /*board*/) const override {
     return {};
   }
 

@@ -21,8 +21,8 @@ class StubMove final : public Move {
       : Move(CardEnum::DUMMY, side), identifier_(identifier) {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> toCommand(
-      const std::unique_ptr<Card>& /*card*/) const override {
+  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& /*card*/,
+                                    const Board& /*board*/) const override {
     return {};
   }
 
@@ -44,7 +44,8 @@ class DummyCard : public Card {
       : Card(CardEnum::DUMMY, "Dummy", 3, Side::NEUTRAL, WarPeriod::DUMMY,
              false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override {
+  std::vector<CommandPtr> event(Side /*side*/,
+                                const Board& /*board*/) const override {
     return {};
   }
   [[nodiscard]]

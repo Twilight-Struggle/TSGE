@@ -30,7 +30,7 @@ TEST_F(SpecialCardsTest, ComeconEventTest) {
   EXPECT_TRUE(comecon.canEvent(board));
 
   // eventコマンドの生成テスト
-  auto commands = comecon.event(Side::USSR);
+  auto commands = comecon.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   // RequestCommandが生成されていることを確認
@@ -44,7 +44,7 @@ TEST_F(SpecialCardsTest, DecolonizationEventTest) {
 
   EXPECT_TRUE(decolonization.canEvent(board));
 
-  auto commands = decolonization.event(Side::USSR);
+  auto commands = decolonization.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -57,7 +57,7 @@ TEST_F(SpecialCardsTest, PuppetGovernmentsEventTest) {
 
   EXPECT_TRUE(puppet_governments.canEvent(board));
 
-  auto commands = puppet_governments.event(Side::USA);
+  auto commands = puppet_governments.event(Side::USA, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -70,7 +70,7 @@ TEST_F(SpecialCardsTest, MarshallPlanEventTest) {
 
   EXPECT_TRUE(marshall_plan.canEvent(board));
 
-  auto commands = marshall_plan.event(Side::USA);
+  auto commands = marshall_plan.event(Side::USA, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -83,7 +83,7 @@ TEST_F(SpecialCardsTest, LiberationTheologyEventTest) {
 
   EXPECT_TRUE(liberation_theology.canEvent(board));
 
-  auto commands = liberation_theology.event(Side::USSR);
+  auto commands = liberation_theology.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -96,7 +96,7 @@ TEST_F(SpecialCardsTest, WarsawPactFormedEventTest) {
 
   EXPECT_TRUE(warsaw_pact.canEvent(board));
 
-  auto commands = warsaw_pact.event(Side::USSR);
+  auto commands = warsaw_pact.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -109,7 +109,7 @@ TEST_F(SpecialCardsTest, OASFoundedEventTest) {
 
   EXPECT_TRUE(oas_founded.canEvent(board));
 
-  auto commands = oas_founded.event(Side::USA);
+  auto commands = oas_founded.event(Side::USA, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -122,7 +122,7 @@ TEST_F(SpecialCardsTest, DestaLinizationEventTest) {
 
   EXPECT_TRUE(destalinization.canEvent(board));
 
-  auto commands = destalinization.event(Side::USSR);
+  auto commands = destalinization.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -135,7 +135,7 @@ TEST_F(SpecialCardsTest, ColonialRearGuardsEventTest) {
 
   EXPECT_TRUE(colonial_rear_guards.canEvent(board));
 
-  auto commands = colonial_rear_guards.event(Side::USA);
+  auto commands = colonial_rear_guards.event(Side::USA, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -148,7 +148,7 @@ TEST_F(SpecialCardsTest, UssuriRiverSkirmishEventTest) {
 
   EXPECT_TRUE(ussuri_river_skirmish.canEvent(board));
 
-  auto commands = ussuri_river_skirmish.event(Side::USA);
+  auto commands = ussuri_river_skirmish.event(Side::USA, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -161,7 +161,7 @@ TEST_F(SpecialCardsTest, TheReformerEventTest) {
 
   EXPECT_TRUE(the_reformer.canEvent(board));
 
-  auto commands = the_reformer.event(Side::USSR);
+  auto commands = the_reformer.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -174,7 +174,7 @@ TEST_F(SpecialCardsTest, SpecialRelationshipEventTest) {
 
   EXPECT_TRUE(special_relationship.canEvent(board));
 
-  auto commands = special_relationship.event(Side::USA);
+  auto commands = special_relationship.event(Side::USA, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =
@@ -198,7 +198,7 @@ TEST_F(SpecialCardsTest, SouthAfricanUnrestEventTest) {
 
   EXPECT_TRUE(south_african_unrest.canEvent(board));
 
-  auto commands = south_african_unrest.event(Side::USSR);
+  auto commands = south_african_unrest.event(Side::USSR, board);
   EXPECT_EQ(commands.size(), 1);
 
   const auto* request_cmd =

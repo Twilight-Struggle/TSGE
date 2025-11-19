@@ -11,13 +11,14 @@
 namespace {
 
 bool addEventAfterAction(std::vector<CommandPtr>& commands,
-                         const std::unique_ptr<Card>& card, Side arPlayerSide) {
+                         const std::unique_ptr<Card>& card, Side arPlayerSide,
+                         const Board& board) {
   if (getOpponentSide(arPlayerSide) != card->getSide()) {
     return false;
   }
 
   // Opponent's event is triggered after the action
-  auto event_commands = card->event(arPlayerSide);
+  auto event_commands = card->event(arPlayerSide, board);
   for (auto& cmd : event_commands) {
     commands.emplace_back(std::move(cmd));
   }
@@ -36,7 +37,7 @@ std::vector<CommandPtr> addFinalizeCardPlayCommand(
 }  // namespace
 
 std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_shared<SetHeadlineCardCommand>(getSide(), getCard()));
@@ -44,17 +45,18 @@ std::vector<CommandPtr> HeadlineCardSelectMove::toCommand(
 }
 
 std::vector<CommandPtr> ActionPlaceInfluenceMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& board) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<PlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
-  const bool event_triggered = addEventAfterAction(commands, card, getSide());
+  const bool event_triggered =
+      addEventAfterAction(commands, card, getSide(), board);
   return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
                                     card, event_triggered);
 }
 
 std::vector<CommandPtr> EventPlaceInfluenceMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<PlaceInfluenceCommand>(
       getSide(), card, targetCountries_));
@@ -62,17 +64,18 @@ std::vector<CommandPtr> EventPlaceInfluenceMove::toCommand(
 }
 
 std::vector<CommandPtr> ActionCoupMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& board) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_shared<ActionCoupCommand>(getSide(), card, targetCountry_));
-  const bool event_triggered = addEventAfterAction(commands, card, getSide());
+  const bool event_triggered =
+      addEventAfterAction(commands, card, getSide(), board);
   return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
                                     card, event_triggered);
 }
 
 std::vector<CommandPtr> ActionSpaceRaceMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(
       std::make_shared<ActionSpaceRaceCommand>(getSide(), card));
@@ -81,7 +84,7 @@ std::vector<CommandPtr> ActionSpaceRaceMove::toCommand(
 }
 
 std::vector<CommandPtr> ActionRealigmentMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& board) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<ActionRealigmentCommand>(
       getSide(), card, targetCountry_));
@@ -112,14 +115,15 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
         }));
   }
 
-  const bool event_triggered = addEventAfterAction(commands, card, getSide());
+  const bool event_triggered =
+      addEventAfterAction(commands, card, getSide(), board);
 
   return addFinalizeCardPlayCommand(std::move(commands), getSide(), getCard(),
                                     card, event_triggered);
 }
 
 std::vector<CommandPtr> RealignmentRequestMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& /*board*/) const {
   if (targetCountry_ == CountryEnum::USSR) {
     // USSRはパスとして扱う
     return {};
@@ -164,7 +168,7 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
 }
 
 std::vector<CommandPtr> ActionEventMove::toCommand(
-    const std::unique_ptr<Card>& card) const {
+    const std::unique_ptr<Card>& card, const Board& board) const {
   std::vector<CommandPtr> commands;
 
   // Get the card's side and player's side
@@ -173,7 +177,7 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
 
   // Execute the event only if shouldTriggerEvent_ is true
   if (shouldTriggerEvent_) {
-    auto event_commands = card->event(player_side);
+    auto event_commands = card->event(player_side, board);
     commands.reserve(event_commands.size() + 1);
     for (auto& cmd : event_commands) {
       commands.emplace_back(std::move(cmd));
@@ -198,12 +202,12 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
 }
 
 std::vector<CommandPtr> PassMove::toCommand(
-    const std::unique_ptr<Card>& /*card*/) const {
+    const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
   // パスはCommandを発生させず、直後の処理へ移行させる。
   return {};
 }
 
 std::vector<CommandPtr> DiscardMove::toCommand(
-    const std::unique_ptr<Card>& /*card*/) const {
+    const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
   return {std::make_shared<DiscardCommand>(getSide(), getCard())};
 }

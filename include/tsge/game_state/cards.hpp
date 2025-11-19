@@ -15,7 +15,7 @@ class RegionScoringCard : public Card {
         region_{region} {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 
@@ -74,7 +74,7 @@ class SoutheastAsiaScoring final : public Card {
              Side::NEUTRAL, WarPeriod::MID_WAR, true) {}
 
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -85,7 +85,7 @@ class DuckAndCover final : public Card {
       : Card(CardEnum::DUCK_AND_COVER, "DuckAndCover", 3, Side::USA,
              WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -96,7 +96,7 @@ class ChinaCard final : public Card {
       : Card(CardEnum::CHINA_CARD, "ChinaCard", 4, Side::NEUTRAL,
              WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -107,7 +107,7 @@ class Fidel final : public Card {
       : Card(CardEnum::FIDEL, "Fidel", 3, Side::USSR, WarPeriod::EARLY_WAR,
              true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -118,7 +118,7 @@ class NuclearTestBan final : public Card {
       : Card(CardEnum::NUCLEAR_TEST_BAN, "NuclearTestBan", 4, Side::NEUTRAL,
              WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -130,7 +130,7 @@ class Comecon final : public Card {
       : Card(CardEnum::COMECON, "Comecon", 3, Side::USSR, WarPeriod::EARLY_WAR,
              true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -141,7 +141,7 @@ class Decolonization final : public Card {
       : Card(CardEnum::DECOLONIZATION, "Decolonization", 2, Side::USSR,
              WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -152,7 +152,7 @@ class DestaLinization final : public Card {
       : Card(CardEnum::DE_STALINIZATION, "De-Stalinization", 3, Side::USSR,
              WarPeriod::EARLY_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -163,7 +163,7 @@ class ColonialRearGuards final : public Card {
       : Card(CardEnum::COLONIAL_REAR_GUARDS, "Colonial Rear Guards", 2,
              Side::USA, WarPeriod::MID_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -174,7 +174,7 @@ class PuppetGovernments final : public Card {
       : Card(CardEnum::PUPPET_GOVERNMENTS, "Puppet Governments", 2, Side::USA,
              WarPeriod::MID_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -185,7 +185,7 @@ class OASFounded final : public Card {
       : Card(CardEnum::OAS_FOUNDED, "OAS Founded", 1, Side::USA,
              WarPeriod::MID_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -196,7 +196,7 @@ class LiberationTheology final : public Card {
       : Card(CardEnum::LIBERATION_THEOLOGY, "Liberation Theology", 2,
              Side::USSR, WarPeriod::MID_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -207,7 +207,7 @@ class WarsawPactFormed final : public Card {
       : Card(CardEnum::WARSAW_PACT_FORMED, "Warsaw Pact Formed", 3, Side::USSR,
              WarPeriod::EARLY_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -218,7 +218,7 @@ class MarshallPlan final : public Card {
       : Card(CardEnum::MARSHALL_PLAN, "Marshall Plan", 4, Side::USA,
              WarPeriod::EARLY_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -229,7 +229,7 @@ class UssuriRiverSkirmish final : public Card {
       : Card(CardEnum::USSURI_RIVER_SKIRMISH, "Ussuri River Skirmish", 3,
              Side::USA, WarPeriod::MID_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -240,7 +240,7 @@ class TheReformer final : public Card {
       : Card(CardEnum::REFORMER, "The Reformer", 3, Side::USSR,
              WarPeriod::LATE_WAR, true) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -251,7 +251,7 @@ class SpecialRelationship final : public Card {
       : Card(CardEnum::SPECIAL_RELATIONSHIP, "Special Relationship", 2,
              Side::USA, WarPeriod::EARLY_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
@@ -262,7 +262,7 @@ class SouthAfricanUnrest final : public Card {
       : Card(CardEnum::SOUTH_AFRICAN_UNREST, "South African Unrest", 2,
              Side::USSR, WarPeriod::MID_WAR, false) {}
   [[nodiscard]]
-  std::vector<CommandPtr> event(Side side) const override;
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };

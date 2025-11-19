@@ -10,7 +10,8 @@
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
-std::vector<CommandPtr> RegionScoringCard::event(Side /*side*/) const {
+std::vector<CommandPtr> RegionScoringCard::event(Side /*side*/,
+                                                 const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<ScoreRegionCommand>(region_));
   return commands;
@@ -20,7 +21,8 @@ bool RegionScoringCard::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> SoutheastAsiaScoring::event(Side /*side*/) const {
+std::vector<CommandPtr> SoutheastAsiaScoring::event(
+    Side /*side*/, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<SoutheastAsiaScoringCommand>());
   return commands;
@@ -30,7 +32,8 @@ bool SoutheastAsiaScoring::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> DuckAndCover::event(Side side) const {
+std::vector<CommandPtr> DuckAndCover::event(Side side,
+                                            const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.push_back(std::make_shared<ChangeDefconCommand>(-1));
   commands.push_back(std::make_shared<LambdaCommand>([](Board& board) {
@@ -41,7 +44,8 @@ std::vector<CommandPtr> DuckAndCover::event(Side side) const {
   return commands;
 }
 
-std::vector<CommandPtr> ChinaCard::event(Side /*side*/) const {
+std::vector<CommandPtr> ChinaCard::event(Side /*side*/,
+                                         const Board& /*board*/) const {
   return {};
 }
 
@@ -53,7 +57,7 @@ bool DuckAndCover::canEvent(const Board& board) const {
   return true;
 }
 
-std::vector<CommandPtr> Fidel::event(Side side) const {
+std::vector<CommandPtr> Fidel::event(Side side, const Board& /*board*/) const {
   // auto& cuba = board.getWorldMap().getCountry(CountryEnum::CUBA);
   // cuba.clearInfluence(Side::USA);
   // auto sufficientInfluence =
@@ -75,7 +79,8 @@ bool NuclearTestBan::canEvent(const Board& board) const {
   return true;
 }
 
-std::vector<CommandPtr> NuclearTestBan::event(Side side) const {
+std::vector<CommandPtr> NuclearTestBan::event(Side side,
+                                              const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.push_back(std::make_shared<LambdaCommand>([side](Board& board) {
     int current_defcon = board.getDefconTrack().getDefcon();
@@ -87,7 +92,8 @@ std::vector<CommandPtr> NuclearTestBan::event(Side side) const {
 }
 
 // 特殊な影響力配置カードの実装
-std::vector<CommandPtr> Comecon::event(Side side) const {
+std::vector<CommandPtr> Comecon::event(Side side,
+                                       const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR,
@@ -110,7 +116,8 @@ bool Comecon::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> Decolonization::event(Side side) const {
+std::vector<CommandPtr> Decolonization::event(Side side,
+                                              const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR,
@@ -134,7 +141,8 @@ bool Decolonization::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> DestaLinization::event(Side side) const {
+std::vector<CommandPtr> DestaLinization::event(Side side,
+                                               const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   // De-Stalinizationは再配置だが、今回は配置のみ実装
   commands.emplace_back(std::make_shared<RequestCommand>(
@@ -158,7 +166,8 @@ bool DestaLinization::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> ColonialRearGuards::event(Side side) const {
+std::vector<CommandPtr> ColonialRearGuards::event(
+    Side side, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USA,
@@ -182,7 +191,8 @@ bool ColonialRearGuards::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> PuppetGovernments::event(Side side) const {
+std::vector<CommandPtr> PuppetGovernments::event(Side side,
+                                                 const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USA,
@@ -205,7 +215,8 @@ bool PuppetGovernments::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> OASFounded::event(Side side) const {
+std::vector<CommandPtr> OASFounded::event(Side side,
+                                          const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USA,
@@ -229,7 +240,8 @@ bool OASFounded::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> LiberationTheology::event(Side side) const {
+std::vector<CommandPtr> LiberationTheology::event(
+    Side side, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR,
@@ -252,7 +264,8 @@ bool LiberationTheology::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> WarsawPactFormed::event(Side side) const {
+std::vector<CommandPtr> WarsawPactFormed::event(Side side,
+                                                const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   // Warsaw Pact Formedは2つの選択肢があるが、今回は配置の部分のみ実装
   commands.emplace_back(std::make_shared<RequestCommand>(
@@ -276,7 +289,8 @@ bool WarsawPactFormed::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> MarshallPlan::event(Side side) const {
+std::vector<CommandPtr> MarshallPlan::event(Side side,
+                                            const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USA,
@@ -299,7 +313,8 @@ bool MarshallPlan::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> UssuriRiverSkirmish::event(Side side) const {
+std::vector<CommandPtr> UssuriRiverSkirmish::event(
+    Side side, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   // Ussuri River Skirmishは条件分岐があるが、今回は配置の部分のみ実装
   commands.emplace_back(std::make_shared<RequestCommand>(
@@ -323,7 +338,8 @@ bool UssuriRiverSkirmish::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> TheReformer::event(Side side) const {
+std::vector<CommandPtr> TheReformer::event(Side side,
+                                           const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   // The Reformerは条件によって配置数が変わるが、今回は4個の場合のみ実装
   commands.emplace_back(std::make_shared<RequestCommand>(
@@ -347,7 +363,8 @@ bool TheReformer::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> SpecialRelationship::event(Side side) const {
+std::vector<CommandPtr> SpecialRelationship::event(
+    Side side, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USA,
@@ -385,7 +402,8 @@ bool SpecialRelationship::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> SouthAfricanUnrest::event(Side side) const {
+std::vector<CommandPtr> SouthAfricanUnrest::event(
+    Side side, const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR,
