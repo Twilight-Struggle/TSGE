@@ -192,3 +192,14 @@ class SouthAfricanUnrest final : public Card {
   [[nodiscard]]
   bool canEvent(const Board& board) const override;
 };
+
+class Junta final : public Card {
+ public:
+  Junta()
+      : Card(CardEnum::JUNTA, "Junta", 2, Side::NEUTRAL, WarPeriod::MID_WAR,
+             false) {}
+  [[nodiscard]]
+  std::vector<CommandPtr> event(Side side, const Board& board) const override;
+  [[nodiscard]]
+  bool canEvent(const Board& board) const override;
+};

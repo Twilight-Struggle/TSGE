@@ -174,22 +174,55 @@ TEST_F(SpecialCardsTest, SpecialRelationshipEventTest) {
 
   EXPECT_TRUE(special_relationship.canEvent(board));
 
-  auto commands = special_relationship.event(Side::USA, board);
-  EXPECT_EQ(commands.size(), 1);
+  // UK支配の状態を設定
+  board.getWorldMap()
+      .getCountry(CountryEnum::UNITED_KINGDOM)
+      .addInfluence(Side::USA, 5);
 
-  const auto* request_cmd =
-      dynamic_cast<const RequestCommand*>(commands[0].get());
-  ASSERT_NE(request_cmd, nullptr);
+  // ケース1: NATO無効時（UK隣接国に+1、VP+2なし）
+  {
+    auto commands = special_relationship.event(Side::USA, board);
+    EXPECT_EQ(commands.size(), 1);  // RequestCommandのみ
 
-  // RequestCommandからMoveを取得
-  auto moves = request_cmd->legalMoves(board);
-  EXPECT_EQ(moves.size(), 4);
+    const auto* request_cmd =
+        dynamic_cast<const RequestCommand*>(commands[0].get());
+    ASSERT_NE(request_cmd, nullptr);
 
-  // 各Moveが正しい型であることを確認
-  for (const auto& move : moves) {
-    const auto* event_move =
-        dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
-    EXPECT_NE(event_move, nullptr);
+    auto moves = request_cmd->legalMoves(board);
+    EXPECT_GT(moves.size(), 0);  // UK隣接国が存在する
+
+    // 各Moveが正しい型であることを確認
+    for (const auto& move : moves) {
+      const auto* event_move =
+          dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+      EXPECT_NE(event_move, nullptr);
+    }
+  }
+
+  // ケース2: NATO有効時（西欧に+2 + VP+2）
+  {
+    board.addCardEffectInProgress(CardEnum::NATO);
+    auto commands = special_relationship.event(Side::USA, board);
+    EXPECT_EQ(commands.size(), 2);  // RequestCommand + ChangeVpCommand
+
+    const auto* request_cmd =
+        dynamic_cast<const RequestCommand*>(commands[0].get());
+    ASSERT_NE(request_cmd, nullptr);
+
+    auto moves = request_cmd->legalMoves(board);
+    EXPECT_GT(moves.size(), 0);  // 西欧の国が存在する
+
+    // 各Moveが正しい型であることを確認
+    for (const auto& move : moves) {
+      const auto* event_move =
+          dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+      EXPECT_NE(event_move, nullptr);
+    }
+
+    // ChangeVpCommandを確認
+    const auto* vp_cmd =
+        dynamic_cast<const ChangeVpCommand*>(commands[1].get());
+    ASSERT_NE(vp_cmd, nullptr);
   }
 }
 

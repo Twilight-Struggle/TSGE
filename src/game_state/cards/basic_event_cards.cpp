@@ -341,38 +341,62 @@ bool TheReformer::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> SpecialRelationship::event(
-    Side side, const Board& /*board*/) const {
+std::vector<CommandPtr> SpecialRelationship::event(Side side,
+                                                   const Board& board) const {
   std::vector<CommandPtr> commands;
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USA,
       [card_enum = getId(), side = Side::USA](
-          const Board& /*board*/) -> std::vector<std::shared_ptr<Move>> {
+          const Board& board) -> std::vector<std::shared_ptr<Move>> {
         std::vector<std::shared_ptr<Move>> moves;
-        moves.reserve(4);
 
-        // France に +1
-        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
-            card_enum, side,
-            std::map<CountryEnum, int>{{CountryEnum::FRANCE, 1}}));
+        // UK支配をチェック
+        bool uk_controlled = board.getWorldMap()
+                                 .getCountry(CountryEnum::UNITED_KINGDOM)
+                                 .getControlSide() == Side::USA;
 
-        // Benelux に +1
-        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
-            card_enum, side,
-            std::map<CountryEnum, int>{{CountryEnum::BENELUX, 1}}));
+        if (!uk_controlled) {
+          return moves;  // UK支配でない場合は空のmovesを返す
+        }
 
-        // Canada に +1
-        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
-            card_enum, side,
-            std::map<CountryEnum, int>{{CountryEnum::CANADA, 1}}));
+        // NATO有効かチェック
+        bool nato_active =
+            board.getCardEffectsInProgress().contains(CardEnum::NATO);
 
-        // Norway に +1
-        moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
-            card_enum, side,
-            std::map<CountryEnum, int>{{CountryEnum::NORWAY, 1}}));
+        if (nato_active) {
+          // NATO有効時: 西欧地域の各国に+2
+          const auto& western_europe_countries =
+              board.getWorldMap().countriesInRegion(Region::WEST_EUROPE);
+          moves.reserve(western_europe_countries.size());
+
+          for (const auto& country : western_europe_countries) {
+            moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+                card_enum, side,
+                std::map<CountryEnum, int>{{country.getId(), 2}}));
+          }
+        } else {
+          // NATO無効時: UK隣接国に+1
+          const auto& united_kingdom =
+              board.getWorldMap().getCountry(CountryEnum::UNITED_KINGDOM);
+          const auto uk_adjacent = united_kingdom.getAdjacentCountries();
+          moves.reserve(uk_adjacent.size());
+
+          for (const auto& country_enum : uk_adjacent) {
+            moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+                card_enum, side,
+                std::map<CountryEnum, int>{{country_enum, 1}}));
+          }
+        }
 
         return moves;
       }));
+
+  // VP+2はNATO有効時のみプッシュ
+  bool nato_active = board.getCardEffectsInProgress().contains(CardEnum::NATO);
+  if (nato_active) {
+    commands.emplace_back(std::make_shared<ChangeVpCommand>(Side::USA, 2));
+  }
+
   return commands;
 }
 
@@ -420,5 +444,45 @@ std::vector<CommandPtr> SouthAfricanUnrest::event(
 }
 
 bool SouthAfricanUnrest::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> Junta::event(Side side, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      side,
+      [card_enum = getId(),
+       side](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        std::vector<std::shared_ptr<Move>> moves;
+
+        // 中南米地域の全国を列挙
+        const auto& central_america_countries =
+            board.getWorldMap().countriesInRegion(Region::CENTRAL_AMERICA);
+        const auto& south_america_countries =
+            board.getWorldMap().countriesInRegion(Region::SOUTH_AMERICA);
+
+        moves.reserve(central_america_countries.size() +
+                      south_america_countries.size());
+
+        // 中米の各国に2影響力を配置するEventPlaceInfluenceMoveを生成
+        for (const auto& country : central_america_countries) {
+          moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+              card_enum, side,
+              std::map<CountryEnum, int>{{country.getId(), 2}}));
+        }
+
+        // 南米の各国に2影響力を配置するEventPlaceInfluenceMoveを生成
+        for (const auto& country : south_america_countries) {
+          moves.emplace_back(std::make_shared<EventPlaceInfluenceMove>(
+              card_enum, side,
+              std::map<CountryEnum, int>{{country.getId(), 2}}));
+        }
+
+        return moves;
+      }));
+  return commands;
+}
+
+bool Junta::canEvent(const Board& /*board*/) const {
   return true;
 }
