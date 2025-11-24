@@ -45,6 +45,9 @@ add_library(ts_core
     src/game_state/world_map.cpp
     src/game_state/world_map_constants.cpp
     src/game_state/cards.cpp
+    src/game_state/cards/scoring_cards.cpp
+    src/game_state/cards/basic_event_cards.cpp
+    src/game_state/cards/special_cards.cpp
     src/game_state/deck.cpp
     src/players/tsnnmcts.cpp
     src/players/policies.cpp

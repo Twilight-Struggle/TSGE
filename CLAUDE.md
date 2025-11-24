@@ -98,11 +98,20 @@ include/tsge/
 ├── core/          # コアゲームメカニクス（board, game, phase_machine）
 ├── actions/       # アクションシステム（command, move, legal_moves_generator）
 ├── game_state/    # ゲーム状態管理（country, world_map, cards, trackers）
+│   └── cards/     # カード実装（カテゴリ別に分類）
+│       ├── scoring_cards.hpp       # スコアリングカード
+│       ├── basic_event_cards.hpp   # 基本イベントカード
+│       ├── special_cards.hpp       # 特殊カード
+│       └── README.md               # カード追加ガイド
 ├── players/       # プレイヤー関連（player, policies）
 ├── utils/         # ユーティリティ（randomizer）
 └── enums/         # 共通列挙型（game_enums）
 
 src/                # 実装ファイル（include/と同じ階層構造、tsge/は含まない）
+├── game_state/cards/               # カード実装
+│   ├── scoring_cards.cpp
+│   ├── basic_event_cards.cpp
+│   └── special_cards.cpp
 tests/              # テストファイル（機能別にサブディレクトリ分け）
 ```
 
@@ -126,6 +135,15 @@ tests/              # テストファイル（機能別にサブディレクト�
 - 新しいCommand/Moveタイプについては既存パターンに従う
 - BoardコンポーネントModifying時はMCTSコピー効率を維持
 - MCTSのコピー効率を最適化するためには、Boardのデータ構造を慎重に設計する必要がある
+
+### カード実装の追加
+- カード実装は`include/tsge/game_state/cards/`以下にカテゴリ別に整理されている
+- 新しいカードを追加する際は`include/tsge/game_state/cards/README.md`を参照
+- カード分類基準:
+  - **スコアリングカード** (`scoring_cards.hpp/cpp`): VP計算を伴う地域スコアリング
+  - **基本イベントカード** (`basic_event_cards.hpp/cpp`): 単一の効果（影響力配置、VP変更、DEFCON変更等）
+  - **特殊カード** (`special_cards.hpp/cpp`): プレイヤーに複数の選択肢を提示、複数のフェーズにまたがる効果
+- 既存のコードは`#include "tsge/game_state/cards.hpp"`だけで全カードにアクセス可能（集約ヘッダ）
 
 ### プレイヤーポリシーに関する注意
 - `TsNnMctsConfig`の数値は暫定値。モード別チューニングや`add_dirichlet_noise`切替を行う際は設計ドキュメントとテストを同期させる。
