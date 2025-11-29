@@ -119,28 +119,21 @@ bool Decolonization::canEvent(const Board& /*board*/) const {
   return true;
 }
 
-std::vector<CommandPtr> DestaLinization::event(Side side,
-                                               const Board& /*board*/) const {
+std::vector<CommandPtr> DeStainization::event(Side side,
+                                              const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
-  // De-Stalinizationは再配置だが、今回は配置のみ実装
+  // De-Stalinization: USSR影響力を1-4除去し、除去した数だけ配置
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR,
-      [card_enum = getId(), side = Side::USSR](
-          const Board& board) -> std::vector<std::shared_ptr<Move>> {
-        CardSpecialPlaceInfluenceConfig config;
-        config.totalInfluence = 4;
-        config.maxPerCountry = 2;
-        config.allowedRegions = std::nullopt;     // 全地域OK
-        config.excludeOpponentControlled = true;  // 非US支配国のみ
-        config.onlyEmptyCountries = false;
-
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        return LegalMovesGenerator::generateDeStalinizationRemoveMoves(
+            board, card_enum, Side::USSR);
       }));
   return commands;
 }
 
-bool DestaLinization::canEvent(const Board& /*board*/) const {
+bool DeStainization::canEvent(const Board& /*board*/) const {
   return true;
 }
 
@@ -245,11 +238,33 @@ bool LiberationTheology::canEvent(const Board& /*board*/) const {
 std::vector<CommandPtr> WarsawPactFormed::event(Side side,
                                                 const Board& /*board*/) const {
   std::vector<CommandPtr> commands;
-  // Warsaw Pact Formedは2つの選択肢があるが、今回は配置の部分のみ実装
+  // Warsaw Pact Formedは2つの選択肢: 除去 or 配置
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR,
       [card_enum = getId(), side = Side::USSR](
           const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        std::vector<std::shared_ptr<Move>> moves;
+
+        // 選択肢1: 東欧4カ国から米影響力全除去
+        // 東欧の国リストを作成
+        std::vector<CountryEnum> east_europe_countries;
+        const auto& world_map = board.getWorldMap();
+        for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+             i < world_map.getCountriesCount(); ++i) {
+          auto country_enum = static_cast<CountryEnum>(i);
+          if (world_map.getCountry(country_enum)
+                  .hasRegion(Region::EAST_EUROPE)) {
+            east_europe_countries.push_back(country_enum);
+          }
+        }
+        auto remove_moves =
+            LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+                board, card_enum, Side::USSR, Side::USA, east_europe_countries,
+                4);
+        moves.insert(moves.end(), std::make_move_iterator(remove_moves.begin()),
+                     std::make_move_iterator(remove_moves.end()));
+
+        // 選択肢2: 東欧に露影響力5配置（1国最大2）
         CardSpecialPlaceInfluenceConfig config;
         config.totalInfluence = 5;
         config.maxPerCountry = 2;
@@ -257,8 +272,13 @@ std::vector<CommandPtr> WarsawPactFormed::event(Side side,
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        auto place_moves =
+            LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
+                board, side, card_enum, config);
+        moves.insert(moves.end(), std::make_move_iterator(place_moves.begin()),
+                     std::make_move_iterator(place_moves.end()));
+
+        return moves;
       }));
   return commands;
 }
@@ -484,5 +504,150 @@ std::vector<CommandPtr> Junta::event(Side side, const Board& /*board*/) const {
 }
 
 bool Junta::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> SocialistGovernments::event(
+    Side side, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+            board, card_enum, Side::USSR, Side::USA, 3, 2,
+            std::vector<Region>{Region::WEST_EUROPE}, std::nullopt);
+      }));
+  return commands;
+}
+
+bool SocialistGovernments::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> TheVoiceOfAmerica::event(Side side,
+                                                 const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USA,
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        // 欧州以外の全地域
+        std::vector<Region> non_europe_regions = {
+            Region::ASIA, Region::MIDDLE_EAST, Region::AFRICA,
+            Region::CENTRAL_AMERICA, Region::SOUTH_AMERICA};
+        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+            board, card_enum, Side::USA, Side::USSR, 4, 2, non_europe_regions,
+            std::nullopt);
+      }));
+  return commands;
+}
+
+bool TheVoiceOfAmerica::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> MarineBarracksBombing::event(
+    Side side, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  // レバノンから米影響力全除去
+  commands.push_back(std::make_shared<RemoveAllInfluenceCommand>(
+      Side::USA, CountryEnum::LEBANON));
+  // 中東から米影響力2除去
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+            board, card_enum, Side::USSR, Side::USA, 2, 2,
+            std::vector<Region>{Region::MIDDLE_EAST}, std::nullopt);
+      }));
+  return commands;
+}
+
+bool MarineBarracksBombing::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> SuezCrisis::event(Side side,
+                                          const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        std::vector<CountryEnum> candidates = {CountryEnum::FRANCE,
+                                               CountryEnum::UNITED_KINGDOM,
+                                               CountryEnum::ISRAEL};
+        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+            board, card_enum, Side::USSR, Side::USA, 4, 2, std::nullopt,
+            candidates);
+      }));
+  return commands;
+}
+
+bool SuezCrisis::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> EastEuropeanUnrest::event(Side side,
+                                                  const Board& board) const {
+  std::vector<CommandPtr> commands;
+  // 現在の時期を取得 (ターン7以下はEarly/Mid War)
+  int remove_amount = (board.getTurnTrack().getTurn() <= 7) ? 1 : 2;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USA,
+      [card_enum = getId(), remove_amount](
+          const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        return LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
+            board, card_enum, Side::USA, Side::USSR, Region::EAST_EUROPE, 3,
+            remove_amount);
+      }));
+  return commands;
+}
+
+bool EastEuropeanUnrest::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> PershingIIDeployed::event(
+    Side side, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  // USSRが1VPを獲得
+  commands.push_back(std::make_shared<ChangeVpCommand>(Side::USSR, 1));
+  // 西欧3カ国から米国影響力を各1除去
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        return LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
+            board, card_enum, Side::USSR, Side::USA, Region::WEST_EUROPE, 3, 1);
+      }));
+  return commands;
+}
+
+bool PershingIIDeployed::canEvent(const Board& /*board*/) const {
+  return true;
+}
+
+std::vector<CommandPtr> MuslimRevolution::event(Side side,
+                                                const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR,
+      [card_enum =
+           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        std::vector<CountryEnum> candidates = {
+            CountryEnum::SUDAN, CountryEnum::IRAN,  CountryEnum::IRAQ,
+            CountryEnum::EGYPT, CountryEnum::LIBYA, CountryEnum::SAUDI_ARABIA,
+            CountryEnum::SYRIA, CountryEnum::JORDAN};
+        return LegalMovesGenerator::
+            generateSelectCountriesRemoveAllInfluenceMoves(
+                board, card_enum, Side::USSR, Side::USA, candidates, 2);
+      }));
+  return commands;
+}
+
+bool MuslimRevolution::canEvent(const Board& /*board*/) const {
   return true;
 }

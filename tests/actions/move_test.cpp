@@ -624,3 +624,135 @@ TEST_F(MoveTest, PassMoveReturnsNoCommands) {
   EXPECT_TRUE(commands.empty());
   EXPECT_EQ(move.getCard(), CardEnum::DUMMY);
 }
+
+// EventRemoveInfluenceMoveのテスト
+TEST_F(MoveTest, EventRemoveInfluenceMove_BasicCommand) {
+  std::map<CountryEnum, int> targets;
+  targets[CountryEnum::FRANCE] = 2;
+  targets[CountryEnum::ITALY] = 1;
+
+  EventRemoveInfluenceMove move(CardEnum::DUMMY, Side::USSR, targets);
+
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+
+  // RemoveInfluenceCommandが1つ
+  ASSERT_EQ(commands.size(), 1);
+
+  auto* remove_cmd = dynamic_cast<RemoveInfluenceCommand*>(commands[0].get());
+  ASSERT_NE(remove_cmd, nullptr);
+}
+
+TEST_F(MoveTest, EventRemoveInfluenceMove_TargetSide) {
+  // USSRがプレイした場合、USAの影響力が除去される
+  // Angolaは初期影響力がないので使用
+  std::map<CountryEnum, int> targets;
+  targets[CountryEnum::ANGOLA] = 2;
+
+  EventRemoveInfluenceMove move(CardEnum::DUMMY, Side::USSR, targets);
+
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+  ASSERT_EQ(commands.size(), 1);
+
+  // コマンドを適用してUSAの影響力が減ることを確認
+  board_.getWorldMap()
+      .getCountry(CountryEnum::ANGOLA)
+      .addInfluence(Side::USA, 3);
+  commands[0]->apply(board_);
+
+  EXPECT_EQ(board_.getWorldMap()
+                .getCountry(CountryEnum::ANGOLA)
+                .getInfluence(Side::USA),
+            1);
+}
+
+// EventRemoveAllInfluenceMoveのテスト
+TEST_F(MoveTest, EventRemoveAllInfluenceMove_MultipleCountries) {
+  std::vector<CountryEnum> targets = {CountryEnum::IRAN, CountryEnum::EGYPT};
+
+  EventRemoveAllInfluenceMove move(CardEnum::DUMMY, Side::USSR, targets);
+
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+
+  // 各国に対してRemoveAllInfluenceCommandが生成される
+  ASSERT_EQ(commands.size(), 2);
+
+  auto* remove_cmd1 =
+      dynamic_cast<RemoveAllInfluenceCommand*>(commands[0].get());
+  auto* remove_cmd2 =
+      dynamic_cast<RemoveAllInfluenceCommand*>(commands[1].get());
+  ASSERT_NE(remove_cmd1, nullptr);
+  ASSERT_NE(remove_cmd2, nullptr);
+}
+
+TEST_F(MoveTest, EventRemoveAllInfluenceMove_RemovesOpponentInfluence) {
+  // USSRがプレイした場合、USAの影響力が全除去される
+  std::vector<CountryEnum> targets = {CountryEnum::LEBANON};
+
+  board_.getWorldMap()
+      .getCountry(CountryEnum::LEBANON)
+      .addInfluence(Side::USA, 5);
+  board_.getWorldMap()
+      .getCountry(CountryEnum::LEBANON)
+      .addInfluence(Side::USSR, 2);
+
+  EventRemoveAllInfluenceMove move(CardEnum::DUMMY, Side::USSR, targets);
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+
+  for (const auto& cmd : commands) {
+    cmd->apply(board_);
+  }
+
+  // USAの影響力が0になり、USSRは残る
+  EXPECT_EQ(board_.getWorldMap()
+                .getCountry(CountryEnum::LEBANON)
+                .getInfluence(Side::USA),
+            0);
+  EXPECT_EQ(board_.getWorldMap()
+                .getCountry(CountryEnum::LEBANON)
+                .getInfluence(Side::USSR),
+            2);
+}
+
+// DeStalinizationRemoveMoveのテスト
+TEST_F(MoveTest, DeStalinizationRemoveMove_BasicCommand) {
+  std::map<CountryEnum, int> targets;
+  targets[CountryEnum::POLAND] = 2;
+  targets[CountryEnum::HUNGARY] = 1;
+
+  DeStalinizationRemoveMove move(CardEnum::DUMMY, Side::USSR, targets);
+
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+
+  // RemoveInfluenceCommand + RequestCommand
+  ASSERT_EQ(commands.size(), 2);
+
+  auto* remove_cmd = dynamic_cast<RemoveInfluenceCommand*>(commands[0].get());
+  ASSERT_NE(remove_cmd, nullptr);
+
+  auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
+  ASSERT_NE(request_cmd, nullptr);
+}
+
+TEST_F(MoveTest, DeStalinizationRemoveMove_PlacementMatchesRemoval) {
+  // 除去数に応じた配置数のRequestCommandが生成される
+  std::map<CountryEnum, int> targets;
+  targets[CountryEnum::POLAND] = 2;
+  targets[CountryEnum::HUNGARY] = 2;  // 合計4除去
+
+  DeStalinizationRemoveMove move(CardEnum::DUMMY, Side::USSR, targets);
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+
+  ASSERT_EQ(commands.size(), 2);
+
+  auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
+  ASSERT_NE(request_cmd, nullptr);
+
+  // RequestCommandから生成される合法手を確認
+  auto legal_moves = request_cmd->legalMoves(board_);
+
+  // 合法手が生成されることを確認（EventPlaceInfluenceMove）
+  for (const auto& move : legal_moves) {
+    auto* place_move = dynamic_cast<EventPlaceInfluenceMove*>(move.get());
+    EXPECT_NE(place_move, nullptr);
+  }
+}

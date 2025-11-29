@@ -61,4 +61,30 @@ class LegalMovesGenerator {
   generateCardSpecificPlaceInfluenceMoves(
       const Board& board, Side side, CardEnum cardEnum,
       const CardSpecialPlaceInfluenceConfig& config);
+
+  // カード固有の影響力除去Moveを生成
+  static std::vector<std::shared_ptr<Move>> generateRemoveInfluenceMoves(
+      const Board& board, CardEnum cardEnum, Side moveSide, Side targetSide,
+      int totalRemove, int maxPerCountry,
+      const std::optional<std::vector<Region>>& allowedRegions,
+      const std::optional<std::vector<CountryEnum>>& specificCountries =
+          std::nullopt);
+
+  // N国選択して固定数除去
+  static std::vector<std::shared_ptr<Move>>
+  generateSelectCountriesRemoveInfluenceMoves(const Board& board,
+                                              CardEnum cardEnum, Side moveSide,
+                                              Side targetSide, Region region,
+                                              int countriesToSelect,
+                                              int removePerCountry);
+
+  // N国選択して全除去
+  static std::vector<std::shared_ptr<Move>>
+  generateSelectCountriesRemoveAllInfluenceMoves(
+      const Board& board, CardEnum cardEnum, Side moveSide, Side targetSide,
+      const std::vector<CountryEnum>& candidates, int countriesToSelect);
+
+  // De-Stalinization: USSR影響力を1-4除去するパターンを生成
+  static std::vector<std::shared_ptr<Move>> generateDeStalinizationRemoveMoves(
+      const Board& board, CardEnum cardEnum, Side side);
 };

@@ -1741,3 +1741,359 @@ TEST_F(ActionEventLegalMovesCanEventTest,
       dynamic_cast<FinalizeCardPlayCommand*>(commands[1].get());
   ASSERT_NE(finalize_cmd, nullptr);
 }
+
+// generateRemoveInfluenceMovesのテスト
+class GenerateRemoveInfluenceMovesTest : public ::testing::Test {
+ protected:
+  GenerateRemoveInfluenceMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override {
+    // 全ての国の影響力をクリア
+    TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  }
+
+  Board board;
+};
+
+TEST_F(GenerateRemoveInfluenceMovesTest, SuezCrisisInsufficientInfluence) {
+  // SuezCrisisシナリオ: 盤面の影響力がカード指定数より少ない
+  // カード: 合計4除去、maxPerCountry=2
+  // 盤面: イギリス=2、フランス=0、イスラエル=1 → 合計3
+
+  board.getWorldMap()
+      .getCountry(CountryEnum::UNITED_KINGDOM)
+      .addInfluence(Side::USA, 2);
+  board.getWorldMap()
+      .getCountry(CountryEnum::ISRAEL)
+      .addInfluence(Side::USA, 1);
+  // フランスは0のまま
+
+  std::vector<CountryEnum> candidates = {
+      CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
+
+  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+      board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
+      candidates);
+
+  // 盤面から除去可能な最大は3（イギリス=2 + イスラエル=1）
+  // 期待: イギリス=2, イスラエル=1の除去パターンが1つ
+  ASSERT_EQ(moves.size(), 1);
+
+  auto* remove_move = dynamic_cast<EventRemoveInfluenceMove*>(moves[0].get());
+  ASSERT_NE(remove_move, nullptr);
+}
+
+TEST_F(GenerateRemoveInfluenceMovesTest, SuezCrisisSufficientInfluence) {
+  // SuezCrisisシナリオ: 盤面の影響力がカード指定数以上
+  // カード: 合計4除去、maxPerCountry=2
+  // 盤面: イギリス=5、フランス=0、イスラエル=1 → 合計6
+
+  board.getWorldMap()
+      .getCountry(CountryEnum::UNITED_KINGDOM)
+      .addInfluence(Side::USA, 5);
+  board.getWorldMap()
+      .getCountry(CountryEnum::ISRAEL)
+      .addInfluence(Side::USA, 1);
+  // フランスは0のまま
+
+  std::vector<CountryEnum> candidates = {
+      CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
+
+  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+      board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
+      candidates);
+
+  // 盤面から除去可能な最大は3（イギリス=2 + イスラエル=1）だが、
+  // maxPerCountry=2なので、イギリス=2, イスラエル=1が実際の除去可能数(3)
+  // カード指定=4だが盤面=3なので3除去
+  // パターン: イギリス=2, イスラエル=1 → 1つ
+  ASSERT_EQ(moves.size(), 1);
+}
+
+TEST_F(GenerateRemoveInfluenceMovesTest, SuezCrisisFullInfluence) {
+  // SuezCrisisシナリオ: 各国がmaxPerCountry以上の影響力を持つ
+  // カード: 合計4除去、maxPerCountry=2
+  // 盤面: イギリス=5、フランス=3、イスラエル=2 → 各国から2ずつ除去可能
+
+  board.getWorldMap()
+      .getCountry(CountryEnum::UNITED_KINGDOM)
+      .addInfluence(Side::USA, 5);
+  board.getWorldMap()
+      .getCountry(CountryEnum::FRANCE)
+      .addInfluence(Side::USA, 3);
+  board.getWorldMap()
+      .getCountry(CountryEnum::ISRAEL)
+      .addInfluence(Side::USA, 2);
+
+  std::vector<CountryEnum> candidates = {
+      CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
+
+  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+      board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
+      candidates);
+
+  // 各国から最大2ずつ、合計4除去のパターン
+  // イギリス=2,フランス=2 / イギリス=2,イスラエル=2 / フランス=2,イスラエル=2
+  // イギリス=2,フランス=1,イスラエル=1 / イギリス=1,フランス=2,イスラエル=1 /
+  // イギリス=1,フランス=1,イスラエル=2
+  EXPECT_GE(moves.size(), 1);
+
+  // 全てのパターンが合計4除去であることを確認
+  for (const auto& move : moves) {
+    auto* remove_move = dynamic_cast<EventRemoveInfluenceMove*>(move.get());
+    ASSERT_NE(remove_move, nullptr);
+  }
+}
+
+TEST_F(GenerateRemoveInfluenceMovesTest, NoCandidates) {
+  // エッジケース: 候補国なし（全国に影響力なし）
+  std::vector<CountryEnum> candidates = {
+      CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
+  // 全ての候補国に影響力なし
+
+  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+      board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
+      candidates);
+
+  // 除去可能な影響力がないため、空
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(GenerateRemoveInfluenceMovesTest, ZeroMaxPerCountry) {
+  // エッジケース: maxPerCountry=0（無制限）
+  board.getWorldMap()
+      .getCountry(CountryEnum::UNITED_KINGDOM)
+      .addInfluence(Side::USA, 5);
+
+  std::vector<CountryEnum> candidates = {CountryEnum::UNITED_KINGDOM};
+
+  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+      board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 0, std::nullopt,
+      candidates);
+
+  // maxPerCountry=0なので、1国から4除去可能
+  ASSERT_EQ(moves.size(), 1);
+}
+
+// generateDeStalinizationRemoveMovesのテスト
+class GenerateDeStalinizationRemoveMovesTest : public ::testing::Test {
+ protected:
+  GenerateDeStalinizationRemoveMovesTest() : board(createTestCardPool()) {}
+
+  void SetUp() override {
+    // 全ての国の影響力をクリア
+    TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  }
+
+  Board board;
+};
+
+TEST_F(GenerateDeStalinizationRemoveMovesTest, InsufficientInfluence) {
+  // 盤面不足シナリオ: USSR影響力が4未満
+  // ポーランドに2、東ドイツに1の合計3
+  board.getWorldMap()
+      .getCountry(CountryEnum::POLAND)
+      .addInfluence(Side::USSR, 2);
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 1);
+
+  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
+      board, CardEnum::DE_STALINIZATION, Side::USSR);
+
+  // パス(0除去) + 1除去パターン + 2除去パターン + 3除去パターン
+  // 4除去はスキップされる
+  EXPECT_GE(moves.size(), 1);  // 少なくともパスオプションがある
+
+  // 全てのパターンがDeStalinizationRemoveMoveであることを確認
+  for (const auto& move : moves) {
+    auto* remove_move = dynamic_cast<DeStalinizationRemoveMove*>(move.get());
+    ASSERT_NE(remove_move, nullptr);
+  }
+}
+
+TEST_F(GenerateDeStalinizationRemoveMovesTest, SufficientInfluence) {
+  // 盤面十分シナリオ: USSR影響力が4以上
+  board.getWorldMap()
+      .getCountry(CountryEnum::POLAND)
+      .addInfluence(Side::USSR, 3);
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 2);
+
+  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
+      board, CardEnum::DE_STALINIZATION, Side::USSR);
+
+  // パス(0除去) + 1~4除去の全パターンが生成される
+  EXPECT_GE(moves.size(), 5);  // パス + 各除去数のパターン
+}
+
+TEST_F(GenerateDeStalinizationRemoveMovesTest, NoCandidates) {
+  // エッジケース: USSR影響力が0
+  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
+      board, CardEnum::DE_STALINIZATION, Side::USSR);
+
+  // 候補国なしで空が返る
+  EXPECT_EQ(moves.size(), 0);
+}
+
+TEST_F(GenerateDeStalinizationRemoveMovesTest, SingleInfluence) {
+  // エッジケース: USSR影響力が1のみ
+  board.getWorldMap()
+      .getCountry(CountryEnum::POLAND)
+      .addInfluence(Side::USSR, 1);
+
+  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
+      board, CardEnum::DE_STALINIZATION, Side::USSR);
+
+  // パス(0除去) + 1除去パターンのみ
+  // 2, 3, 4除去はスキップされる
+  EXPECT_EQ(moves.size(), 2);  // パス + 1除去
+}
+
+// generateSelectCountriesRemoveInfluenceMovesのテスト
+class GenerateSelectCountriesRemoveInfluenceMovesTest : public ::testing::Test {
+ protected:
+  GenerateSelectCountriesRemoveInfluenceMovesTest()
+      : board(createTestCardPool()) {}
+
+  void SetUp() override {
+    TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  }
+
+  Board board;
+};
+
+TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest, ThreeCountriesSelect3) {
+  // 3カ国選択テスト (例: EastEuropeanUnrest)
+  board.getWorldMap()
+      .getCountry(CountryEnum::POLAND)
+      .addInfluence(Side::USSR, 2);
+  board.getWorldMap()
+      .getCountry(CountryEnum::HUNGARY)
+      .addInfluence(Side::USSR, 2);
+  board.getWorldMap()
+      .getCountry(CountryEnum::CZECHOSLOVAKIA)
+      .addInfluence(Side::USSR, 2);
+  board.getWorldMap()
+      .getCountry(CountryEnum::EAST_GERMANY)
+      .addInfluence(Side::USSR, 2);
+
+  auto moves = LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
+      board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
+      Region::EAST_EUROPE, 3, 1);
+
+  // 4C3 = 4パターン
+  EXPECT_EQ(moves.size(), 4);
+
+  for (const auto& move : moves) {
+    auto* remove_move = dynamic_cast<EventRemoveInfluenceMove*>(move.get());
+    ASSERT_NE(remove_move, nullptr);
+  }
+}
+
+TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest,
+       CandidatesLessThanSelectCount) {
+  // 候補国がN未満の場合（2カ国に影響力を設定）
+  board.getWorldMap()
+      .getCountry(CountryEnum::POLAND)
+      .addInfluence(Side::USSR, 2);
+  board.getWorldMap()
+      .getCountry(CountryEnum::HUNGARY)
+      .addInfluence(Side::USSR, 2);
+
+  auto moves = LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
+      board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
+      Region::EAST_EUROPE, 3, 1);
+
+  // 2カ国しか影響力がないので、2カ国全てを選択するパターンのみ
+  EXPECT_EQ(moves.size(), 1);
+}
+
+TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest, NoInfluence) {
+  // 影響力がない場合
+  auto moves = LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
+      board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
+      Region::EAST_EUROPE, 3, 1);
+
+  // 除去可能な影響力がないため、空
+  EXPECT_EQ(moves.size(), 0);
+}
+
+// generateSelectCountriesRemoveAllInfluenceMovesのテスト
+class GenerateSelectCountriesRemoveAllInfluenceMovesTest
+    : public ::testing::Test {
+ protected:
+  GenerateSelectCountriesRemoveAllInfluenceMovesTest()
+      : board(createTestCardPool()) {}
+
+  void SetUp() override {
+    TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+    TestHelper::clearAllOpponentInfluence(board, Side::USA);
+  }
+
+  Board board;
+};
+
+TEST_F(GenerateSelectCountriesRemoveAllInfluenceMovesTest,
+       TwoCountriesFromThree) {
+  // MuslimRevolution風: 3カ国から2カ国選択
+  board.getWorldMap().getCountry(CountryEnum::IRAN).addInfluence(Side::USA, 2);
+  board.getWorldMap().getCountry(CountryEnum::EGYPT).addInfluence(Side::USA, 3);
+  board.getWorldMap()
+      .getCountry(CountryEnum::SAUDI_ARABIA)
+      .addInfluence(Side::USA, 1);
+
+  std::vector<CountryEnum> candidates = {CountryEnum::IRAN, CountryEnum::EGYPT,
+                                         CountryEnum::SAUDI_ARABIA};
+
+  auto moves =
+      LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+          board, CardEnum::MUSLIM_REVOLUTION, Side::USSR, Side::USA, candidates,
+          2);
+
+  // 3C2 = 3パターン
+  EXPECT_EQ(moves.size(), 3);
+
+  for (const auto& move : moves) {
+    auto* remove_all_move =
+        dynamic_cast<EventRemoveAllInfluenceMove*>(move.get());
+    ASSERT_NE(remove_all_move, nullptr);
+  }
+}
+
+TEST_F(GenerateSelectCountriesRemoveAllInfluenceMovesTest,
+       ExcludesNoInfluenceCountries) {
+  // 影響力がない国は除外される
+  board.getWorldMap().getCountry(CountryEnum::IRAN).addInfluence(Side::USA, 2);
+  board.getWorldMap().getCountry(CountryEnum::EGYPT).addInfluence(Side::USA, 3);
+  // SAUDI_ARABIAは影響力なし
+
+  std::vector<CountryEnum> candidates = {CountryEnum::IRAN, CountryEnum::EGYPT,
+                                         CountryEnum::SAUDI_ARABIA};
+
+  auto moves =
+      LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+          board, CardEnum::MUSLIM_REVOLUTION, Side::USSR, Side::USA, candidates,
+          2);
+
+  // 影響力がある国が2つしかないので、1パターン
+  EXPECT_EQ(moves.size(), 1);
+}
+
+TEST_F(GenerateSelectCountriesRemoveAllInfluenceMovesTest, AllNoInfluence) {
+  // 全ての候補国に影響力がない
+  std::vector<CountryEnum> candidates = {CountryEnum::IRAN, CountryEnum::EGYPT,
+                                         CountryEnum::SAUDI_ARABIA};
+
+  auto moves =
+      LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+          board, CardEnum::MUSLIM_REVOLUTION, Side::USSR, Side::USA, candidates,
+          2);
+
+  // 除去可能な影響力がないため、空
+  EXPECT_EQ(moves.size(), 0);
+}

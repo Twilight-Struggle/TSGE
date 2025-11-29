@@ -211,3 +211,53 @@ std::vector<CommandPtr> DiscardMove::toCommand(
     const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
   return {std::make_shared<DiscardCommand>(getSide(), getCard())};
 }
+
+std::vector<CommandPtr> EventRemoveInfluenceMove::toCommand(
+    const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.emplace_back(std::make_shared<RemoveInfluenceCommand>(
+      getOpponentSide(getSide()), targetCountries_));
+  return commands;
+}
+
+std::vector<CommandPtr> EventRemoveAllInfluenceMove::toCommand(
+    const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+  commands.reserve(targetCountries_.size());
+  for (const auto& country : targetCountries_) {
+    commands.emplace_back(std::make_shared<RemoveAllInfluenceCommand>(
+        getOpponentSide(getSide()), country));
+  }
+  return commands;
+}
+
+std::vector<CommandPtr> DeStalinizationRemoveMove::toCommand(
+    const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
+  std::vector<CommandPtr> commands;
+
+  // 1. Remove USSR influence
+  commands.emplace_back(
+      std::make_shared<RemoveInfluenceCommand>(Side::USSR, targetCountries_));
+
+  // 2. Calculate total removed
+  int total_removed = 0;
+  for (const auto& [country, amount] : targetCountries_) {
+    total_removed += amount;
+  }
+
+  // 3. Push placement Request directly
+  CardSpecialPlaceInfluenceConfig config;
+  config.totalInfluence = total_removed;
+  config.maxPerCountry = 2;
+  config.allowedRegions = std::nullopt;     // All regions
+  config.excludeOpponentControlled = true;  // No USA controlled
+  config.onlyEmptyCountries = false;
+
+  commands.emplace_back(std::make_shared<RequestCommand>(
+      Side::USSR, [card_enum = getCard(), config](const Board& board) {
+        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
+            board, Side::USSR, card_enum, config);
+      }));
+
+  return commands;
+}

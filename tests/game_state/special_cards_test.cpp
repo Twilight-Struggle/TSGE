@@ -118,7 +118,7 @@ TEST_F(SpecialCardsTest, OASFoundedEventTest) {
 }
 
 TEST_F(SpecialCardsTest, DestaLinizationEventTest) {
-  DestaLinization destalinization;
+  DeStainization destalinization;
 
   EXPECT_TRUE(destalinization.canEvent(board));
 

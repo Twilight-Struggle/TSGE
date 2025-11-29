@@ -793,3 +793,289 @@ LegalMovesGenerator::spaceTrackDiscardLegalMoves(const Board& board,
   moves.emplace_back(std::make_shared<PassMove>(side));
   return moves;
 }
+
+// ========== 影響力除去系のヘルパー関数 ==========
+
+// 影響力除去の候補国を収集
+std::vector<CountryEnum> collectRemoveInfluenceCandidates(
+    const WorldMap& world_map, Side targetSide,
+    const std::optional<std::vector<Region>>& allowedRegions,
+    const std::optional<std::vector<CountryEnum>>& specificCountries) {
+  std::vector<CountryEnum> candidates;
+
+  if (specificCountries.has_value()) {
+    // 特定国リストが指定されている場合
+    for (const auto& country_enum : *specificCountries) {
+      const auto& country = world_map.getCountry(country_enum);
+      if (country.getInfluence(targetSide) > 0) {
+        candidates.push_back(country_enum);
+      }
+    }
+    return candidates;
+  }
+
+  // 世界から候補を収集
+  candidates.reserve(world_map.getCountriesCount());
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+    const auto& country = world_map.getCountry(country_enum);
+
+    // 除去対象の影響力がない国はスキップ
+    if (country.getInfluence(targetSide) == 0) {
+      continue;
+    }
+
+    // 地域フィルタ
+    if (allowedRegions.has_value() &&
+        !std::ranges::any_of(*allowedRegions, [&country](Region region) {
+          return country.hasRegion(region);
+        })) {
+      continue;
+    }
+
+    candidates.push_back(country_enum);
+  }
+
+  return candidates;
+}
+
+// 除去パターンをDFSで生成
+void generateRemovePatternsDfs(
+    const std::vector<CountryEnum>& candidates, const WorldMap& world_map,
+    Side targetSide, int maxPerCountry, size_t idx, int remaining,
+    std::map<CountryEnum, int>& current,
+    std::vector<std::map<CountryEnum, int>>& patterns) {
+  if (remaining == 0) {
+    if (!current.empty()) {
+      patterns.push_back(current);
+    }
+    return;
+  }
+
+  if (idx >= candidates.size()) {
+    return;
+  }
+
+  // この国をスキップ
+  generateRemovePatternsDfs(candidates, world_map, targetSide, maxPerCountry,
+                            idx + 1, remaining, current, patterns);
+
+  // この国から除去
+  auto country = candidates[idx];
+  int available = world_map.getCountry(country).getInfluence(targetSide);
+  int max_remove =
+      maxPerCountry > 0 ? std::min(maxPerCountry, remaining) : remaining;
+  max_remove = std::min(max_remove, available);
+
+  for (int amount = 1; amount <= max_remove; ++amount) {
+    current[country] = amount;
+    generateRemovePatternsDfs(candidates, world_map, targetSide, maxPerCountry,
+                              idx + 1, remaining - amount, current, patterns);
+    current.erase(country);
+  }
+}
+
+// グループA, B向け: 柔軟な除去Move生成
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::generateRemoveInfluenceMoves(
+    const Board& board, CardEnum cardEnum, Side moveSide, Side targetSide,
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    int totalRemove, int maxPerCountry,
+    const std::optional<std::vector<Region>>& allowedRegions,
+    const std::optional<std::vector<CountryEnum>>& specificCountries) {
+  auto candidates = collectRemoveInfluenceCandidates(
+      board.getWorldMap(), targetSide, allowedRegions, specificCountries);
+
+  if (candidates.empty()) {
+    return {};
+  }
+
+  // 盤面から除去可能な最大影響力を計算（カード値以上になったら早期break）
+  const auto& world_map = board.getWorldMap();
+  int max_removable = 0;
+  for (const auto& country_enum : candidates) {
+    int available = world_map.getCountry(country_enum).getInfluence(targetSide);
+    int removable_from_country =
+        (maxPerCountry > 0) ? std::min(available, maxPerCountry) : available;
+    max_removable += removable_from_country;
+    if (max_removable >= totalRemove) {
+      break;  // カード値以上になったら早期終了
+    }
+  }
+
+  // 実際の除去数を決定
+  int actual_remove = std::min(totalRemove, max_removable);
+  if (actual_remove == 0) {
+    return {};  // 除去可能な影響力がない
+  }
+
+  std::vector<std::map<CountryEnum, int>> patterns;
+  std::map<CountryEnum, int> current;
+  generateRemovePatternsDfs(candidates, world_map, targetSide, maxPerCountry, 0,
+                            actual_remove, current, patterns);
+
+  std::vector<std::shared_ptr<Move>> results;
+  results.reserve(patterns.size());
+  for (const auto& pattern : patterns) {
+    results.emplace_back(std::make_shared<EventRemoveInfluenceMove>(
+        cardEnum, moveSide, pattern));
+  }
+
+  return results;
+}
+
+// グループC向け: N国選択して固定数除去
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
+    const Board& board, CardEnum cardEnum, Side moveSide, Side targetSide,
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    Region region, int countriesToSelect, int removePerCountry) {
+  // 地域内で影響力を持つ国を収集
+  std::vector<CountryEnum> candidates;
+  const auto& world_map = board.getWorldMap();
+
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+    const auto& country = world_map.getCountry(country_enum);
+
+    if (!country.hasRegion(region)) {
+      continue;
+    }
+
+    // 影響力が1以上あれば候補に含める（除去数より少なくても全除去可能）
+    if (country.getInfluence(targetSide) == 0) {
+      continue;
+    }
+
+    candidates.push_back(country_enum);
+  }
+
+  // 候補数が足りない場合は、可能な限りの国を選択
+  if (candidates.empty()) {
+    return {};
+  }
+  int actual_countries_to_select =
+      std::min(countriesToSelect, static_cast<int>(candidates.size()));
+
+  // 組み合わせ(nCk)を生成
+  std::vector<std::shared_ptr<Move>> results;
+  std::vector<CountryEnum> selected;
+  selected.reserve(actual_countries_to_select);
+
+  std::function<void(size_t)> generate_combinations = [&](size_t start) {
+    if (selected.size() == static_cast<size_t>(actual_countries_to_select)) {
+      std::map<CountryEnum, int> pattern;
+      for (const auto& country : selected) {
+        pattern[country] = removePerCountry;
+      }
+      results.emplace_back(std::make_shared<EventRemoveInfluenceMove>(
+          cardEnum, moveSide, pattern));
+      return;
+    }
+
+    for (size_t i = start; i < candidates.size(); ++i) {
+      selected.push_back(candidates[i]);
+      generate_combinations(i + 1);
+      selected.pop_back();
+    }
+  };
+
+  generate_combinations(0);
+  return results;
+}
+
+// グループD向け: N国選択して全除去
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    const Board& board, CardEnum cardEnum, Side moveSide, Side targetSide,
+    const std::vector<CountryEnum>& candidates, int countriesToSelect) {
+  // 影響力を持つ国のみをフィルタ
+  std::vector<CountryEnum> valid_candidates;
+  const auto& world_map = board.getWorldMap();
+
+  for (const auto& country_enum : candidates) {
+    const auto& country = world_map.getCountry(country_enum);
+    if (country.getInfluence(targetSide) > 0) {
+      valid_candidates.push_back(country_enum);
+    }
+  }
+
+  // 候補数が足りない場合は、可能な限りの国を選択
+  if (valid_candidates.empty()) {
+    return {};
+  }
+  int actual_countries_to_select =
+      std::min(countriesToSelect, static_cast<int>(valid_candidates.size()));
+
+  // 組み合わせ(nCk)を生成
+  std::vector<std::shared_ptr<Move>> results;
+  std::vector<CountryEnum> selected;
+  selected.reserve(actual_countries_to_select);
+
+  std::function<void(size_t)> generate_combinations = [&](size_t start) {
+    if (selected.size() == static_cast<size_t>(actual_countries_to_select)) {
+      results.emplace_back(std::make_shared<EventRemoveAllInfluenceMove>(
+          cardEnum, moveSide, selected));
+      return;
+    }
+
+    for (size_t i = start; i < valid_candidates.size(); ++i) {
+      selected.push_back(valid_candidates[i]);
+      generate_combinations(i + 1);
+      selected.pop_back();
+    }
+  };
+
+  generate_combinations(0);
+  return results;
+}
+
+// De-Stalinization: USSR影響力を1-4除去するパターンを生成
+std::vector<std::shared_ptr<Move>>
+LegalMovesGenerator::generateDeStalinizationRemoveMoves(const Board& board,
+                                                        CardEnum cardEnum,
+                                                        Side side) {
+  auto candidates = collectRemoveInfluenceCandidates(
+      board.getWorldMap(), Side::USSR, std::nullopt, std::nullopt);
+
+  if (candidates.empty()) {
+    return {};
+  }
+
+  // 盤面から除去可能な最大影響力を計算
+  const auto& world_map = board.getWorldMap();
+  int max_removable = 0;
+  for (const auto& country_enum : candidates) {
+    max_removable +=
+        world_map.getCountry(country_enum).getInfluence(Side::USSR);
+  }
+
+  std::vector<std::shared_ptr<Move>> results;
+
+  // パスオプション（0除去 = 0配置）
+  results.emplace_back(std::make_shared<DeStalinizationRemoveMove>(
+      cardEnum, side, std::map<CountryEnum, int>{}));
+
+  // 1, 2, 3, 4除去のパターンを生成
+  for (int total_remove = 1; total_remove <= 4; ++total_remove) {
+    // 盤面の影響力が不足している場合はスキップ
+    if (total_remove > max_removable) {
+      continue;
+    }
+
+    std::vector<std::map<CountryEnum, int>> patterns;
+    std::map<CountryEnum, int> current;
+    generateRemovePatternsDfs(candidates, world_map, Side::USSR, 0, 0,
+                              total_remove, current, patterns);
+
+    for (const auto& pattern : patterns) {
+      results.emplace_back(
+          std::make_shared<DeStalinizationRemoveMove>(cardEnum, side, pattern));
+    }
+  }
+
+  return results;
+}

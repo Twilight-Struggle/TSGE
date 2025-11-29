@@ -466,3 +466,81 @@ TEST_F(CommandTest, RequestCommandGetSide) {
   // Assert: getSide()が注入されたSideをそのまま返す
   EXPECT_EQ(command.getSide(), Side::USSR);
 }
+
+// RemoveInfluenceCommandのテスト
+TEST_F(CommandTest, RemoveInfluenceCommandSingleCountry) {
+  // 単一国から指定数の影響力除去
+  // Angolaは初期影響力がないので使用
+  auto& angola = board.getWorldMap().getCountry(CountryEnum::ANGOLA);
+  angola.addInfluence(Side::USA, 3);
+  EXPECT_EQ(angola.getInfluence(Side::USA), 3);
+
+  RemoveInfluenceCommand remove_cmd(Side::USA, {{CountryEnum::ANGOLA, 2}});
+  remove_cmd.apply(board);
+
+  EXPECT_EQ(angola.getInfluence(Side::USA), 1);
+}
+
+TEST_F(CommandTest, RemoveInfluenceCommandMultipleCountries) {
+  // 複数国から同時除去
+  // ZimbabweとZaireは初期影響力がないので使用
+  auto& zimbabwe = board.getWorldMap().getCountry(CountryEnum::ZIMBABWE);
+  auto& zaire = board.getWorldMap().getCountry(CountryEnum::ZAIRE);
+  zimbabwe.addInfluence(Side::USSR, 3);
+  zaire.addInfluence(Side::USSR, 2);
+
+  RemoveInfluenceCommand remove_cmd(
+      Side::USSR, {{CountryEnum::ZIMBABWE, 2}, {CountryEnum::ZAIRE, 1}});
+  remove_cmd.apply(board);
+
+  EXPECT_EQ(zimbabwe.getInfluence(Side::USSR), 1);
+  EXPECT_EQ(zaire.getInfluence(Side::USSR), 1);
+}
+
+TEST_F(CommandTest, RemoveInfluenceCommandExceedsAvailable) {
+  // 影響力が指定数より少ない場合、0にクランプされる
+  auto& iran = board.getWorldMap().getCountry(CountryEnum::IRAN);
+  iran.addInfluence(Side::USA, 1);
+
+  RemoveInfluenceCommand remove_cmd(Side::USA, {{CountryEnum::IRAN, 5}});
+  remove_cmd.apply(board);
+
+  EXPECT_EQ(iran.getInfluence(Side::USA), 0);
+}
+
+// RemoveAllInfluenceCommandのテスト
+TEST_F(CommandTest, RemoveAllInfluenceCommandRemovesAll) {
+  // 指定国から全影響力除去
+  auto& lebanon = board.getWorldMap().getCountry(CountryEnum::LEBANON);
+  lebanon.addInfluence(Side::USA, 5);
+  EXPECT_EQ(lebanon.getInfluence(Side::USA), 5);
+
+  RemoveAllInfluenceCommand remove_all_cmd(Side::USA, CountryEnum::LEBANON);
+  remove_all_cmd.apply(board);
+
+  EXPECT_EQ(lebanon.getInfluence(Side::USA), 0);
+}
+
+TEST_F(CommandTest, RemoveAllInfluenceCommandNoInfluence) {
+  // 影響力がない場合でもエラーにならない
+  auto& angola = board.getWorldMap().getCountry(CountryEnum::ANGOLA);
+  EXPECT_EQ(angola.getInfluence(Side::USA), 0);
+
+  RemoveAllInfluenceCommand remove_all_cmd(Side::USA, CountryEnum::ANGOLA);
+  remove_all_cmd.apply(board);  // エラーなく実行される
+
+  EXPECT_EQ(angola.getInfluence(Side::USA), 0);
+}
+
+TEST_F(CommandTest, RemoveAllInfluenceCommandPreservesOtherSide) {
+  // 一方の陣営の影響力を除去しても他方の影響力は残る
+  auto& egypt = board.getWorldMap().getCountry(CountryEnum::EGYPT);
+  egypt.addInfluence(Side::USA, 3);
+  egypt.addInfluence(Side::USSR, 2);
+
+  RemoveAllInfluenceCommand remove_all_cmd(Side::USA, CountryEnum::EGYPT);
+  remove_all_cmd.apply(board);
+
+  EXPECT_EQ(egypt.getInfluence(Side::USA), 0);
+  EXPECT_EQ(egypt.getInfluence(Side::USSR), 2);  // USSRの影響力は残る
+}

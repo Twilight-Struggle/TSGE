@@ -40,6 +40,10 @@ class Board {
   DefconTrack& getDefconTrack() { return defconTrack_; }
   MilopsTrack& getMilopsTrack() { return milopsTrack_; }
   TurnTrack& getTurnTrack() { return turnTrack_; }
+  [[nodiscard]]
+  const TurnTrack& getTurnTrack() const {
+    return turnTrack_;
+  }
   ActionRoundTrack& getActionRoundTrack() { return actionRoundTrack_; }
   Randomizer& getRandomizer() { return randomizer_; }
   Deck& getDeck() { return deck_; }

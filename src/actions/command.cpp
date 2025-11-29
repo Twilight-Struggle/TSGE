@@ -223,3 +223,15 @@ void SoutheastAsiaScoringCommand::apply(Board& board) const {
   }
   board.pushState(std::make_shared<ChangeVpCommand>(Side::USSR, delta));
 }
+
+void RemoveInfluenceCommand::apply(Board& board) const {
+  auto& world_map = board.getWorldMap();
+  for (const auto& [country, amount] : targetCountries_) {
+    world_map.getCountry(country).removeInfluence(targetSide_, amount);
+  }
+}
+
+void RemoveAllInfluenceCommand::apply(Board& board) const {
+  auto& world_map = board.getWorldMap();
+  world_map.getCountry(country_).clearInfluence(targetSide_);
+}

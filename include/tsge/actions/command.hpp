@@ -186,3 +186,30 @@ class SoutheastAsiaScoringCommand final : public Command {
 
   void apply(Board& board) const override;
 };
+
+class RemoveInfluenceCommand final : public Command {
+ public:
+  RemoveInfluenceCommand(Side targetSide,
+                         const std::map<CountryEnum, int>& targetCountries)
+      : Command{Side::NEUTRAL},
+        targetSide_{targetSide},
+        targetCountries_{targetCountries} {}
+
+  void apply(Board& board) const override;
+
+ private:
+  const Side targetSide_;
+  const std::map<CountryEnum, int> targetCountries_;
+};
+
+class RemoveAllInfluenceCommand final : public Command {
+ public:
+  RemoveAllInfluenceCommand(Side targetSide, CountryEnum country)
+      : Command{Side::NEUTRAL}, targetSide_{targetSide}, country_{country} {}
+
+  void apply(Board& board) const override;
+
+ private:
+  const Side targetSide_;
+  const CountryEnum country_;
+};
