@@ -517,3 +517,242 @@ TEST_F(MuslimRevolutionTest, GeneratesRemoveAllMovesForTargetCountries) {
   // 2カ国選択なので、3C2 = 3パターン
   EXPECT_EQ(legal_moves.size(), 3);
 }
+
+class PlaceCardsTest : public ::testing::Test {
+ protected:
+  PlaceCardsTest() : board(defaultCardPool()) {}
+
+  static const std::array<std::unique_ptr<Card>, 111>& defaultCardPool() {
+    static std::array<std::unique_ptr<Card>, 111> pool{};
+    return pool;
+  }
+
+  Board board;
+};
+
+TEST_F(PlaceCardsTest, ComeconEventTest) {
+  Comecon comecon;
+
+  // canEventのテスト
+  EXPECT_TRUE(comecon.canEvent(board));
+
+  // eventコマンドの生成テスト
+  auto commands = comecon.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  // RequestCommandが生成されていることを確認
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, DecolonizationEventTest) {
+  Decolonization decolonization;
+
+  EXPECT_TRUE(decolonization.canEvent(board));
+
+  auto commands = decolonization.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, PuppetGovernmentsEventTest) {
+  PuppetGovernments puppet_governments;
+
+  EXPECT_TRUE(puppet_governments.canEvent(board));
+
+  auto commands = puppet_governments.event(Side::USA, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, MarshallPlanEventTest) {
+  MarshallPlan marshall_plan;
+
+  EXPECT_TRUE(marshall_plan.canEvent(board));
+
+  auto commands = marshall_plan.event(Side::USA, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, LiberationTheologyEventTest) {
+  LiberationTheology liberation_theology;
+
+  EXPECT_TRUE(liberation_theology.canEvent(board));
+
+  auto commands = liberation_theology.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, WarsawPactFormedEventTest) {
+  WarsawPactFormed warsaw_pact;
+
+  EXPECT_TRUE(warsaw_pact.canEvent(board));
+
+  auto commands = warsaw_pact.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, OASFoundedEventTest) {
+  OASFounded oas_founded;
+
+  EXPECT_TRUE(oas_founded.canEvent(board));
+
+  auto commands = oas_founded.event(Side::USA, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, DestaLinizationEventTest) {
+  DeStainization destalinization;
+
+  EXPECT_TRUE(destalinization.canEvent(board));
+
+  auto commands = destalinization.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, ColonialRearGuardsEventTest) {
+  ColonialRearGuards colonial_rear_guards;
+
+  EXPECT_TRUE(colonial_rear_guards.canEvent(board));
+
+  auto commands = colonial_rear_guards.event(Side::USA, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, UssuriRiverSkirmishEventTest) {
+  UssuriRiverSkirmish ussuri_river_skirmish;
+
+  EXPECT_TRUE(ussuri_river_skirmish.canEvent(board));
+
+  auto commands = ussuri_river_skirmish.event(Side::USA, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, TheReformerEventTest) {
+  TheReformer the_reformer;
+
+  EXPECT_TRUE(the_reformer.canEvent(board));
+
+  auto commands = the_reformer.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  EXPECT_NE(request_cmd, nullptr);
+}
+
+TEST_F(PlaceCardsTest, SpecialRelationshipEventTest) {
+  SpecialRelationship special_relationship;
+
+  EXPECT_TRUE(special_relationship.canEvent(board));
+
+  // UK支配の状態を設定
+  board.getWorldMap()
+      .getCountry(CountryEnum::UNITED_KINGDOM)
+      .addInfluence(Side::USA, 5);
+
+  // ケース1: NATO無効時（UK隣接国に+1、VP+2なし）
+  {
+    auto commands = special_relationship.event(Side::USA, board);
+    EXPECT_EQ(commands.size(), 1);  // RequestCommandのみ
+
+    const auto* request_cmd =
+        dynamic_cast<const RequestCommand*>(commands[0].get());
+    ASSERT_NE(request_cmd, nullptr);
+
+    auto moves = request_cmd->legalMoves(board);
+    EXPECT_GT(moves.size(), 0);  // UK隣接国が存在する
+
+    // 各Moveが正しい型であることを確認
+    for (const auto& move : moves) {
+      const auto* event_move =
+          dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+      EXPECT_NE(event_move, nullptr);
+    }
+  }
+
+  // ケース2: NATO有効時（西欧に+2 + VP+2）
+  {
+    board.addCardEffectInProgress(CardEnum::NATO);
+    auto commands = special_relationship.event(Side::USA, board);
+    EXPECT_EQ(commands.size(), 2);  // RequestCommand + ChangeVpCommand
+
+    const auto* request_cmd =
+        dynamic_cast<const RequestCommand*>(commands[0].get());
+    ASSERT_NE(request_cmd, nullptr);
+
+    auto moves = request_cmd->legalMoves(board);
+    EXPECT_GT(moves.size(), 0);  // 西欧の国が存在する
+
+    // 各Moveが正しい型であることを確認
+    for (const auto& move : moves) {
+      const auto* event_move =
+          dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+      EXPECT_NE(event_move, nullptr);
+    }
+
+    // ChangeVpCommandを確認
+    const auto* vp_cmd =
+        dynamic_cast<const ChangeVpCommand*>(commands[1].get());
+    ASSERT_NE(vp_cmd, nullptr);
+  }
+}
+
+TEST_F(PlaceCardsTest, SouthAfricanUnrestEventTest) {
+  SouthAfricanUnrest south_african_unrest;
+
+  EXPECT_TRUE(south_african_unrest.canEvent(board));
+
+  auto commands = south_african_unrest.event(Side::USSR, board);
+  EXPECT_EQ(commands.size(), 1);
+
+  const auto* request_cmd =
+      dynamic_cast<const RequestCommand*>(commands[0].get());
+  ASSERT_NE(request_cmd, nullptr);
+
+  // RequestCommandからMoveを取得
+  auto moves = request_cmd->legalMoves(board);
+  EXPECT_EQ(moves.size(), 4);
+
+  // 各Moveが正しい型であることを確認
+  for (const auto& move : moves) {
+    const auto* event_move =
+        dynamic_cast<const EventPlaceInfluenceMove*>(move.get());
+    EXPECT_NE(event_move, nullptr);
+  }
+}
