@@ -361,11 +361,11 @@ void generateCardSpecificPlacementPatternsDfs(
 std::vector<std::map<CountryEnum, int>>
 generateCardSpecificInfluencePlacementPatterns(
     const std::vector<CountryEnum>& candidates,
-    const CardSpecialPlaceInfluenceConfig& config) {
+    const CardSpecialPlaceInfluenceConfig& config, int actualTotalInfluence) {
   std::vector<std::map<CountryEnum, int>> patterns;
   std::map<CountryEnum, int> current_pattern;
   generateCardSpecificPlacementPatternsDfs(
-      candidates, config, 0, config.totalInfluence, current_pattern, patterns);
+      candidates, config, 0, actualTotalInfluence, current_pattern, patterns);
   return patterns;
 }
 
@@ -397,9 +397,26 @@ LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
     return {};
   }
 
+  // 実際に配置可能な影響力の総数を計算
+  int max_placeable_influence = 0;
+  if (config.maxPerCountry > 0) {
+    max_placeable_influence =
+        static_cast<int>(candidates.size()) * config.maxPerCountry;
+  } else {
+    // maxPerCountryが0の場合は無制限だが、実際にはtotalInfluenceが上限
+    max_placeable_influence = config.totalInfluence;
+  }
+
+  int actual_total_influence =
+      std::min(config.totalInfluence, max_placeable_influence);
+
+  if (actual_total_influence == 0) {
+    return {};
+  }
+
   // 配置パターンを生成
-  auto patterns =
-      generateCardSpecificInfluencePlacementPatterns(candidates, config);
+  auto patterns = generateCardSpecificInfluencePlacementPatterns(
+      candidates, config, actual_total_influence);
 
   // Moveオブジェクトに変換
   std::vector<std::shared_ptr<Move>> results;

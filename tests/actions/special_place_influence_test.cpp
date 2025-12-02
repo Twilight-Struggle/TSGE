@@ -127,7 +127,57 @@ TEST_F(SpecialPlaceInfluenceTest, EmptyRegionTest) {
 
   auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
       board, Side::USSR, CardEnum::COMECON, config);
-
   // SPECIAL地域にはUSS/USAしかないため、合法手は少ないはず
   EXPECT_GE(moves.size(), 0);
+}
+
+TEST_F(SpecialPlaceInfluenceTest, PuppetGovernmentsInsufficientCandidates) {
+  // Puppet Governments: 影響力を置くべき国の候補が足りないケース
+  // totalInfluence=3, maxPerCountry=1 だが、影響力のない国が2つしかない
+  // この場合、2つの国に1ずつ、合計2の影響力を置くMoveが1つ生成されるべき
+  CardSpecialPlaceInfluenceConfig config;
+  config.totalInfluence = 3;
+  config.maxPerCountry = 1;
+  config.allowedRegions = std::nullopt;
+  config.excludeOpponentControlled = false;
+  config.onlyEmptyCountries = true;
+  // 全ての国に影響力を1ずつ置いて、空き地をなくす
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < board.getWorldMap().getCountriesCount(); ++i) {
+    board.getWorldMap()
+        .getCountry(static_cast<CountryEnum>(i))
+        .addInfluence(Side::USA, 1);
+  }
+  // 2つだけ空き地を作る
+  board.getWorldMap().getCountry(CountryEnum::ZAIRE).clearInfluence(Side::USA);
+  board.getWorldMap()
+      .getCountry(CountryEnum::ZIMBABWE)
+      .clearInfluence(Side::USA);
+  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
+      board, Side::USA, CardEnum::PUPPET_GOVERNMENTS, config);
+  // 2カ国に1つずつ置くパターンが1つだけ生成されるはず
+  EXPECT_EQ(moves.size(), 1);
+
+  if (!moves.empty()) {
+    Board board_copy = board;
+    auto commands = moves[0]->toCommand(
+        board_copy.getCardpool()[static_cast<size_t>(moves[0]->getCard())],
+        board_copy);
+    for (const auto& command : commands) {
+      command->apply(board_copy);
+    }
+    EXPECT_EQ(board_copy.getWorldMap()
+                  .getCountry(CountryEnum::ZAIRE)
+                  .getInfluence(Side::USA),
+              1);
+    EXPECT_EQ(board_copy.getWorldMap()
+                  .getCountry(CountryEnum::ZIMBABWE)
+                  .getInfluence(Side::USA),
+              1);
+    // 元のボードに影響がないことを確認
+    EXPECT_EQ(board.getWorldMap()
+                  .getCountry(CountryEnum::ZAIRE)
+                  .getInfluence(Side::USA),
+              0);
+  }
 }
