@@ -10,11 +10,12 @@
 
 // カード固有の影響力配置設定
 struct CardSpecialPlaceInfluenceConfig {
-  int totalInfluence;  // 配置する総影響力数
-  int maxPerCountry;   // 一カ国あたりの最大配置数（0=無制限）
+  int totalInfluence = 0;  // 配置する総影響力数
+  int maxPerCountry = 0;  // 一カ国あたりの最大配置数（0=無制限）
   std::optional<std::vector<Region>> allowedRegions;  // 許可される地域
-  bool excludeOpponentControlled;  // 相手支配国を除外するか
-  bool onlyEmptyCountries;         // 影響力のない国のみか
+  bool excludeOpponentControlled = false;  // 相手支配国を除外するか
+  bool onlyEmptyCountries = false;         // 影響力のない国のみか
+  CardSpecialPlaceInfluenceConfig() = default;
 };
 
 class LegalMovesGenerator {
