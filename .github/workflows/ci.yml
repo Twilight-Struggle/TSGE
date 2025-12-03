@@ -106,6 +106,7 @@ jobs:
           -object ./build/tsnnmcts_policy_test \
           -object ./build/special_cards_test \
           -object ./build/special_place_influence_test \
+          -object ./build/event_remove_influence_test \
           > coverage.lcov
 
         # lcovファイルの内容を確認(デバッグ用)
