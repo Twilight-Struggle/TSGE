@@ -115,6 +115,7 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:scoring_cards_test>
                 -object $<TARGET_FILE:special_cards_test>
                 -object $<TARGET_FILE:special_place_influence_test>
+                -object $<TARGET_FILE:event_remove_influence_test>
                 -object $<TARGET_FILE:deck_test>
                 -object $<TARGET_FILE:tsnnmcts_policy_test>
                 
@@ -140,6 +141,7 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:scoring_cards_test>
                 -object $<TARGET_FILE:special_cards_test>
                 -object $<TARGET_FILE:special_place_influence_test>
+                -object $<TARGET_FILE:event_remove_influence_test>
                 -object $<TARGET_FILE:deck_test>
                 -object $<TARGET_FILE:tsnnmcts_policy_test>
 
