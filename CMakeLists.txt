@@ -107,7 +107,9 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:board_scoring_test>
                 -object $<TARGET_FILE:board_mcts_test>
                 -object $<TARGET_FILE:command_test>
-                -object $<TARGET_FILE:legal_moves_generator_test>
+                -object $<TARGET_FILE:realignment_moves_test>
+                -object $<TARGET_FILE:action_ops_moves_test>
+                -object $<TARGET_FILE:misc_moves_test>
                 -object $<TARGET_FILE:move_test>
                 -object $<TARGET_FILE:phase_machine_test>
                 -object $<TARGET_FILE:world_map_test>
@@ -133,7 +135,9 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:board_scoring_test>
                 -object $<TARGET_FILE:board_mcts_test>
                 -object $<TARGET_FILE:command_test>
-                -object $<TARGET_FILE:legal_moves_generator_test>
+                -object $<TARGET_FILE:realignment_moves_test>
+                -object $<TARGET_FILE:action_ops_moves_test>
+                -object $<TARGET_FILE:misc_moves_test>
                 -object $<TARGET_FILE:move_test>
                 -object $<TARGET_FILE:phase_machine_test>
                 -object $<TARGET_FILE:world_map_test>
@@ -150,7 +154,7 @@ if(ENABLE_COVERAGE)
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS board_test board_scoring_test board_mcts_test command_test legal_moves_generator_test move_test phase_machine_test world_map_test country_test trackers_test basic_event_cards_test scoring_cards_test special_cards_test special_place_influence_test event_remove_influence_test deck_test
+            DEPENDS board_test board_scoring_test board_mcts_test command_test realignment_moves_test action_ops_moves_test misc_moves_test move_test phase_machine_test world_map_test country_test trackers_test basic_event_cards_test scoring_cards_test special_cards_test special_place_influence_test event_remove_influence_test deck_test
         )
     endif()
 endif()
@@ -180,6 +184,7 @@ if(ENABLE_TESTING)
 
     function(add_test_with_path TEST_NAME TEST_PATH)
         add_executable(${TEST_NAME} ${TEST_PATH})
+        target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/actions/legal_moves_generator)
         target_link_libraries(${TEST_NAME}
             PRIVATE
                 GTest::gtest_main
@@ -204,7 +209,9 @@ if(ENABLE_TESTING)
     add_test_with_path(board_scoring_test tests/core/board_scoring_test.cpp)
     add_test_with_path(board_mcts_test tests/core/board_mcts_test.cpp)
     add_test_with_path(command_test tests/actions/command_test.cpp)
-    add_test_with_path(legal_moves_generator_test tests/actions/legal_moves_generator/legal_moves_generator_test.cpp)
+    add_test_with_path(realignment_moves_test tests/actions/legal_moves_generator/realignment_moves_test.cpp)
+    add_test_with_path(action_ops_moves_test tests/actions/legal_moves_generator/action_ops_moves_test.cpp)
+    add_test_with_path(misc_moves_test tests/actions/legal_moves_generator/misc_moves_test.cpp)
     add_test_with_path(move_test tests/actions/move_test.cpp)
     add_test_with_path(phase_machine_test tests/core/phase_machine_test.cpp)
     add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)

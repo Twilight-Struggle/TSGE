@@ -107,6 +107,9 @@ jobs:
           -object ./build/special_cards_test \
           -object ./build/special_place_influence_test \
           -object ./build/event_remove_influence_test \
+          -object ./build/realignment_moves_test \
+          -object ./build/action_ops_moves_test \
+          -object ./build/misc_moves_test \
           > coverage.lcov
 
         # lcovファイルの内容を確認(デバッグ用)
