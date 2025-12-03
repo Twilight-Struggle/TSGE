@@ -111,7 +111,10 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:action_ops_moves_test>
                 -object $<TARGET_FILE:misc_moves_test>
                 -object $<TARGET_FILE:move_test>
-                -object $<TARGET_FILE:phase_machine_test>
+                -object $<TARGET_FILE:phase_machine_headline_test>
+                -object $<TARGET_FILE:phase_machine_action_round_test>
+                -object $<TARGET_FILE:phase_machine_turn_phase_test>
+                -object $<TARGET_FILE:phase_machine_misc_test>
                 -object $<TARGET_FILE:world_map_test>
                 -object $<TARGET_FILE:basic_event_cards_test>
                 -object $<TARGET_FILE:scoring_cards_test>
@@ -139,7 +142,10 @@ if(ENABLE_COVERAGE)
                 -object $<TARGET_FILE:action_ops_moves_test>
                 -object $<TARGET_FILE:misc_moves_test>
                 -object $<TARGET_FILE:move_test>
-                -object $<TARGET_FILE:phase_machine_test>
+                -object $<TARGET_FILE:phase_machine_headline_test>
+                -object $<TARGET_FILE:phase_machine_action_round_test>
+                -object $<TARGET_FILE:phase_machine_turn_phase_test>
+                -object $<TARGET_FILE:phase_machine_misc_test>
                 -object $<TARGET_FILE:world_map_test>
                 -object $<TARGET_FILE:basic_event_cards_test>
                 -object $<TARGET_FILE:scoring_cards_test>
@@ -154,7 +160,7 @@ if(ENABLE_COVERAGE)
 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with llvm-cov..."
-            DEPENDS board_test board_scoring_test board_mcts_test command_test realignment_moves_test action_ops_moves_test misc_moves_test move_test phase_machine_test world_map_test country_test trackers_test basic_event_cards_test scoring_cards_test special_cards_test special_place_influence_test event_remove_influence_test deck_test
+            DEPENDS board_test board_scoring_test board_mcts_test command_test realignment_moves_test action_ops_moves_test misc_moves_test move_test phase_machine_headline_test phase_machine_action_round_test phase_machine_turn_phase_test phase_machine_misc_test world_map_test country_test trackers_test basic_event_cards_test scoring_cards_test special_cards_test special_place_influence_test event_remove_influence_test deck_test
         )
     endif()
 endif()
@@ -213,7 +219,10 @@ if(ENABLE_TESTING)
     add_test_with_path(action_ops_moves_test tests/actions/legal_moves_generator/action_ops_moves_test.cpp)
     add_test_with_path(misc_moves_test tests/actions/legal_moves_generator/misc_moves_test.cpp)
     add_test_with_path(move_test tests/actions/move_test.cpp)
-    add_test_with_path(phase_machine_test tests/core/phase_machine_test.cpp)
+    add_test_with_path(phase_machine_headline_test tests/core/phase_machine/phase_machine_headline_test.cpp)
+    add_test_with_path(phase_machine_action_round_test tests/core/phase_machine/phase_machine_action_round_test.cpp)
+    add_test_with_path(phase_machine_turn_phase_test tests/core/phase_machine/phase_machine_turn_phase_test.cpp)
+    add_test_with_path(phase_machine_misc_test tests/core/phase_machine/phase_machine_misc_test.cpp)
     add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
     add_test_with_path(country_test tests/game_state/country_test.cpp)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
