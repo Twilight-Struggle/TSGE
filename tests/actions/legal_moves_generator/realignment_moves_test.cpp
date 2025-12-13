@@ -1,5 +1,5 @@
 #include "test_helper.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/game_logic_legal_moves_generator.hpp"
 
 // realignmentRequestLegalMovesのテスト
 class RealignmentRequestLegalMovesTest : public ::testing::Test {
@@ -18,7 +18,7 @@ TEST_F(RealignmentRequestLegalMovesTest, BasicCaseWithOpponentInfluence) {
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
   int remaining_ops = 2;
 
-  auto moves = LegalMovesGenerator::realignmentRequestLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
       board, Side::USSR, CardEnum::DUCK_AND_COVER, history, remaining_ops,
       AdditionalOpsType::NONE);
 
@@ -50,7 +50,7 @@ TEST_F(RealignmentRequestLegalMovesTest, NoOpponentInfluencePassOnly) {
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
   int remaining_ops = 1;
 
-  auto moves = LegalMovesGenerator::realignmentRequestLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
       board, Side::USSR, CardEnum::DUCK_AND_COVER, history, remaining_ops,
       AdditionalOpsType::NONE);
 
@@ -67,7 +67,7 @@ TEST_F(RealignmentRequestLegalMovesTest, CanTargetSameCountryMultipleTimes) {
                                       CountryEnum::WEST_GERMANY};
   int remaining_ops = 1;
 
-  auto moves = LegalMovesGenerator::realignmentRequestLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
       board, Side::USSR, CardEnum::NUCLEAR_TEST_BAN, history, remaining_ops,
       AdditionalOpsType::NONE);
 
@@ -83,7 +83,7 @@ TEST_F(RealignmentRequestLegalMovesTest, LastOpsStillIncludesAllOptions) {
                                       CountryEnum::WEST_GERMANY};
   int remaining_ops = 1;
 
-  auto moves = LegalMovesGenerator::realignmentRequestLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
       board, Side::USSR, CardEnum::DUCK_AND_COVER, history, remaining_ops,
       AdditionalOpsType::NONE);
 
@@ -99,7 +99,7 @@ TEST_F(RealignmentRequestLegalMovesTest, DefconRestrictions) {
   std::vector<CountryEnum> history = {};
   int remaining_ops = 2;
 
-  auto moves = LegalMovesGenerator::realignmentRequestLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
       board, Side::USSR, CardEnum::DUCK_AND_COVER, history, remaining_ops,
       AdditionalOpsType::NONE);
 
@@ -141,7 +141,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, ChinaCardBonusAsiaOnly) {
       CountryEnum::JAPAN, CountryEnum::SOUTH_KOREA, CountryEnum::SOUTH_KOREA,
       CountryEnum::SOUTH_KOREA};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::CHINA_CARD, history,
       AdditionalOpsType::NONE);
 
@@ -175,7 +175,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, VietnamRevoltsBonus) {
   std::vector<CountryEnum> history = {CountryEnum::VIETNAM,
                                       CountryEnum::THAILAND};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::DUCK_AND_COVER, history,
       AdditionalOpsType::NONE);
 
@@ -192,7 +192,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, RegionConditionNotSatisfied) {
   std::vector<CountryEnum> history = {CountryEnum::JAPAN,
                                       CountryEnum::WEST_GERMANY};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::CHINA_CARD, history,
       AdditionalOpsType::NONE);
 
@@ -206,7 +206,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, NoTargetCountries) {
 
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::CHINA_CARD, history,
       AdditionalOpsType::NONE);
 
@@ -220,7 +220,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, AlreadyUsedChinaCardBonus) {
 
   std::vector<CountryEnum> history = {CountryEnum::JAPAN};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::CHINA_CARD, history,
       AdditionalOpsType::CHINA_CARD);
 
@@ -235,7 +235,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, AlreadyUsedVietnamRevoltsBonus) {
   std::vector<CountryEnum> history = {CountryEnum::VIETNAM,
                                       CountryEnum::THAILAND};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::DUCK_AND_COVER, history,
       AdditionalOpsType::VIETNAM_REVOLTS);
 
@@ -249,7 +249,7 @@ TEST_F(AdditionalOpsRealignmentLegalMovesTest, BothBonusesAlreadyUsed) {
 
   std::vector<CountryEnum> history = {CountryEnum::THAILAND};
 
-  auto moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+  auto moves = GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
       board, Side::USSR, CardEnum::CHINA_CARD, history,
       AdditionalOpsType::BOTH);
 
@@ -273,8 +273,8 @@ TEST_F(ActionRealignmentLegalMovesTest, BasicCaseStandardHand) {
   TestHelper::addCardsToHand(board, Side::USSR,
                              {CardEnum::DUCK_AND_COVER, CardEnum::FIDEL});
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // 手札2枚 × 相手影響力4か国 = 8個
   EXPECT_EQ(moves.size(), 8);
@@ -297,8 +297,8 @@ TEST_F(ActionRealignmentLegalMovesTest, EmptyHand) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {});
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // 手札がないため、結果は空
   EXPECT_EQ(moves.size(), 0);
@@ -309,8 +309,8 @@ TEST_F(ActionRealignmentLegalMovesTest, NoOpponentInfluence) {
   TestHelper::clearAllOpponentInfluence(board, Side::USSR);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // 相手影響力がないため、結果は空
   EXPECT_EQ(moves.size(), 0);
@@ -321,8 +321,8 @@ TEST_F(ActionRealignmentLegalMovesTest, ScoringCardOpsZero) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUMMY});  // Ops0
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // TODO: 仕様では除外されるべき
   EXPECT_EQ(moves.size(), 0);
@@ -334,8 +334,8 @@ TEST_F(ActionRealignmentLegalMovesTest, DefconRegionRestrictions) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(3);  // ヨーロッパ、アジア制限
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // TODO: 仕様では日本と西ドイツが除外されるべき
   EXPECT_EQ(moves.size(), 2);
@@ -349,8 +349,8 @@ TEST_F(ActionRealignmentLegalMovesTest, MultipleCardsOfSameOps) {
       {CardEnum::DUCK_AND_COVER, CardEnum::DUCK_AND_COVER,
        CardEnum::DUCK_AND_COVER});
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // 同じOps値のカード3枚から独立したMoveが生成される
   // 3枚 × 4か国 = 12個
@@ -363,13 +363,13 @@ TEST_F(ActionRealignmentLegalMovesTest, OpsValueDoesNotAffectMoveCount) {
 
   // 1 Opsカードと4 Opsカードで同じ数のMoveが生成される
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});  // 2 Ops
-  auto moves2ops =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves2ops = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   TestHelper::addCardsToHand(board, Side::USSR,
                              {CardEnum::NUCLEAR_TEST_BAN});  // 4 Ops
-  auto moves4ops =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves4ops = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // 両方とも相手影響力がある国数と同じ数のMoveを生成
   EXPECT_EQ(moves2ops.size(), 4);
@@ -381,8 +381,8 @@ TEST_F(ActionRealignmentLegalMovesTest, ChinaCardAddsLegalMovesWhenFaceUp) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
 
-  auto moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(
+      board, Side::USSR);
 
   // 手札1枚 + 中国カードで 2 枚分のムーブが生成される
   EXPECT_EQ(moves.size(), 8);
@@ -397,10 +397,12 @@ TEST_F(ActionRealignmentLegalMovesTest, SingleCardHelperMatchesGeneral) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
 
-  auto helper_moves = LegalMovesGenerator::actionRealignmentLegalMovesForCard(
-      board, Side::USSR, CardEnum::FIDEL);
+  auto helper_moves =
+      GameLogicLegalMovesGenerator::actionRealignmentLegalMovesForCard(
+          board, Side::USSR, CardEnum::FIDEL);
   auto general_moves =
-      LegalMovesGenerator::actionRealignmentLegalMoves(board, Side::USSR);
+      GameLogicLegalMovesGenerator::actionRealignmentLegalMoves(board,
+                                                                Side::USSR);
 
   ASSERT_EQ(helper_moves.size(), general_moves.size());
   EXPECT_FALSE(helper_moves.empty());

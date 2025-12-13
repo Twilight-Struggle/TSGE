@@ -41,7 +41,8 @@ add_library(ts_core
     src/core/phase_machine.cpp
     src/actions/command.cpp
     src/actions/move.cpp
-    src/actions/legal_moves_generator.cpp
+    src/actions/game_logic_legal_moves_generator.cpp
+    src/actions/card_effect_legal_move_generator.cpp
     src/game_state/world_map.cpp
     src/game_state/world_map_constants.cpp
     src/game_state/cards.cpp

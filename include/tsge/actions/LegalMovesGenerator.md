@@ -1,6 +1,6 @@
-# LegalMovesGenerator 概要
+# GameLogicLegalMovesGenerator 概要
 
-`LegalMovesGenerator`は現在の`Board`と`Side`から選択可能な`Move`を列挙する静的ユーティリティ。返却された`Move`は`Move::toCommand()`で`Command`列へ変換され、`PhaseMachine`による適用順序を決定する。
+`GameLogicLegalMovesGenerator`は現在の`Board`と`Side`から選択可能な`Move`を列挙する静的ユーティリティ。返却された`Move`は`Move::toCommand()`で`Command`列へ変換され、`PhaseMachine`による適用順序を決定する。
 
 ## 前提条件
 - 影響力配置候補は`WorldMap::placeableCountries(side)`で判定（自勢力影響力または隣接国保持）。
@@ -19,7 +19,7 @@
 - `actionCoupLegalMoves` → `ActionCoupMove`
   - 全合法国×Ops>0カード。`ActionCoupCommand`が連鎖でDEFCON変更等を生成。
 - `actionLegalMovesForCard` → `ActionPlaceInfluenceMove` / `ActionRealigmentMove` / `ActionCoupMove`
-  - 指定カードのOpsを用いる通常アクション一式を連結して返す。イベント後の追加Ops選択など、`Move`合成責務を`LegalMovesGenerator`へ集約するためのユーティリティ。
+  - 指定カードのOpsを用いる通常アクション一式を連結して返す。イベント後の追加Ops選択など、`Move`合成責務を`GameLogicLegalMovesGenerator`へ集約するためのユーティリティ。
 - `actionSpaceRaceLegalMoves` → `ActionSpaceRaceMove`
   - `SpaceTrack::canSpace`を満たすカードのみ。Moveは単一の`ActionSpaceRaceCommand`を返す。
 - `actionEventLegalMoves` → `ActionEventMove`
@@ -40,3 +40,12 @@
 - `computeOpsVariants()`へのボーナスOps追加とキャッシュ共有。
 - ヘッドライン候補からUN Interventionを除外するロジック。
 - カード側`canEvent`の条件判定をドキュメントと同期させる。
+
+## CardEffectLegalMoveGenerator 概要
+
+カードイベント固有の合法手は`CardEffectLegalMoveGenerator`へ移譲する。
+
+- `CardSpecialPlaceInfluenceConfig`でカード固有の配置制約を宣言的に記述し、DFSで全候補を列挙。
+- `generateRemoveInfluenceMoves`/`generateSelectCountriesRemoveInfluenceMoves`など、除去系ロジックを共有ヘルパーとして提供。
+- `enumerateRemoveInfluencePatterns`はMove生成を伴わずパターンだけを返し、カード固有Move（例: `DeStalinizationRemoveMove`）へ柔軟に再利用可能。
+- `registerGenerator`と`generate`でカード単位のラムダを登録。単独カードの特殊処理（De-Stalinizationなど）はラムダにカプセル化し、将来カード追加時の衝突を防ぐ。

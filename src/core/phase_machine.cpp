@@ -5,7 +5,7 @@
 #include <variant>
 
 #include "tsge/actions/command.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/game_logic_legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
 
 //===----------------------------------------------------------------------===//
@@ -121,7 +121,7 @@ MaybeStepOutput handleActionRound(Board& board, StateStack& states, Side side,
   board.setCurrentArPlayer(side);
   states.emplace_back(completion_state);
 
-  auto legal_moves = LegalMovesGenerator::arLegalMoves(board, side);
+  auto legal_moves = GameLogicLegalMovesGenerator::arLegalMoves(board, side);
   if (legal_moves.empty()) {
     return std::nullopt;
   }
@@ -135,7 +135,7 @@ MaybeStepOutput handleExtraActionRound(Board& board, StateStack& states,
   states.emplace_back(completion_state);
 
   auto legal_moves =
-      LegalMovesGenerator::extraActionRoundLegalMoves(board, side);
+      GameLogicLegalMovesGenerator::extraActionRoundLegalMoves(board, side);
   if (legal_moves.empty()) {
     return std::nullopt;
   }
@@ -330,7 +330,7 @@ MaybeStepOutput handleState(Board& board, StateStack& states, StateType state) {
         }
         states.emplace_back(std::make_shared<RequestCommand>(
             side, [side](const Board& next_board) {
-              return LegalMovesGenerator::spaceTrackDiscardLegalMoves(
+              return GameLogicLegalMovesGenerator::spaceTrackDiscardLegalMoves(
                   next_board, side);
             }));
       };
@@ -364,11 +364,13 @@ MaybeStepOutput handleState(Board& board, StateStack& states, StateType state) {
       return std::nullopt;
     case StateType::HEADLINE_CARD_SELECT_USSR:
       return makeInputResult(
-          LegalMovesGenerator::headlineCardSelectLegalMoves(board, Side::USSR),
+          GameLogicLegalMovesGenerator::headlineCardSelectLegalMoves(
+              board, Side::USSR),
           Side::USSR);
     case StateType::HEADLINE_CARD_SELECT_USA:
       return makeInputResult(
-          LegalMovesGenerator::headlineCardSelectLegalMoves(board, Side::USA),
+          GameLogicLegalMovesGenerator::headlineCardSelectLegalMoves(board,
+                                                                     Side::USA),
           Side::USA);
     case StateType::HEADLINE_PROCESS_EVENTS:
       return handleHeadlineProcess(board, states);
