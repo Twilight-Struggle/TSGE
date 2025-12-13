@@ -117,7 +117,7 @@ std::vector<CommandPtr> MyCard::event(Side side, const Board& board) const {
         config.excludeOpponentControlled = true;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
+        return CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
             board, side, card_enum, config);
       }));
   return commands;

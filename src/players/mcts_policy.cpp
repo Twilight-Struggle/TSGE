@@ -4,7 +4,6 @@
 #include <limits>
 #include <numeric>
 
-#include "tsge/actions/legal_moves_generator.hpp"
 #include "tsge/core/phase_machine.hpp"
 
 namespace mcts {

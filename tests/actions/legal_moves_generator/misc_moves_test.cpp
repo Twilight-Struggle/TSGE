@@ -1,5 +1,5 @@
 #include "test_helper.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/game_logic_legal_moves_generator.hpp"
 
 class ActionLegalMovesForCardTest : public ::testing::Test {
  protected:
@@ -13,14 +13,16 @@ TEST_F(ActionLegalMovesForCardTest, AggregatesPlaceRealignCoupMoves) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(5);
 
-  auto place_moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
-      board, Side::USSR, CardEnum::DUCK_AND_COVER);
-  auto realign_moves = LegalMovesGenerator::actionRealignmentLegalMovesForCard(
-      board, Side::USSR, CardEnum::DUCK_AND_COVER);
-  auto coup_moves = LegalMovesGenerator::actionCoupLegalMovesForCard(
+  auto place_moves =
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+          board, Side::USSR, CardEnum::DUCK_AND_COVER);
+  auto realign_moves =
+      GameLogicLegalMovesGenerator::actionRealignmentLegalMovesForCard(
+          board, Side::USSR, CardEnum::DUCK_AND_COVER);
+  auto coup_moves = GameLogicLegalMovesGenerator::actionCoupLegalMovesForCard(
       board, Side::USSR, CardEnum::DUCK_AND_COVER);
 
-  auto ops_moves = LegalMovesGenerator::actionLegalMovesForCard(
+  auto ops_moves = GameLogicLegalMovesGenerator::actionLegalMovesForCard(
       board, Side::USSR, CardEnum::DUCK_AND_COVER);
 
   const size_t expected_size =
@@ -55,8 +57,8 @@ TEST_F(ExtraActionRoundLegalMovesTest, ProvidesPassWhenNoOtherMoves) {
   ASSERT_FALSE(board.isChinaCardAvailableFor(Side::USSR));
   EXPECT_TRUE(board.getPlayerHand(Side::USSR).empty());
 
-  auto moves =
-      LegalMovesGenerator::extraActionRoundLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::extraActionRoundLegalMoves(
+      board, Side::USSR);
 
   ASSERT_EQ(moves.size(), 1);
   EXPECT_NE(dynamic_cast<PassMove*>(moves.front().get()), nullptr);
@@ -66,8 +68,8 @@ TEST_F(ExtraActionRoundLegalMovesTest, PassIncludedAlongsideOpsMoves) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
 
-  auto moves =
-      LegalMovesGenerator::extraActionRoundLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::extraActionRoundLegalMoves(
+      board, Side::USSR);
 
   ASSERT_GE(moves.size(), 2);
   const auto pass_count =
@@ -90,8 +92,8 @@ TEST_F(SpaceTrackDiscardLegalMovesTest, ListsCardsAndPassMove) {
   TestHelper::addCardsToHand(board, Side::USSR,
                              {CardEnum::FIDEL, CardEnum::DUCK_AND_COVER});
 
-  auto moves =
-      LegalMovesGenerator::spaceTrackDiscardLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::spaceTrackDiscardLegalMoves(
+      board, Side::USSR);
 
   ASSERT_EQ(moves.size(), 3);
   int pass_count = 0;
@@ -120,8 +122,8 @@ TEST_F(SpaceTrackDiscardLegalMovesTest, ListsCardsAndPassMove) {
 TEST_F(SpaceTrackDiscardLegalMovesTest, ReturnsEmptyWhenHandEmpty) {
   board.clearHand(Side::USSR);
 
-  auto moves =
-      LegalMovesGenerator::spaceTrackDiscardLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::spaceTrackDiscardLegalMoves(
+      board, Side::USSR);
 
   EXPECT_TRUE(moves.empty());
 }

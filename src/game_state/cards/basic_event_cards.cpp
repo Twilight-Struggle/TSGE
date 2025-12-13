@@ -3,12 +3,60 @@
 // なぜ: カード実装を分類し、可読性と保守性を向上させるため
 #include "tsge/game_state/cards/basic_event_cards.hpp"
 
+#include <map>
 #include <memory>
 
+#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/actions/command.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
+
+namespace {
+
+std::vector<std::shared_ptr<Move>> buildDeStalinizationRemoveMoves(
+    const Board& board, Side side) {
+  const auto& world_map = board.getWorldMap();
+  bool has_candidate = false;
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+    if (world_map.getCountry(country_enum).getInfluence(Side::USSR) > 0) {
+      has_candidate = true;
+      break;
+    }
+  }
+
+  if (!has_candidate) {
+    return {};
+  }
+
+  std::vector<std::shared_ptr<Move>> results;
+  const CardEnum card_enum = CardEnum::DE_STALINIZATION;
+  results.emplace_back(std::make_shared<DeStalinizationRemoveMove>(
+      card_enum, side, std::map<CountryEnum, int>{}));
+
+  for (int total_remove = 1; total_remove <= 4; ++total_remove) {
+    auto patterns =
+        CardEffectLegalMoveGenerator::enumerateRemoveInfluencePatterns(
+            board, Side::USSR, total_remove, /*maxPerCountry=*/0, std::nullopt,
+            std::nullopt, RemovalSaturationStrategy::kRequireExact);
+    for (const auto& pattern : patterns) {
+      results.emplace_back(std::make_shared<DeStalinizationRemoveMove>(
+          card_enum, side, pattern));
+    }
+  }
+
+  return results;
+}
+
+}  // namespace
+
+void registerDeStalinizationCardEffectGenerator() {
+  CardEffectLegalMoveGenerator::registerGenerator(
+      CardEnum::DE_STALINIZATION, [](const Board& board, Side side) {
+        return buildDeStalinizationRemoveMoves(board, side);
+      });
+}
 
 std::vector<CommandPtr> DuckAndCover::event(Side side,
                                             const Board& /*board*/) const {
@@ -84,8 +132,9 @@ std::vector<CommandPtr> Comecon::event(Side side,
         config.excludeOpponentControlled = true;  // 非US支配国のみ
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -109,8 +158,9 @@ std::vector<CommandPtr> Decolonization::event(Side side,
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -124,11 +174,9 @@ std::vector<CommandPtr> DeStainization::event(Side side,
   std::vector<CommandPtr> commands;
   // De-Stalinization: USSR影響力を1-4除去し、除去した数だけ配置
   commands.emplace_back(std::make_shared<RequestCommand>(
-      Side::USSR,
-      [card_enum =
-           getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
-        return LegalMovesGenerator::generateDeStalinizationRemoveMoves(
-            board, card_enum, Side::USSR);
+      Side::USSR, [](const Board& board) -> std::vector<std::shared_ptr<Move>> {
+        return CardEffectLegalMoveGenerator::generate(
+            CardEnum::DE_STALINIZATION, board, Side::USSR);
       }));
   return commands;
 }
@@ -152,8 +200,9 @@ std::vector<CommandPtr> ColonialRearGuards::event(
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -176,8 +225,9 @@ std::vector<CommandPtr> PuppetGovernments::event(Side side,
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = true;  // 影響力のない国のみ
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -201,8 +251,9 @@ std::vector<CommandPtr> OASFounded::event(Side side,
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -225,8 +276,9 @@ std::vector<CommandPtr> LiberationTheology::event(
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -257,8 +309,8 @@ std::vector<CommandPtr> WarsawPactFormed::event(Side side,
             east_europe_countries.push_back(country_enum);
           }
         }
-        auto remove_moves =
-            LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+        auto remove_moves = CardEffectLegalMoveGenerator::
+            generateSelectCountriesRemoveAllInfluenceMoves(
                 board, card_enum, Side::USSR, Side::USA, east_europe_countries,
                 4);
         moves.insert(moves.end(), std::make_move_iterator(remove_moves.begin()),
@@ -272,9 +324,9 @@ std::vector<CommandPtr> WarsawPactFormed::event(Side side,
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        auto place_moves =
-            LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-                board, side, card_enum, config);
+        auto place_moves = CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
         moves.insert(moves.end(), std::make_move_iterator(place_moves.begin()),
                      std::make_move_iterator(place_moves.end()));
 
@@ -301,8 +353,9 @@ std::vector<CommandPtr> MarshallPlan::event(Side side,
         config.excludeOpponentControlled = true;  // 非USSR支配国のみ
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -326,8 +379,9 @@ std::vector<CommandPtr> UssuriRiverSkirmish::event(
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -351,8 +405,9 @@ std::vector<CommandPtr> TheReformer::event(Side side,
         config.excludeOpponentControlled = false;
         config.onlyEmptyCountries = false;
 
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, side, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, side, card_enum,
+                                                    config);
       }));
   return commands;
 }
@@ -514,7 +569,7 @@ std::vector<CommandPtr> SocialistGovernments::event(
       Side::USSR,
       [card_enum =
            getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
-        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+        return CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
             board, card_enum, Side::USSR, Side::USA, 3, 2,
             std::vector<Region>{Region::WEST_EUROPE}, std::nullopt);
       }));
@@ -536,7 +591,7 @@ std::vector<CommandPtr> TheVoiceOfAmerica::event(Side side,
         std::vector<Region> non_europe_regions = {
             Region::ASIA, Region::MIDDLE_EAST, Region::AFRICA,
             Region::CENTRAL_AMERICA, Region::SOUTH_AMERICA};
-        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+        return CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
             board, card_enum, Side::USA, Side::USSR, 4, 2, non_europe_regions,
             std::nullopt);
       }));
@@ -558,7 +613,7 @@ std::vector<CommandPtr> MarineBarracksBombing::event(
       Side::USSR,
       [card_enum =
            getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
-        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+        return CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
             board, card_enum, Side::USSR, Side::USA, 2, 2,
             std::vector<Region>{Region::MIDDLE_EAST}, std::nullopt);
       }));
@@ -579,7 +634,7 @@ std::vector<CommandPtr> SuezCrisis::event(Side side,
         std::vector<CountryEnum> candidates = {CountryEnum::FRANCE,
                                                CountryEnum::UNITED_KINGDOM,
                                                CountryEnum::ISRAEL};
-        return LegalMovesGenerator::generateRemoveInfluenceMoves(
+        return CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
             board, card_enum, Side::USSR, Side::USA, 4, 2, std::nullopt,
             candidates);
       }));
@@ -599,9 +654,10 @@ std::vector<CommandPtr> EastEuropeanUnrest::event(Side side,
       Side::USA,
       [card_enum = getId(), remove_amount](
           const Board& board) -> std::vector<std::shared_ptr<Move>> {
-        return LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
-            board, card_enum, Side::USA, Side::USSR, Region::EAST_EUROPE, 3,
-            remove_amount);
+        return CardEffectLegalMoveGenerator::
+            generateSelectCountriesRemoveInfluenceMoves(
+                board, card_enum, Side::USA, Side::USSR, Region::EAST_EUROPE, 3,
+                remove_amount);
       }));
   return commands;
 }
@@ -620,8 +676,10 @@ std::vector<CommandPtr> PershingIIDeployed::event(
       Side::USSR,
       [card_enum =
            getId()](const Board& board) -> std::vector<std::shared_ptr<Move>> {
-        return LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
-            board, card_enum, Side::USSR, Side::USA, Region::WEST_EUROPE, 3, 1);
+        return CardEffectLegalMoveGenerator::
+            generateSelectCountriesRemoveInfluenceMoves(
+                board, card_enum, Side::USSR, Side::USA, Region::WEST_EUROPE, 3,
+                1);
       }));
   return commands;
 }
@@ -641,7 +699,7 @@ std::vector<CommandPtr> MuslimRevolution::event(Side side,
             CountryEnum::SUDAN, CountryEnum::IRAN,  CountryEnum::IRAQ,
             CountryEnum::EGYPT, CountryEnum::LIBYA, CountryEnum::SAUDI_ARABIA,
             CountryEnum::SYRIA, CountryEnum::JORDAN};
-        return LegalMovesGenerator::
+        return CardEffectLegalMoveGenerator::
             generateSelectCountriesRemoveAllInfluenceMoves(
                 board, card_enum, Side::USSR, Side::USA, candidates, 2);
       }));

@@ -3,8 +3,9 @@
 #include <memory>
 #include <utility>
 
+#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/actions/command.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/game_logic_legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/game_enums.hpp"
 
@@ -99,19 +100,20 @@ std::vector<CommandPtr> ActionRealigmentMove::toCommand(
         [side = getSide(), card_enum = getCard(),
          history = std::move(initial_history), ops = remaining_ops](
             const Board& board) -> std::vector<std::shared_ptr<Move>> {
-          return LegalMovesGenerator::realignmentRequestLegalMoves(
+          return GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, AdditionalOpsType::NONE);
         }));
   } else {
     // すべてのOpsを使い切った場合、追加Opsの処理
-    // 実際の判定はLegalMovesGeneratorで行う
+    // 実際の判定はGameLogicLegalMovesGeneratorで行う
     commands.emplace_back(std::make_shared<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(initial_history)](
             const Board& board) -> std::vector<std::shared_ptr<Move>> {
-          return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-              board, side, card_enum, history, AdditionalOpsType::NONE);
+          return GameLogicLegalMovesGenerator::
+              additionalOpsRealignmentLegalMoves(
+                  board, side, card_enum, history, AdditionalOpsType::NONE);
         }));
   }
 
@@ -147,20 +149,21 @@ std::vector<CommandPtr> RealignmentRequestMove::toCommand(
          history = std::move(updated_history), ops = new_remaining_ops,
          applied_ops = appliedAdditionalOps_](
             const Board& board) -> std::vector<std::shared_ptr<Move>> {
-          return LegalMovesGenerator::realignmentRequestLegalMoves(
+          return GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
               board, side, card_enum, history, ops, applied_ops);
         }));
   } else {
     // すべてのOpsを使い切った場合、追加Opsの処理
-    // 実際の判定はLegalMovesGeneratorで行う
+    // 実際の判定はGameLogicLegalMovesGeneratorで行う
     commands.emplace_back(std::make_shared<RequestCommand>(
         getSide(),
         [side = getSide(), card_enum = getCard(),
          history = std::move(updated_history),
          applied_ops = appliedAdditionalOps_](
             const Board& board) -> std::vector<std::shared_ptr<Move>> {
-          return LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-              board, side, card_enum, history, applied_ops);
+          return GameLogicLegalMovesGenerator::
+              additionalOpsRealignmentLegalMoves(board, side, card_enum,
+                                                 history, applied_ops);
         }));
   }
 
@@ -192,8 +195,8 @@ std::vector<CommandPtr> ActionEventMove::toCommand(
         player_side,
         [card_enum = getCard(), side = player_side](
             const Board& board) -> std::vector<std::shared_ptr<Move>> {
-          return LegalMovesGenerator::actionLegalMovesForCard(board, side,
-                                                              card_enum);
+          return GameLogicLegalMovesGenerator::actionLegalMovesForCard(
+              board, side, card_enum);
         }));
   }
 
@@ -255,8 +258,9 @@ std::vector<CommandPtr> DeStalinizationRemoveMove::toCommand(
 
   commands.emplace_back(std::make_shared<RequestCommand>(
       Side::USSR, [card_enum = getCard(), config](const Board& board) {
-        return LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-            board, Side::USSR, card_enum, config);
+        return CardEffectLegalMoveGenerator::
+            generateCardSpecificPlaceInfluenceMoves(board, Side::USSR,
+                                                    card_enum, config);
       }));
 
   return commands;

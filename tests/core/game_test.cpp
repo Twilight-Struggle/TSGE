@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
@@ -113,4 +114,32 @@ TEST_F(GameTest, IllegalMoveRejected) {
   // このテストは現在のアーキテクチャでは実装が困難
   // PhaseMachineが適切に初期化されていないとゲームが進行しない
   // TODO: より適切なテスト環境を構築後に実装
+}
+
+TEST_F(GameTest, ConstructorInitializesCardEffectGenerators) {
+  CardEffectLegalMoveGenerator::resetBuiltinGeneratorsForTest();
+
+  Player<TestPolicy> player1;
+  Player<TestPolicy> player2;
+  Game game(std::move(player1), std::move(player2), cardpool_);
+
+  auto& board = game.getBoard();
+  auto& poland = board.getWorldMap().getCountry(CountryEnum::POLAND);
+  poland.clearInfluence(Side::USSR);
+  poland.addInfluence(Side::USSR, 2);
+
+  auto moves = CardEffectLegalMoveGenerator::generate(
+      CardEnum::DE_STALINIZATION, board, Side::USSR);
+
+  bool has_de_stalinization_move = false;
+  for (const auto& move : moves) {
+    if (dynamic_cast<DeStalinizationRemoveMove*>(move.get()) != nullptr) {
+      has_de_stalinization_move = true;
+      break;
+    }
+  }
+
+  EXPECT_TRUE(has_de_stalinization_move);
+
+  CardEffectLegalMoveGenerator::resetBuiltinGeneratorsForTest();
 }

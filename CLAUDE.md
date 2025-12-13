@@ -68,11 +68,15 @@ ctest --test-dir build --rerun-failed --output-on-failure
 5. **PhaseMachine** (`phase_machine.hpp`): ゲームフロー制御
    - MoveをCommandに変換して適用
    - ゲームフェーズと遷移を管理(Board変更する可能性)
-   - LegalMovesGeneratorから合法手を要求
+   - GameLogicLegalMovesGeneratorから合法手を要求
 
-6. **LegalMovesGenerator** (`legal_moves_generator.hpp`): 合法手の検証
-   - 現在のゲーム状態での全合法手を生成
-   - 現在のフェーズに基づくコンテキスト認識
+6. **GameLogicLegalMovesGenerator** (`game_logic_legal_moves_generator.hpp`): AR/Headline等の基本アクションを列挙
+   - 現在のフェーズとOpsコンテキストに応じたムーブ群を生成
+   - ボード状態とカードOpsを組み合わせた共通ルーティンを保持
+
+7. **CardEffectLegalMoveGenerator** (`card_effect_legal_move_generator.hpp`): カード固有イベント用の合法手を提供
+   - 影響力配置/除去など複数カードで共有するヘルパーを集約
+   - カードごとのレジストリエントリを通じて特化ムーブを登録・生成
 
 ### サポートコンポーネント
 
@@ -184,6 +188,8 @@ tests/              # テストファイル（機能別にサブディレクト�
   - 将来的に`activeEvents_`メンバでCIA Createdなどの効果による可視性変更に対応予定
 
 ## 将来計画(AIは読まなくて良い)
+- LegalMoves, Move, Command整理
+- tests/game_state/basic_event_cards_test.cpp整理
 
 - メモリアクセスパターンの最適化→キャッシュの関係から同じタイミングでアクセスされやすいデータは近くの方がいい。以下例。
 ```cpp

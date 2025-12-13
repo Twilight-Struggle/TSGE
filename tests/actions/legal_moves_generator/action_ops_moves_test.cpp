@@ -1,5 +1,5 @@
 #include "test_helper.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/game_logic_legal_moves_generator.hpp"
 
 // actionPlaceInfluenceLegalMovesのテスト
 class ActionPlaceInfluenceLegalMovesTest : public ::testing::Test {
@@ -25,8 +25,8 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, SimpleCase2OpsOneCountry) {
 
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});  // 2 Ops
 
-  auto moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(
+      board, Side::USSR);
 
   // 2 Opsで東ドイツに配置可能なパターン：
   // 全ての配置可能国が1 Opsコストのため、多数のパターンが生成される
@@ -45,8 +45,8 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, EmptyHand) {
   auto placeable = board.getWorldMap().placeableCountries(Side::USSR);
   ASSERT_FALSE(placeable.empty());
 
-  auto moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(
+      board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
 }
@@ -61,8 +61,8 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, NoPlaceableCountries) {
 
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
 
-  auto moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(
+      board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
 }
@@ -87,8 +87,8 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, MixedCostCountries) {
   TestHelper::addCardsToHand(board, Side::USSR,
                              {CardEnum::DUCK_AND_COVER});  // 3 Ops
 
-  auto moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(
+      board, Side::USSR);
 
   // 3 Opsで可能な配置パターンが生成される
   // 西ドイツ（2 Opsコスト）と他の国（1 Opsコスト）の組み合わせ
@@ -110,18 +110,20 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, MultipleCardsWithSameOps) {
   TestHelper::addCardsToHand(board, Side::USSR,
                              {CardEnum::FIDEL, CardEnum::FIDEL});  // 両方2 Ops
 
-  auto moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(
+      board, Side::USSR);
 
   // 同じOps値のカード2枚分のMoveが生成される
   auto placeable = board.getWorldMap().placeableCountries(Side::USSR);
   // 2 Opsの配置パターン数を2倍
   auto single_card_moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(board,
+                                                                   Side::USSR);
   board.clearHand(Side::USSR);
   board.addCardToHand(Side::USSR, CardEnum::FIDEL);
   auto one_card_moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(board,
+                                                                   Side::USSR);
   EXPECT_EQ(moves.size(), one_card_moves.size() * 2);
 
   // 同じ配置パターンが複数カード分存在することを確認
@@ -152,10 +154,11 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardProvidesAsiaBonus) {
   const auto& china_card =
       board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)];
 
-  auto china_moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
-      board, Side::USSR, CardEnum::CHINA_CARD);
+  auto china_moves =
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+          board, Side::USSR, CardEnum::CHINA_CARD);
   auto neutral_moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
           board, Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
 
   ASSERT_FALSE(china_moves.empty());
@@ -250,8 +253,9 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ChinaCardBaseOpsNeedsNonAsia) {
   const auto& china_card =
       board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)];
 
-  auto moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
-      board, Side::USSR, CardEnum::CHINA_CARD);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+          board, Side::USSR, CardEnum::CHINA_CARD);
 
   ASSERT_FALSE(moves.empty());
   EXPECT_EQ(moves.front()->getSide(), Side::USSR);
@@ -353,8 +357,9 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest,
   const auto& china_card =
       board.getCardpool()[static_cast<size_t>(CardEnum::CHINA_CARD)];
 
-  auto moves = LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
-      board, Side::USSR, CardEnum::CHINA_CARD);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+          board, Side::USSR, CardEnum::CHINA_CARD);
 
   bool found_non_asia_base = false;
   bool found_asia_without_se_bonus = false;
@@ -448,8 +453,8 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, ScoringCardNoMoves) {
 
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUMMY});  // Ops0
 
-  auto moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(
+      board, Side::USSR);
 
   // CLAUDE.mdの仕様：Ops0では合法手なし（実装でOps0カードは除外される）
   EXPECT_EQ(moves.size(), 0);
@@ -468,10 +473,11 @@ TEST_F(ActionPlaceInfluenceLegalMovesTest, SingleCardHelperMatchesGeneral) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});
 
   auto helper_moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMovesForCard(
           board, Side::USSR, CardEnum::FIDEL);
   auto general_moves =
-      LegalMovesGenerator::actionPlaceInfluenceLegalMoves(board, Side::USSR);
+      GameLogicLegalMovesGenerator::actionPlaceInfluenceLegalMoves(board,
+                                                                   Side::USSR);
 
   ASSERT_EQ(helper_moves.size(), general_moves.size());
   EXPECT_FALSE(helper_moves.empty());
@@ -498,7 +504,8 @@ TEST_F(ActionCoupLegalMovesTest, BasicCaseDefcon5) {
                              {CardEnum::DUCK_AND_COVER});  // 3 Ops
   board.getDefconTrack().setDefcon(5);
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // 相手影響力がある国数分のMoveが生成される
   // setupBoardWithInfluenceで日本、西ドイツ、イラン、アンゴラにUSA影響力設定
@@ -516,7 +523,8 @@ TEST_F(ActionCoupLegalMovesTest, Defcon4RestrictionEurope) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(4);
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // 西ドイツ（ヨーロッパ）が除外される
   // 日本、イラン、アンゴラの3か国のみ
@@ -540,7 +548,8 @@ TEST_F(ActionCoupLegalMovesTest, Defcon3RestrictionEuropeAsia) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(3);
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // 西ドイツ（ヨーロッパ）と日本（アジア）が除外される
   // イラン、アンゴラの2か国のみ
@@ -553,7 +562,8 @@ TEST_F(ActionCoupLegalMovesTest, Defcon2RestrictionEuropeAsiaMiddleEast) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(2);
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // 西ドイツ（ヨーロッパ）、日本（アジア）、イラン（中東）が除外される
   // アンゴラ（アフリカ）の1か国のみ
@@ -565,7 +575,8 @@ TEST_F(ActionCoupLegalMovesTest, EmptyHand) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {});
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
 }
@@ -575,7 +586,8 @@ TEST_F(ActionCoupLegalMovesTest, ChinaCardAddsMovesWhenFaceUp) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {});
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 4);
   const bool has_china_card_move =
@@ -590,7 +602,8 @@ TEST_F(ActionCoupLegalMovesTest, NoOpponentInfluence) {
   TestHelper::clearAllOpponentInfluence(board, Side::USSR);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
 }
@@ -600,7 +613,8 @@ TEST_F(ActionCoupLegalMovesTest, ScoringCardOpsZero) {
   TestHelper::setupBoardWithInfluence(board);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUMMY});  // Ops0
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // CLAUDE.mdの仕様：Ops0では合法手なし
   EXPECT_EQ(moves.size(), 0);
@@ -616,7 +630,8 @@ TEST_F(ActionCoupLegalMovesTest, AllExcludedByDefcon) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(2);  // ヨーロッパ、アジア、中東制限
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // 全ての国がDEFCON制限により除外される
   EXPECT_EQ(moves.size(), 0);
@@ -630,7 +645,8 @@ TEST_F(ActionCoupLegalMovesTest, MultipleCards) {
       {CardEnum::DUCK_AND_COVER, CardEnum::FIDEL, CardEnum::NUCLEAR_TEST_BAN});
   board.getDefconTrack().setDefcon(5);
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // 3枚のカード × 4か国 = 12個のMove
   EXPECT_EQ(moves.size(), 12);
@@ -646,7 +662,8 @@ TEST_F(ActionCoupLegalMovesTest, MixedOpsValues) {
                               CardEnum::DUMMY});           // 0 Ops
   board.getDefconTrack().setDefcon(5);
 
-  auto moves = LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   // Ops0のカード以外の3枚 × 4か国 = 12個のMove
   EXPECT_EQ(moves.size(), 12);
@@ -667,10 +684,10 @@ TEST_F(ActionCoupLegalMovesTest, SingleCardHelperMatchesGeneral) {
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
   board.getDefconTrack().setDefcon(5);
 
-  auto helper_moves = LegalMovesGenerator::actionCoupLegalMovesForCard(
+  auto helper_moves = GameLogicLegalMovesGenerator::actionCoupLegalMovesForCard(
       board, Side::USSR, CardEnum::DUCK_AND_COVER);
   auto general_moves =
-      LegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
+      GameLogicLegalMovesGenerator::actionCoupLegalMoves(board, Side::USSR);
 
   ASSERT_EQ(helper_moves.size(), general_moves.size());
   EXPECT_FALSE(helper_moves.empty());
@@ -698,8 +715,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, BasicCaseInitialStage) {
                              {CardEnum::DUCK_AND_COVER, CardEnum::FIDEL,
                               CardEnum::NUCLEAR_TEST_BAN});  // 3, 2, 4 Ops
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // 2 Ops以上のカードのみ使用可能：DuckAndCover(3), NuclearTestBan(4)
   // Fidel(2)も使用可能
@@ -720,8 +737,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, RequiredOpsChanges) {
                              {CardEnum::FIDEL, CardEnum::DUCK_AND_COVER,
                               CardEnum::NUCLEAR_TEST_BAN});  // 2, 3, 4 Ops
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // 3 Ops以上のカードのみ使用可能：DuckAndCover(3), NuclearTestBan(4)
   // Fidel(2)は不足
@@ -734,8 +751,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, EmptyHand) {
   TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
   TestHelper::addCardsToHand(board, Side::USSR, {});
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
 }
@@ -746,8 +763,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, ChinaCardEnablesSpaceRaceWhenFaceUp) {
   TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
   TestHelper::addCardsToHand(board, Side::USSR, {});
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   ASSERT_EQ(moves.size(), 1);
   EXPECT_EQ(moves.front()->getCard(), CardEnum::CHINA_CARD);
@@ -759,8 +776,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, TrialLimitReached) {
   TestHelper::setSpaceTrackTried(board, Side::USSR, 1);  // 上限到達
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // 試行回数制限により実行不可
   EXPECT_EQ(moves.size(), 0);
@@ -772,8 +789,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, SpaceRaceCompleted) {
   TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::DUCK_AND_COVER});
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // 完了済みのため実行不可
   EXPECT_EQ(moves.size(), 0);
@@ -785,8 +802,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, AllCardsInsufficientOps) {
   TestHelper::setSpaceTrackTried(board, Side::USSR, 0);
   TestHelper::addCardsToHand(board, Side::USSR, {CardEnum::FIDEL});  // 2 Ops
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // 全カードがOps不足
   EXPECT_EQ(moves.size(), 0);
@@ -800,8 +817,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, SpecialCardsOnly) {
   TestHelper::addCardsToHand(board, Side::USSR,
                              {CardEnum::DUMMY});  // スコアリングカード（Ops0）
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // スコアリングカードは使用不可
   EXPECT_EQ(moves.size(), 0);
@@ -816,8 +833,8 @@ TEST_F(ActionSpaceRaceLegalMovesTest, MultipleSameOpsCards) {
       {CardEnum::DUCK_AND_COVER, CardEnum::DUCK_AND_COVER,
        CardEnum::DUCK_AND_COVER});
 
-  auto moves =
-      LegalMovesGenerator::actionSpaceRaceLegalMoves(board, Side::USSR);
+  auto moves = GameLogicLegalMovesGenerator::actionSpaceRaceLegalMoves(
+      board, Side::USSR);
 
   // 同じOps値のカード3枚から独立したMoveが生成される
   EXPECT_EQ(moves.size(), 3);
@@ -838,7 +855,8 @@ TEST_F(ActionEventLegalMovesTest, MixedHandStandard) {
                               CardEnum::FIDEL,               // 2 Ops, 中立
                               CardEnum::NUCLEAR_TEST_BAN});  // 4 Ops, 中立
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
 
   // 全てのイベントカードが実行可能
   EXPECT_EQ(moves.size(), 3);
@@ -856,7 +874,8 @@ TEST_F(ActionEventLegalMovesTest, ScoringCardMandatory) {
       {CardEnum::DUMMY,             // 0 Ops, スコアリングカード
        CardEnum::DUCK_AND_COVER});  // 3 Ops, 通常イベント
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
 
   // スコアリングカードも含まれる
   EXPECT_EQ(moves.size(), 2);
@@ -876,7 +895,8 @@ TEST_F(ActionEventLegalMovesTest, EmptyHand) {
   // エッジケース：手札なし
   TestHelper::addCardsToHand(board, Side::USSR, {});
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
 
   EXPECT_EQ(moves.size(), 0);
 }
@@ -887,7 +907,8 @@ TEST_F(ActionEventLegalMovesTest, AllScoringCards) {
       board, Side::USSR,
       {CardEnum::DUMMY, CardEnum::DUMMY});  // 両方スコアリングカード
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
 
   // スコアリングカード2枚分のEventMove
   EXPECT_EQ(moves.size(), 2);
@@ -900,7 +921,8 @@ TEST_F(ActionEventLegalMovesTest, MixedCardTypes) {
                               CardEnum::DUCK_AND_COVER,  // 通常イベント
                               CardEnum::FIDEL});         // 通常イベント
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board, Side::USSR);
 
   // 全てのカードがイベントとして実行可能
   EXPECT_EQ(moves.size(), 3);
@@ -960,7 +982,8 @@ TEST_F(ActionEventLegalMovesCanEventTest, OwnSideCardWithCanEventTrue) {
   // USSR手札: DUCK_AND_COVER (USSR側、canEvent=true)
   board_.addCardToHand(Side::USSR, CardEnum::DUCK_AND_COVER);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
 
   // 含まれる
   ASSERT_EQ(moves.size(), 1);
@@ -974,7 +997,8 @@ TEST_F(ActionEventLegalMovesCanEventTest, OwnSideCardWithCanEventFalse) {
   // USSR手札: FIDEL (USSR側、canEvent=false)
   board_.addCardToHand(Side::USSR, CardEnum::FIDEL);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
 
   // 含まれない
   EXPECT_EQ(moves.size(), 0);
@@ -984,7 +1008,8 @@ TEST_F(ActionEventLegalMovesCanEventTest, OpponentSideCardWithCanEventTrue) {
   // USSR手札: NUCLEAR_TEST_BAN (USA側、canEvent=true)
   board_.addCardToHand(Side::USSR, CardEnum::NUCLEAR_TEST_BAN);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
 
   // 含まれる
   ASSERT_EQ(moves.size(), 1);
@@ -998,7 +1023,8 @@ TEST_F(ActionEventLegalMovesCanEventTest, OpponentSideCardWithCanEventFalse) {
   // USSR手札: COMECON (USA側、canEvent=false)
   board_.addCardToHand(Side::USSR, CardEnum::COMECON);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
 
   // 含まれる（★重要：canEventがfalseでも敵陣営カードは含まれる）
   ASSERT_EQ(moves.size(), 1);
@@ -1012,7 +1038,8 @@ TEST_F(ActionEventLegalMovesCanEventTest, NeutralCardWithCanEventTrue) {
   // USSR手札: DUMMY (NEUTRAL、canEvent=true)
   board_.addCardToHand(Side::USSR, CardEnum::DUMMY);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
 
   // 含まれる
   ASSERT_EQ(moves.size(), 1);
@@ -1026,7 +1053,8 @@ TEST_F(ActionEventLegalMovesCanEventTest, NeutralCardWithCanEventFalse) {
   // USSR手札: ASIA_SCORING (NEUTRAL、canEvent=false)
   board_.addCardToHand(Side::USSR, CardEnum::ASIA_SCORING);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
 
   // 含まれない
   EXPECT_EQ(moves.size(), 0);
@@ -1037,7 +1065,8 @@ TEST_F(ActionEventLegalMovesCanEventTest,
   // USSR手札: COMECON (USA側、canEvent=false)
   board_.addCardToHand(Side::USSR, CardEnum::COMECON);
 
-  auto moves = LegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
+  auto moves =
+      GameLogicLegalMovesGenerator::actionEventLegalMoves(board_, Side::USSR);
   ASSERT_EQ(moves.size(), 1);
 
   auto* event_move = dynamic_cast<ActionEventMove*>(moves[0].get());

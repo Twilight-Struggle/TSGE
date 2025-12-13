@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
@@ -178,7 +178,7 @@ TEST_F(GenerateRemoveInfluenceMovesTest, SuezCrisisInsufficientInfluence) {
   std::vector<CountryEnum> candidates = {
       CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
 
-  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
       board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
       candidates);
 
@@ -206,7 +206,7 @@ TEST_F(GenerateRemoveInfluenceMovesTest, SuezCrisisSufficientInfluence) {
   std::vector<CountryEnum> candidates = {
       CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
 
-  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
       board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
       candidates);
 
@@ -235,7 +235,7 @@ TEST_F(GenerateRemoveInfluenceMovesTest, SuezCrisisFullInfluence) {
   std::vector<CountryEnum> candidates = {
       CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
 
-  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
       board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
       candidates);
 
@@ -258,7 +258,7 @@ TEST_F(GenerateRemoveInfluenceMovesTest, NoCandidates) {
       CountryEnum::FRANCE, CountryEnum::UNITED_KINGDOM, CountryEnum::ISRAEL};
   // 全ての候補国に影響力なし
 
-  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
       board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 2, std::nullopt,
       candidates);
 
@@ -274,7 +274,7 @@ TEST_F(GenerateRemoveInfluenceMovesTest, ZeroMaxPerCountry) {
 
   std::vector<CountryEnum> candidates = {CountryEnum::UNITED_KINGDOM};
 
-  auto moves = LegalMovesGenerator::generateRemoveInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::generateRemoveInfluenceMoves(
       board, CardEnum::SUEZ_CRISIS, Side::USSR, Side::USA, 4, 0, std::nullopt,
       candidates);
 
@@ -282,12 +282,13 @@ TEST_F(GenerateRemoveInfluenceMovesTest, ZeroMaxPerCountry) {
   ASSERT_EQ(moves.size(), 1);
 }
 
-// generateDeStalinizationRemoveMovesのテスト
+// De-Stalinization固有レジストリのテスト
 class GenerateDeStalinizationRemoveMovesTest : public ::testing::Test {
  protected:
   GenerateDeStalinizationRemoveMovesTest() : board(createTestCardPool()) {}
 
   void SetUp() override {
+    CardEffectLegalMoveGenerator::initializeBuiltinGenerators();
     // 全ての国の影響力をクリア
     TestHelper::clearAllOpponentInfluence(board, Side::USSR);
     TestHelper::clearAllOpponentInfluence(board, Side::USA);
@@ -306,8 +307,8 @@ TEST_F(GenerateDeStalinizationRemoveMovesTest, InsufficientInfluence) {
       .getCountry(CountryEnum::EAST_GERMANY)
       .addInfluence(Side::USSR, 1);
 
-  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
-      board, CardEnum::DE_STALINIZATION, Side::USSR);
+  auto moves = CardEffectLegalMoveGenerator::generate(
+      CardEnum::DE_STALINIZATION, board, Side::USSR);
 
   // パス(0除去) + 1除去パターン + 2除去パターン + 3除去パターン
   // 4除去はスキップされる
@@ -329,8 +330,8 @@ TEST_F(GenerateDeStalinizationRemoveMovesTest, SufficientInfluence) {
       .getCountry(CountryEnum::EAST_GERMANY)
       .addInfluence(Side::USSR, 2);
 
-  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
-      board, CardEnum::DE_STALINIZATION, Side::USSR);
+  auto moves = CardEffectLegalMoveGenerator::generate(
+      CardEnum::DE_STALINIZATION, board, Side::USSR);
 
   // パス(0除去) + 1~4除去の全パターンが生成される
   EXPECT_GE(moves.size(), 5);  // パス + 各除去数のパターン
@@ -338,8 +339,8 @@ TEST_F(GenerateDeStalinizationRemoveMovesTest, SufficientInfluence) {
 
 TEST_F(GenerateDeStalinizationRemoveMovesTest, NoCandidates) {
   // エッジケース: USSR影響力が0
-  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
-      board, CardEnum::DE_STALINIZATION, Side::USSR);
+  auto moves = CardEffectLegalMoveGenerator::generate(
+      CardEnum::DE_STALINIZATION, board, Side::USSR);
 
   // 候補国なしで空が返る
   EXPECT_EQ(moves.size(), 0);
@@ -351,8 +352,8 @@ TEST_F(GenerateDeStalinizationRemoveMovesTest, SingleInfluence) {
       .getCountry(CountryEnum::POLAND)
       .addInfluence(Side::USSR, 1);
 
-  auto moves = LegalMovesGenerator::generateDeStalinizationRemoveMoves(
-      board, CardEnum::DE_STALINIZATION, Side::USSR);
+  auto moves = CardEffectLegalMoveGenerator::generate(
+      CardEnum::DE_STALINIZATION, board, Side::USSR);
 
   // パス(0除去) + 1除去パターンのみ
   // 2, 3, 4除去はスキップされる
@@ -388,9 +389,10 @@ TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest, ThreeCountriesSelect3) {
       .getCountry(CountryEnum::EAST_GERMANY)
       .addInfluence(Side::USSR, 2);
 
-  auto moves = LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
-      board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
-      Region::EAST_EUROPE, 3, 1);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateSelectCountriesRemoveInfluenceMoves(
+          board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
+          Region::EAST_EUROPE, 3, 1);
 
   // 4C3 = 4パターン
   EXPECT_EQ(moves.size(), 4);
@@ -411,9 +413,10 @@ TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest,
       .getCountry(CountryEnum::HUNGARY)
       .addInfluence(Side::USSR, 2);
 
-  auto moves = LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
-      board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
-      Region::EAST_EUROPE, 3, 1);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateSelectCountriesRemoveInfluenceMoves(
+          board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
+          Region::EAST_EUROPE, 3, 1);
 
   // 2カ国しか影響力がないので、2カ国全てを選択するパターンのみ
   EXPECT_EQ(moves.size(), 1);
@@ -421,9 +424,10 @@ TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest,
 
 TEST_F(GenerateSelectCountriesRemoveInfluenceMovesTest, NoInfluence) {
   // 影響力がない場合
-  auto moves = LegalMovesGenerator::generateSelectCountriesRemoveInfluenceMoves(
-      board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
-      Region::EAST_EUROPE, 3, 1);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateSelectCountriesRemoveInfluenceMoves(
+          board, CardEnum::EAST_EUROPEAN_UNREST, Side::USA, Side::USSR,
+          Region::EAST_EUROPE, 3, 1);
 
   // 除去可能な影響力がないため、空
   EXPECT_EQ(moves.size(), 0);
@@ -456,8 +460,8 @@ TEST_F(GenerateSelectCountriesRemoveAllInfluenceMovesTest,
   std::vector<CountryEnum> candidates = {CountryEnum::IRAN, CountryEnum::EGYPT,
                                          CountryEnum::SAUDI_ARABIA};
 
-  auto moves =
-      LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::
+      generateSelectCountriesRemoveAllInfluenceMoves(
           board, CardEnum::MUSLIM_REVOLUTION, Side::USSR, Side::USA, candidates,
           2);
 
@@ -481,8 +485,8 @@ TEST_F(GenerateSelectCountriesRemoveAllInfluenceMovesTest,
   std::vector<CountryEnum> candidates = {CountryEnum::IRAN, CountryEnum::EGYPT,
                                          CountryEnum::SAUDI_ARABIA};
 
-  auto moves =
-      LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::
+      generateSelectCountriesRemoveAllInfluenceMoves(
           board, CardEnum::MUSLIM_REVOLUTION, Side::USSR, Side::USA, candidates,
           2);
 
@@ -495,11 +499,76 @@ TEST_F(GenerateSelectCountriesRemoveAllInfluenceMovesTest, AllNoInfluence) {
   std::vector<CountryEnum> candidates = {CountryEnum::IRAN, CountryEnum::EGYPT,
                                          CountryEnum::SAUDI_ARABIA};
 
-  auto moves =
-      LegalMovesGenerator::generateSelectCountriesRemoveAllInfluenceMoves(
+  auto moves = CardEffectLegalMoveGenerator::
+      generateSelectCountriesRemoveAllInfluenceMoves(
           board, CardEnum::MUSLIM_REVOLUTION, Side::USSR, Side::USA, candidates,
           2);
 
   // 除去可能な影響力がないため、空
   EXPECT_EQ(moves.size(), 0);
+}
+
+TEST(CardEffectLegalMoveGeneratorRegistryTest,
+     RegisterGeneratorProvidesCustomMoves) {
+  Board board(createTestCardPool());
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+
+  // 事前状態: 未登録カードはムーブを生成しない
+  auto initial_moves =
+      CardEffectLegalMoveGenerator::generate(CardEnum::DUMMY, board, Side::USA);
+  EXPECT_TRUE(initial_moves.empty());
+
+  const auto expected_pattern =
+      std::map<CountryEnum, int>{{CountryEnum::JAPAN, 1}};
+  const auto expected_move = std::make_shared<EventRemoveInfluenceMove>(
+      CardEnum::DUMMY, Side::USA, expected_pattern);
+  const Board* board_ptr = &board;
+
+  CardEffectLegalMoveGenerator::registerGenerator(
+      CardEnum::DUMMY,
+      [expected_move, board_ptr](const Board& passed_board, Side side) {
+        EXPECT_EQ(&passed_board, board_ptr);
+        EXPECT_EQ(side, Side::USA);
+        std::vector<std::shared_ptr<Move>> moves;
+        moves.push_back(expected_move);
+        return moves;
+      });
+
+  auto moves =
+      CardEffectLegalMoveGenerator::generate(CardEnum::DUMMY, board, Side::USA);
+  ASSERT_EQ(moves.size(), 1);
+  EXPECT_EQ(moves[0], expected_move);
+
+  // 後続テスト影響を避けるために空挙動へ戻す
+  CardEffectLegalMoveGenerator::registerGenerator(
+      CardEnum::DUMMY, [](const Board& /*board*/, Side /*side*/) {
+        return std::vector<std::shared_ptr<Move>>{};
+      });
+}
+
+TEST(CardEffectLegalMoveGeneratorRegistryTest,
+     DeStalinizationGeneratorRegisteredAfterInitializer) {
+  CardEffectLegalMoveGenerator::initializeBuiltinGenerators();
+  Board board(createTestCardPool());
+  TestHelper::clearAllOpponentInfluence(board, Side::USSR);
+  TestHelper::clearAllOpponentInfluence(board, Side::USA);
+
+  board.getWorldMap()
+      .getCountry(CountryEnum::POLAND)
+      .addInfluence(Side::USSR, 2);
+
+  auto moves = CardEffectLegalMoveGenerator::generate(
+      CardEnum::DE_STALINIZATION, board, Side::USSR);
+
+  ASSERT_FALSE(moves.empty());
+  bool has_de_stalinization_move = false;
+  for (const auto& move : moves) {
+    if (dynamic_cast<DeStalinizationRemoveMove*>(move.get()) != nullptr) {
+      has_de_stalinization_move = true;
+      break;
+    }
+  }
+
+  EXPECT_TRUE(has_de_stalinization_move);
 }

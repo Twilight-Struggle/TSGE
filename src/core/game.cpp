@@ -1,3 +1,7 @@
+// どこで: src/core/game.cpp
+// 何を: Gameクラスのエントリポイントとフェーズ制御の連携を実装
+// なぜ:
+// トップレベルのゲーム進行と初期化順序を集中管理し、安定したセットアップを保証する
 #include "tsge/core/game.hpp"
 
 #include "tsge/enums/game_enums.hpp"
@@ -8,13 +12,16 @@
 #endif
 #include <stdexcept>
 
+#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/actions/command.hpp"
 
 #ifdef TEST
 Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
            const std::array<std::unique_ptr<Card>, 111>& cardpool)
     : board_{Board(cardpool)},
-      players_{{std::move(player1), std::move(player2)}} {}
+      players_{{std::move(player1), std::move(player2)}} {
+  CardEffectLegalMoveGenerator::initializeBuiltinGenerators();
+}
 #endif
 
 #ifndef TEST
@@ -22,6 +29,7 @@ Game::Game(Player<TestPolicy>&& player1, Player<TestPolicy>&& player2,
            const std::array<std::unique_ptr<Card>, 111>& cardpool)
     : board_{Board(cardpool)},
       players_{{std::move(player1), std::move(player2)}} {
+  CardEffectLegalMoveGenerator::initializeBuiltinGenerators();
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<> firstSecond(0, 1);

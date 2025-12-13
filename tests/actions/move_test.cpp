@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "tsge/actions/command.hpp"
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/game_logic_legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
 #include "tsge/enums/game_enums.hpp"
@@ -382,9 +382,10 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommandLambda) {
   // 2. 期待される引数で直接呼び出した結果と比較
   // ラムダ関数のキャプチャ値が正しいことを間接的に検証
   std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE};
-  auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-      board_, Side::USA, CardEnum::DUMMY, expected_history, 3,
-      AdditionalOpsType::NONE);
+  auto expected_moves =
+      GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
+          board_, Side::USA, CardEnum::DUMMY, expected_history, 3,
+          AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
   ASSERT_EQ(legal_moves.size(), expected_moves.size());
@@ -423,9 +424,10 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_IntegrationTest) {
 
   // 期待される引数で直接呼び出した結果と比較
   std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE};
-  auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-      board_, Side::USA, CardEnum::DUMMY, expected_history, 3,
-      AdditionalOpsType::NONE);
+  auto expected_moves =
+      GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
+          board_, Side::USA, CardEnum::DUMMY, expected_history, 3,
+          AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
   ASSERT_EQ(legal_moves.size(), expected_moves.size());
@@ -464,7 +466,7 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
     // 期待される引数で直接呼び出した結果と比較
     std::vector<CountryEnum> expected_history = {CountryEnum::ITALY};
     auto expected_moves =
-        LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+        GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
             board_, Side::USSR, CardEnum::DUMMY, expected_history,
             AdditionalOpsType::NONE);
 
@@ -490,9 +492,10 @@ TEST_F(MoveTest, ActionRealigmentMove_RequestCommand_DifferentOps) {
 
     // 期待される引数で直接呼び出した結果と比較
     std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE};
-    auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-        board_, Side::USA, CardEnum::DUMMY, expected_history, 2,
-        AdditionalOpsType::NONE);
+    auto expected_moves =
+        GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
+            board_, Side::USA, CardEnum::DUMMY, expected_history, 2,
+            AdditionalOpsType::NONE);
 
     // 結果が同じであることを確認（引数が正しく渡されている証拠）
     ASSERT_EQ(legal_moves.size(), expected_moves.size());
@@ -519,9 +522,10 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithRemainingOps) {
   // 期待される引数で直接呼び出した結果と比較
   std::vector<CountryEnum> expected_history = {CountryEnum::FRANCE,
                                                CountryEnum::ITALY};
-  auto expected_moves = LegalMovesGenerator::realignmentRequestLegalMoves(
-      board_, Side::USSR, CardEnum::DUMMY, expected_history, 1,
-      AdditionalOpsType::NONE);
+  auto expected_moves =
+      GameLogicLegalMovesGenerator::realignmentRequestLegalMoves(
+          board_, Side::USSR, CardEnum::DUMMY, expected_history, 1,
+          AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
   ASSERT_EQ(legal_moves.size(), expected_moves.size());
@@ -559,9 +563,10 @@ TEST_F(MoveTest, RealignmentRequestMove_LambdaExecution_WithoutRemainingOps) {
   // 期待される引数で直接呼び出した結果と比較
   std::vector<CountryEnum> expected_history = {
       CountryEnum::FRANCE, CountryEnum::ITALY, CountryEnum::WEST_GERMANY};
-  auto expected_moves = LegalMovesGenerator::additionalOpsRealignmentLegalMoves(
-      board_, Side::USA, CardEnum::DUMMY, expected_history,
-      AdditionalOpsType::NONE);
+  auto expected_moves =
+      GameLogicLegalMovesGenerator::additionalOpsRealignmentLegalMoves(
+          board_, Side::USA, CardEnum::DUMMY, expected_history,
+          AdditionalOpsType::NONE);
 
   // 結果が同じであることを確認（引数が正しく渡されている証拠）
   ASSERT_EQ(legal_moves.size(), expected_moves.size());
@@ -599,7 +604,7 @@ TEST_F(MoveTest, ActionEventMove_LambdaExecution_OpponentSideEvent) {
   EXPECT_NO_THROW({ auto moves = request_cmd->legalMoves(board_); });
 
   // LegalMovesGeneratorの新ヘルパーと結果が一致することを確認
-  auto expected_moves = LegalMovesGenerator::actionLegalMovesForCard(
+  auto expected_moves = GameLogicLegalMovesGenerator::actionLegalMovesForCard(
       board_, Side::USA, CardEnum::DUMMY);
   EXPECT_EQ(legal_moves.size(), expected_moves.size());
 

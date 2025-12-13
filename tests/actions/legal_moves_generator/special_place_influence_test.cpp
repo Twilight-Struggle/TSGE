@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "tsge/actions/legal_moves_generator.hpp"
+#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 
@@ -29,8 +29,9 @@ TEST_F(SpecialPlaceInfluenceTest, ComeconConfigTest) {
   config.excludeOpponentControlled = true;
   config.onlyEmptyCountries = false;
 
-  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-      board, Side::USSR, CardEnum::COMECON, config);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
+          board, Side::USSR, CardEnum::COMECON, config);
 
   // 少なくとも何らかの合法手が生成されることを確認
   EXPECT_GE(moves.size(), 0);
@@ -55,8 +56,9 @@ TEST_F(SpecialPlaceInfluenceTest, DecolonizationConfigTest) {
   config.excludeOpponentControlled = false;
   config.onlyEmptyCountries = false;
 
-  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-      board, Side::USSR, CardEnum::DECOLONIZATION, config);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
+          board, Side::USSR, CardEnum::DECOLONIZATION, config);
 
   EXPECT_GE(moves.size(), 0);
 
@@ -78,8 +80,9 @@ TEST_F(SpecialPlaceInfluenceTest, PuppetGovernmentsConfigTest) {
   config.excludeOpponentControlled = false;
   config.onlyEmptyCountries = true;  // 影響力のない国のみ
 
-  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-      board, Side::USA, CardEnum::PUPPET_GOVERNMENTS, config);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
+          board, Side::USA, CardEnum::PUPPET_GOVERNMENTS, config);
 
   EXPECT_GE(moves.size(), 0);
 
@@ -101,8 +104,9 @@ TEST_F(SpecialPlaceInfluenceTest, LiberationTheologyConfigTest) {
   config.excludeOpponentControlled = false;
   config.onlyEmptyCountries = false;
 
-  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-      board, Side::USSR, CardEnum::LIBERATION_THEOLOGY, config);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
+          board, Side::USSR, CardEnum::LIBERATION_THEOLOGY, config);
 
   EXPECT_GE(moves.size(), 0);
 
@@ -125,8 +129,9 @@ TEST_F(SpecialPlaceInfluenceTest, EmptyRegionTest) {
   config.excludeOpponentControlled = false;
   config.onlyEmptyCountries = false;
 
-  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-      board, Side::USSR, CardEnum::COMECON, config);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
+          board, Side::USSR, CardEnum::COMECON, config);
   // SPECIAL地域にはUSS/USAしかないため、合法手は少ないはず
   EXPECT_GE(moves.size(), 0);
 }
@@ -153,8 +158,9 @@ TEST_F(SpecialPlaceInfluenceTest, PuppetGovernmentsInsufficientCandidates) {
   board.getWorldMap()
       .getCountry(CountryEnum::ZIMBABWE)
       .clearInfluence(Side::USA);
-  auto moves = LegalMovesGenerator::generateCardSpecificPlaceInfluenceMoves(
-      board, Side::USA, CardEnum::PUPPET_GOVERNMENTS, config);
+  auto moves =
+      CardEffectLegalMoveGenerator::generateCardSpecificPlaceInfluenceMoves(
+          board, Side::USA, CardEnum::PUPPET_GOVERNMENTS, config);
   // 2カ国に1つずつ置くパターンが1つだけ生成されるはず
   EXPECT_EQ(moves.size(), 1);
 
