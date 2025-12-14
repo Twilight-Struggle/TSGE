@@ -624,19 +624,6 @@ TEST_F(PlaceCardsTest, OASFoundedEventTest) {
   EXPECT_NE(request_cmd, nullptr);
 }
 
-TEST_F(PlaceCardsTest, DestaLinizationEventTest) {
-  DeStainization destalinization;
-
-  EXPECT_TRUE(destalinization.canEvent(board));
-
-  auto commands = destalinization.event(Side::USSR, board);
-  EXPECT_EQ(commands.size(), 1);
-
-  const auto* request_cmd =
-      dynamic_cast<const RequestCommand*>(commands[0].get());
-  EXPECT_NE(request_cmd, nullptr);
-}
-
 TEST_F(PlaceCardsTest, ColonialRearGuardsEventTest) {
   ColonialRearGuards colonial_rear_guards;
 

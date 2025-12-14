@@ -72,17 +72,6 @@ class Decolonization final : public Card {
   bool canEvent(const Board& board) const override;
 };
 
-class DeStainization final : public Card {
- public:
-  DeStainization()
-      : Card(CardEnum::DE_STALINIZATION, "De-Stalinization", 3, Side::USSR,
-             WarPeriod::EARLY_WAR, true) {}
-  [[nodiscard]]
-  std::vector<CommandPtr> event(Side side, const Board& board) const override;
-  [[nodiscard]]
-  bool canEvent(const Board& board) const override;
-};
-
 class ColonialRearGuards final : public Card {
  public:
   ColonialRearGuards()
