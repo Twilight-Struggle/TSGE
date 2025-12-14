@@ -49,10 +49,10 @@ void processAnswer(Board& board, StateStack& states,
   auto selected_move = std::move(*answer);
   answer.reset();
 
-  // 回答が来たらRequestCommandをスタックから取り除く
+  // 回答が来たら入力要求をスタックから取り除く
   if (!states.empty() && std::holds_alternative<CommandPtr>(states.back())) {
     auto& ptr = std::get<CommandPtr>(states.back());
-    if (dynamic_cast<RequestCommand*>(ptr.get()) != nullptr) {
+    if (ptr != nullptr && ptr->requiresPlayerInput()) {
       states.pop_back();
     }
   }
@@ -67,20 +67,22 @@ MaybeStepOutput handleCommandOnTop(Board& board, StateStack& states) {
     return std::nullopt;
   }
 
-  if (auto* request = dynamic_cast<RequestCommand*>(command_ptr->get())) {
-    auto legal_moves = request->legalMoves(board);
+  auto& command = *command_ptr;
+
+  if (command != nullptr && command->requiresPlayerInput()) {
+    auto legal_moves = command->legalMoves(board);
     if (legal_moves.empty()) {
       states.pop_back();
       return std::nullopt;
     }
-    return makeInputResult(std::move(legal_moves), request->getSide());
+    return makeInputResult(std::move(legal_moves), command->getSide());
   }
 
-  // RequestCommand以外は先にスタックから取り除き、派生先のState/Commandが
+  // 入力要求以外は先にスタックから取り除き、派生先のState/Commandが
   // pop_backで消えないようにする。
-  auto command = *command_ptr;
+  auto command_to_apply = command;
   states.pop_back();
-  command->apply(board);
+  command_to_apply->apply(board);
   return std::nullopt;
 }
 

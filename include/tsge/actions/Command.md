@@ -1,6 +1,6 @@
 # Command 仕様概要
 
-CommandはBoardの状態を更新するほぼ唯一の手段(例外はPhaseMahine)であり、ゲーム内のあらゆる状態遷移を表現する。Moveは`toCommand()`で`std::vector<CommandPtr>`へ展開され、PhaseMachineが先頭から順に`apply()`を実行する。`Board::pushState(std::variant<StateType, CommandPtr>)`によりCommandやStateを同一キューで扱う。
+CommandはBoardの状態を更新するほぼ唯一の手段(例外はPhaseMahine)であり、ゲーム内のあらゆる状態遷移を表現する。Moveは`toCommand()`で`std::vector<CommandPtr>`へ展開され、PhaseMachineが先頭から順に`apply()`を実行する。`Board::pushState(std::variant<StateType, CommandPtr>)`によりCommandやStateを同一キューで扱う。2025-12時点では入力要求の判定もCommandの仮想インタフェース経由で行い、`dynamic_cast`削減とホットパスのオーバーヘッド低減を図っている。
 
 ## Command基礎
 - `apply(Board&) const`のみが状態変更の入り口。Commandはコピー構築可・代入禁止で、生成後の差し替えを想定しない。
@@ -25,7 +25,7 @@ CommandはBoardの状態を更新するほぼ唯一の手段(例外はPhaseMahin
 - `ChangeVpCommand`：`getVpMultiplier(side_)`を使ってVP符号を決定。±20到達で勝敗ステートを追加。
 
 ### カード/要求処理
-- `RequestCommand`：合法手生成コールバックを保持し、`apply()`では何もしない。Move生成側が`getSide()`で対象プレイヤーを把握する。
+- `RequestCommand`：合法手生成コールバックを保持し、`apply()`では何もしない。Move生成側が`getSide()`で対象プレイヤーを把握するほか、`requiresPlayerInput()/legalMoves(Board)`をオーバーライドしてPhaseMachineへ入力要求情報を提供する。
 - `SetHeadlineCardCommand`：手札からカードを除去し、ヘッドライン枠に登録。
 - `FinalizeCardPlayCommand`：手札からカードを抜き、イベント除去なら`Deck::getRemovedCards()`、通常は捨て札へ。
 - `LambdaCommand`：即席処理をラムダで包むユーティリティ（カード固有処理・テスト用）。
@@ -34,6 +34,13 @@ CommandはBoardの状態を更新するほぼ唯一の手段(例外はPhaseMahin
 - `getWorldMap()`, `getSpaceTrack()`, `getDefconTrack()`, `getMilopsTrack()`, `getActionRoundTrack()`などのトラック参照。
 - `getDeck()`, `getPlayerHand()`, `setHeadlineCard()`でカード在庫を管理。
 - `pushState()`, `changeVp()`, `getCurrentArPlayer()`, `getRandomizer()`を通じ、副次Commandの連鎖やダイス判定を扱う。
+
+## 入力要求インタフェース
+
+- `Command::requiresPlayerInput()`：入力要求であればtrueを返す。デフォルト実装はfalse。
+- `Command::legalMoves(const Board&)`：入力要求時に提示する合法手を返す。デフォルトは空vector。
+- `Command::getSide()`：Command生成時に束縛された`Side`を返す。`requiresPlayerInput()`がtrueのケースでは、このサイドが入力対象を示す。
+- PhaseMachineは上記メソッドを組み合わせ、RequestCommandかどうかを意識せず入力待ちの判定と合法手返却を行う。
 
 ## 実装メモ
 - Command単位で処理は原子的に完結させ、中途例外時の仕様は未定義。

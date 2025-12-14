@@ -29,6 +29,20 @@ class Command {
   // MCTSで必要
   // virtual bool undo(Board& board) const = 0;
 
+  [[nodiscard]]
+  virtual bool requiresPlayerInput() const {
+    return false;
+  }
+
+  [[nodiscard]]
+  virtual std::vector<std::shared_ptr<Move>> legalMoves(
+      const Board& board) const;
+
+  [[nodiscard]]
+  Side getSide() const {
+    return side_;
+  }
+
  protected:
   const Side side_;
 };
@@ -123,17 +137,28 @@ class RequestCommand final : public Command {
   RequestCommand(Side side,
                  std::function<std::vector<std::shared_ptr<Move>>(const Board&)>
                      legalMoves)
-      : Command(side), legalMoves(std::move(legalMoves)) {}
+      : Command(side), legalMovesFactory_(std::move(legalMoves)) {}
 
-  std::function<std::vector<std::shared_ptr<Move>>(const Board&)> legalMoves;
   // std::function<std::vector<CommandPtr>(const Move&)> resume; いらないかも
 
   void apply(Board& board) const override;
 
   [[nodiscard]]
+  bool requiresPlayerInput() const override {
+    return true;
+  }
+
+  std::vector<std::shared_ptr<Move>> legalMoves(
+      const Board& board) const override;
+
+  [[nodiscard]]
   Side getSide() const {
     return side_;
   }
+
+ private:
+  std::function<std::vector<std::shared_ptr<Move>>(const Board&)>
+      legalMovesFactory_;
 };
 
 class SetHeadlineCardCommand final : public Command {

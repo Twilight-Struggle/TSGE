@@ -25,6 +25,10 @@ constexpr std::array<std::pair<CountryEnum, int>, 7>
 
 }  // namespace
 
+std::vector<std::shared_ptr<Move>> Command::legalMoves(const Board&) const {
+  return {};
+}
+
 void PlaceInfluenceCommand::apply(Board& board) const {
   for (const auto& target_country : targetCountries_) {
     board.getWorldMap()
@@ -166,6 +170,11 @@ void ChangeVpCommand::apply(Board& board) const {
 }
 
 void RequestCommand::apply(Board& board) const {}
+
+std::vector<std::shared_ptr<Move>> RequestCommand::legalMoves(
+    const Board& board) const {
+  return legalMovesFactory_(board);
+}
 
 void SetHeadlineCardCommand::apply(Board& board) const {
   auto& hand = board.getPlayerHand(side_);

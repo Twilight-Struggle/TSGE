@@ -19,9 +19,9 @@ PhaseMachine::step(Board& board,
 
 ## コアループ
 
-1. `answer` があれば `RequestCommand` を除去し、`Move::toCommand()`（参照: `include/tsge/actions/Move.md`）で得た `Command` 列を逆順で状態スタックに積む。
+1. `answer` があれば「入力要求フラグ（`Command::requiresPlayerInput()`）がtrue」のCommandを除去し、`Move::toCommand()`（参照: `include/tsge/actions/Move.md`）で得た `Command` 列を逆順で状態スタックに積む。
 2. スタックが尽きるか入力待ちが発生するまで末尾を処理する。
-   - **CommandPtr**: `RequestCommand` なら `legalMoves(board)` を返却し、空なら破棄。その他は `apply(board)` 実行後にポップ。
+   - **CommandPtr**: `requiresPlayerInput()` がtrueなら `legalMoves(board)` を返却し、空なら破棄。その他は `apply(board)` 実行後にポップ。
    - **StateType**: 以下の表に従って次状態を積むか合法手を返す。
 3. スタックが空になった場合は `winner = Side::NEUTRAL` を含む終端タプルを返す（ゲーム継続不可時のセーフガード）。
 
@@ -45,8 +45,8 @@ PhaseMachine::step(Board& board,
 
 ## 入力要求の扱い
 
-- `RequestCommand` は合法手が無ければ自動破棄し、ハングを防止する。
-- プレイヤー回答を受け取ると `processAnswer()` が直前の `RequestCommand` を除去し、回答 `Move` から展開した `Command` を積んだ上でループ処理を再開する。
+- `requiresPlayerInput()` がtrueのCommand（例：`RequestCommand`）は合法手が無ければ自動破棄し、ハングを防止する。
+- プレイヤー回答を受け取ると `processAnswer()` が直前の入力要求Commandを除去し、回答 `Move` から展開した `Command` を積んだ上でループ処理を再開する。
 
 ## TODO
 

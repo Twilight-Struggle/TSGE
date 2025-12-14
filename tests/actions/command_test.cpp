@@ -467,6 +467,27 @@ TEST_F(CommandTest, RequestCommandGetSide) {
   EXPECT_EQ(command.getSide(), Side::USSR);
 }
 
+TEST_F(CommandTest, CommandDefaultDoesNotRequestInput) {
+  LambdaCommand command([](Board&) {});
+
+  EXPECT_FALSE(command.requiresPlayerInput());
+  EXPECT_EQ(command.getSide(), Side::NEUTRAL);
+  EXPECT_TRUE(command.legalMoves(board).empty());
+}
+
+TEST_F(CommandTest, RequestCommandFlagsInputRequirement) {
+  auto expected_move = std::make_shared<StubMove>(Side::USA, 7);
+  RequestCommand command(Side::USA, [expected_move](const Board&) {
+    return std::vector<std::shared_ptr<Move>>{expected_move};
+  });
+
+  EXPECT_TRUE(command.requiresPlayerInput());
+  EXPECT_EQ(command.getSide(), Side::USA);
+  const auto moves = command.legalMoves(board);
+  ASSERT_EQ(moves.size(), 1U);
+  EXPECT_EQ(moves[0], expected_move);
+}
+
 // RemoveInfluenceCommandのテスト
 TEST_F(CommandTest, RemoveInfluenceCommandSingleCountry) {
   // 単一国から指定数の影響力除去
