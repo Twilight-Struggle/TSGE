@@ -188,8 +188,6 @@ tests/              # テストファイル（機能別にサブディレクト�
   - 将来的に`activeEvents_`メンバでCIA Createdなどの効果による可視性変更に対応予定
 
 ## 将来計画(AIは読まなくて良い)
-- LegalMoves, Move, Command整理
-- tests/game_state/basic_event_cards_test.cpp整理
 
 - メモリアクセスパターンの最適化→キャッシュの関係から同じタイミングでアクセスされやすいデータは近くの方がいい。以下例。
 ```cpp
