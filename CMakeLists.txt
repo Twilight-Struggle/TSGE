@@ -190,8 +190,11 @@ if(ENABLE_TESTING)
     include(GoogleTest)
     enable_testing()
 
-    function(add_test_with_path TEST_NAME TEST_PATH)
-        add_executable(${TEST_NAME} ${TEST_PATH})
+    function(add_test_with_path TEST_NAME)
+        if(NOT ARGN)
+            message(FATAL_ERROR "add_test_with_path requires at least one source file")
+        endif()
+        add_executable(${TEST_NAME} ${ARGN})
         target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/actions/legal_moves_generator)
         target_link_libraries(${TEST_NAME}
             PRIVATE
@@ -228,7 +231,11 @@ if(ENABLE_TESTING)
     add_test_with_path(world_map_test tests/game_state/world_map_test.cpp)
     add_test_with_path(country_test tests/game_state/country_test.cpp)
     add_test_with_path(trackers_test tests/game_state/trackers_test.cpp)
-    add_test_with_path(basic_event_cards_test tests/game_state/basic_event_cards_test.cpp)
+    add_test_with_path(basic_event_cards_test
+        tests/game_state/basic_event_cards_test/early_war.cpp
+        tests/game_state/basic_event_cards_test/mid_war.cpp
+        tests/game_state/basic_event_cards_test/late_war.cpp
+    )
     add_test_with_path(scoring_cards_test tests/game_state/scoring_cards_test.cpp)
     add_test_with_path(special_cards_test tests/game_state/special_cards_test.cpp)
     add_test_with_path(special_place_influence_test tests/actions/legal_moves_generator/special_place_influence_test.cpp)
