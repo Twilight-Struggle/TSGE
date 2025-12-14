@@ -43,6 +43,7 @@ add_library(ts_core
     src/actions/move.cpp
     src/actions/game_logic_legal_moves_generator.cpp
     src/actions/card_effect_legal_move_generator.cpp
+    src/actions/card_specific_moves.cpp
     src/game_state/world_map.cpp
     src/game_state/world_map_constants.cpp
     src/game_state/cards.cpp

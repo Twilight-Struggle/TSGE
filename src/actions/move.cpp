@@ -3,7 +3,6 @@
 #include <memory>
 #include <utility>
 
-#include "tsge/actions/card_effect_legal_move_generator.hpp"
 #include "tsge/actions/command.hpp"
 #include "tsge/actions/game_logic_legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
@@ -231,37 +230,5 @@ std::vector<CommandPtr> EventRemoveAllInfluenceMove::toCommand(
     commands.emplace_back(std::make_shared<RemoveAllInfluenceCommand>(
         getOpponentSide(getSide()), country));
   }
-  return commands;
-}
-
-std::vector<CommandPtr> DeStalinizationRemoveMove::toCommand(
-    const std::unique_ptr<Card>& /*card*/, const Board& /*board*/) const {
-  std::vector<CommandPtr> commands;
-
-  // 1. Remove USSR influence
-  commands.emplace_back(
-      std::make_shared<RemoveInfluenceCommand>(Side::USSR, targetCountries_));
-
-  // 2. Calculate total removed
-  int total_removed = 0;
-  for (const auto& [country, amount] : targetCountries_) {
-    total_removed += amount;
-  }
-
-  // 3. Push placement Request directly
-  CardSpecialPlaceInfluenceConfig config;
-  config.totalInfluence = total_removed;
-  config.maxPerCountry = 2;
-  config.allowedRegions = std::nullopt;     // All regions
-  config.excludeOpponentControlled = true;  // No USA controlled
-  config.onlyEmptyCountries = false;
-
-  commands.emplace_back(std::make_shared<RequestCommand>(
-      Side::USSR, [card_enum = getCard(), config](const Board& board) {
-        return CardEffectLegalMoveGenerator::
-            generateCardSpecificPlaceInfluenceMoves(board, Side::USSR,
-                                                    card_enum, config);
-      }));
-
   return commands;
 }

@@ -32,3 +32,8 @@ MoveはGameLogicLegalMovesGeneratorによって生成され、PhaseMachineから
 
 ## HeadlineCardSelectMove
 - `SetHeadlineCardCommand`のみを積む。ヘッドライン処理は別フェーズでFinalizeされるため、ここでは追加コマンドを持たない。
+
+## カード固有Move
+- 個別カードでのみ使用するMoveは`include/tsge/actions/card_specific_moves.hpp`および対応する`src/actions/card_specific_moves.cpp`に実装する。
+- 共通`move.hpp`には汎用Moveのみを残し、カード固有Moveの追加・削除が他カードへ影響しないようにする。
+- `DeStalinizationRemoveMove`はカード固有Moveの第一例であり、除去→配置Requestのシーケンスを1ユニットとして管理する。今後追加するカードも同ファイルに集約し、`RequestCommand`の引数やカード固有設定をここで完結させる方針とする。

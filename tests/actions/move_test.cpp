@@ -2,8 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <memory>
 
+#include "tsge/actions/card_specific_moves.hpp"
 #include "tsge/actions/command.hpp"
 #include "tsge/actions/game_logic_legal_moves_generator.hpp"
 #include "tsge/core/board.hpp"
@@ -759,5 +761,80 @@ TEST_F(MoveTest, DeStalinizationRemoveMove_PlacementMatchesRemoval) {
   for (const auto& move : legal_moves) {
     auto* place_move = dynamic_cast<EventPlaceInfluenceMove*>(move.get());
     EXPECT_NE(place_move, nullptr);
+  }
+}
+
+TEST_F(MoveTest, DeStalinizationRemoveMove_ExcludeOpponentControlledTargets) {
+  auto& world_map = board_.getWorldMap();
+
+  // 盤面全体をUSA支配に寄せ、候補国数を制限してパターン数を抑制
+  for (size_t i = static_cast<size_t>(CountryEnum::USA) + 1;
+       i < world_map.getCountriesCount(); ++i) {
+    auto country_enum = static_cast<CountryEnum>(i);
+    auto& country = world_map.getCountry(country_enum);
+    country.clearInfluence(Side::USSR);
+    country.clearInfluence(Side::USA);
+    country.addInfluence(Side::USA, 5);
+  }
+
+  // 配置候補として残す国を明示的にニュートラル化
+  const std::array<CountryEnum, 2> neutral_candidates = {CountryEnum::ALGERIA,
+                                                         CountryEnum::LIBYA};
+  for (const auto country_enum : neutral_candidates) {
+    auto& country = world_map.getCountry(country_enum);
+    country.clearInfluence(Side::USA);
+    country.clearInfluence(Side::USSR);
+  }
+
+  // 除去対象国はUSSR影響を持たせたうえでUSA支配にしておく
+  auto& poland = world_map.getCountry(CountryEnum::POLAND);
+  poland.clearInfluence(Side::USA);
+  poland.clearInfluence(Side::USSR);
+  poland.addInfluence(Side::USA, 5);
+  poland.addInfluence(Side::USSR, 2);
+
+  auto& hungary = world_map.getCountry(CountryEnum::HUNGARY);
+  hungary.clearInfluence(Side::USA);
+  hungary.clearInfluence(Side::USSR);
+  hungary.addInfluence(Side::USA, 5);
+  hungary.addInfluence(Side::USSR, 2);
+
+  std::map<CountryEnum, int> targets;
+  targets[CountryEnum::POLAND] = 2;
+  targets[CountryEnum::HUNGARY] = 2;
+
+  DeStalinizationRemoveMove move(CardEnum::DE_STALINIZATION, Side::USSR,
+                                 targets);
+  auto commands = move.toCommand(dummy_card_neutral_, board_);
+  ASSERT_EQ(commands.size(), 2);
+
+  // 除去後の盤面でRequestCommandを評価
+  commands[0]->apply(board_);
+  auto* request_cmd = dynamic_cast<RequestCommand*>(commands[1].get());
+  ASSERT_NE(request_cmd, nullptr);
+
+  auto legal_moves = request_cmd->legalMoves(board_);
+  ASSERT_FALSE(legal_moves.empty());
+
+  for (const auto& candidate_move : legal_moves) {
+    auto* place_move =
+        dynamic_cast<EventPlaceInfluenceMove*>(candidate_move.get());
+    ASSERT_NE(place_move, nullptr);
+
+    Board validation_board(createTestCardPool());
+    auto& validation_france =
+        validation_board.getWorldMap().getCountry(CountryEnum::FRANCE);
+    validation_france.addInfluence(Side::USA, 5);
+
+    auto place_commands =
+        place_move->toCommand(dummy_card_neutral_, validation_board);
+    for (const auto& cmd : place_commands) {
+      cmd->apply(validation_board);
+    }
+
+    EXPECT_EQ(validation_board.getWorldMap()
+                  .getCountry(CountryEnum::FRANCE)
+                  .getInfluence(Side::USSR),
+              0);
   }
 }

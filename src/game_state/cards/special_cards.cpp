@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "tsge/actions/card_effect_legal_move_generator.hpp"
+#include "tsge/actions/card_specific_moves.hpp"
 #include "tsge/actions/command.hpp"
 #include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"

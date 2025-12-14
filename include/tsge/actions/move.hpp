@@ -15,8 +15,6 @@ enum class AdditionalOpsType : uint8_t {
   BOTH = CHINA_CARD | VIETNAM_REVOLTS
 };
 
-class Game;
-
 class Move {
  public:
   Move(CardEnum card, Side side) : card_{card}, side_{side} {}
@@ -344,32 +342,4 @@ class EventRemoveAllInfluenceMove final : public Move {
 
  private:
   const std::vector<CountryEnum> targetCountries_;
-};
-
-class DeStalinizationRemoveMove final : public Move {
- public:
-  DeStalinizationRemoveMove(CardEnum card, Side side,
-                            const std::map<CountryEnum, int>& targetCountries)
-      : Move{card, side}, targetCountries_{targetCountries} {}
-
-  [[nodiscard]]
-  std::vector<CommandPtr> toCommand(const std::unique_ptr<Card>& card,
-                                    const Board& board) const override;
-
-  [[nodiscard]]
-  bool operator==(const Move& other) const override {
-    if (this->getCard() != other.getCard() ||
-        this->getSide() != other.getSide()) {
-      return false;
-    }
-    const auto* other_cast =
-        dynamic_cast<const DeStalinizationRemoveMove*>(&other);
-    if (other_cast == nullptr) {
-      return false;
-    }
-    return targetCountries_ == other_cast->targetCountries_;
-  }
-
- private:
-  const std::map<CountryEnum, int> targetCountries_;
 };

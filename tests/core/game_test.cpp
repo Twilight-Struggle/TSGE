@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "tsge/actions/card_effect_legal_move_generator.hpp"
+#include "tsge/actions/card_specific_moves.hpp"
 #include "tsge/actions/move.hpp"
 #include "tsge/core/board.hpp"
 #include "tsge/enums/cards_enum.hpp"
